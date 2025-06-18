@@ -1,5 +1,5 @@
 from character.hero import RpgHero
-from components.core_components import ItemNotFoundError, InsufficientQuantityError
+from components.inventory import ItemNotFoundError, InsufficientQuantityError
 from game.magic import NoTargetError
 
 

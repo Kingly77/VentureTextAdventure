@@ -5,6 +5,7 @@ from components.inventory import ItemNotFoundError, InsufficientQuantityError
 from game.items import Item, UseItemError
 from game.room import Room
 from game.util import handle_inventory_operation, handle_spell_cast
+from game.room_effects import DarkCaveLightingEffect
 
 def main():
     """Main function to demonstrate the RPG game mechanics."""
@@ -30,6 +31,7 @@ def main():
     # Add a torch to the dark cave
     dark_cave.add_item(Item("Torch", 5, True))
     dark_cave.add_item(Item("Goblin Ear", 1, False))
+    dark_cave.add_effect(DarkCaveLightingEffect(dark_cave))
 
     print(f"\nOur heroes ventured forth from the Forest Clearing and arrived at the {dark_cave.name}.")
     print("As they peered into the darkness, this is what they saw:")

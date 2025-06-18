@@ -1,5 +1,6 @@
 from character.basecharacter import BaseCharacter
-from components.core_components import Mana, Inventory
+from components.core_components import Mana
+from components.inventory import Inventory
 from game.magic import Spell, NoTargetError
 from interfaces.interface import Combatant
 
