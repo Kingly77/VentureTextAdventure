@@ -1,0 +1,137 @@
+from character.basecharacter import BaseCharacter
+from components.core_components import Mana, Inventory
+from game.magic import Spell, NoTargetError
+from interfaces.interface import Combatant
+
+
+class RpgHero(BaseCharacter):
+    """Hero character class with spells, mana, and inventory."""
+    BASE_XP_TO_NEXT_LEVEL = 100
+    BASE_MANA = 100
+    BASE_HEALTH = 100
+    MANA_PER_LEVEL = 2
+    HEALTH_PER_LEVEL = 5
+
+    def __init__(self, name: str, level: int):
+        """Initialize a hero with default attributes and abilities."""
+        # Calculate health based on level
+        health = self.BASE_HEALTH + (level - 1) * self.HEALTH_PER_LEVEL
+        super().__init__(name, level, base_health=health)
+
+        # Hero-specific initialization
+        self.xp = 0
+        self.xp_to_next_level = self._calculate_xp_to_next_level()
+
+        # Add hero-specific components
+        self.components.add_component("mana", Mana(self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL))
+        self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(10)))
+        self.components.add_component("magic_missile", Spell("Magic Missile", 5, self, lambda target: target.take_damage(1)))
+        self.components.add_component("inventory", Inventory())
+
+    def _calculate_xp_to_next_level(self) -> int:
+        """Calculates the XP required for the next level."""
+        return self.BASE_XP_TO_NEXT_LEVEL + (self.level * 50)
+
+    def add_xp(self, xp: int):
+        """Adds experience points to the hero and levels up if threshold reached."""
+        if xp < 0:
+            raise ValueError("XP cannot be negative.")
+        self.xp += xp
+        while self.xp >= self.xp_to_next_level:
+            self.level_up()
+
+    def level_up(self):
+        """Increases hero's level and updates stats."""
+        self.xp -= self.xp_to_next_level
+        self.level += 1
+        self.xp_to_next_level = self._calculate_xp_to_next_level()
+        self.components["mana"].mana = self.BASE_MANA + self.level * self.MANA_PER_LEVEL
+        self.components["health"].health = self.BASE_HEALTH + self.level * self.HEALTH_PER_LEVEL
+        print(f"{self.name} leveled up to level {self.level}!")
+
+    def get_mana_component(self) -> Mana:
+        """Get the mana component of the hero."""
+        return self.components["mana"]
+
+    def get_spell(self, spell_name: str) -> Spell | None:
+        """Retrieves a spell by name if it exists and is a Spell.
+
+        Args:
+            spell_name: The name of the spell to retrieve
+
+        Returns:
+            The spell object or None if not found
+        """
+        if self.components.has_component(spell_name):
+            component = self.components[spell_name]
+            if isinstance(component, Spell):
+                return component
+        return None
+
+    class SpellCastError(Exception):
+        """Exception raised when a spell cannot be cast."""
+        pass
+
+    class SpellNotFoundError(SpellCastError):
+        """Exception raised when a spell is not found."""
+        def __init__(self, spell_name: str):
+            self.spell_name = spell_name
+            super().__init__(f"Spell '{spell_name}' doesn't exist.")
+
+    class InsufficientManaError(SpellCastError):
+        """Exception raised when there is not enough mana to cast a spell."""
+        def __init__(self, spell_name: str, cost: int, available: int):
+            self.spell_name = spell_name
+            self.cost = cost
+            self.available = available
+            super().__init__(f"Not enough mana for '{spell_name}'. Required: {cost}, Available: {available}")
+
+    def cast_spell(self, spell_name: str, target: Combatant) -> bool:
+        """Cast a spell on a target if the hero has enough mana.
+
+        Args:
+            spell_name: The name of the spell to cast
+            target: The target to cast the spell on
+
+        Returns:
+            True if the spell was cast successfully, False otherwise
+
+        Raises:
+            SpellNotFoundError: If the spell doesn't exist
+            InsufficientManaError: If there's not enough mana
+            NoTargetError: If no target is provided
+            Exception: Any exception that might be raised by the spell's effect
+        """
+        spell = self.get_spell(spell_name)
+        if not spell:
+            print(f"Spell '{spell_name}' doesn't exist.")
+            raise self.SpellNotFoundError(spell_name)
+
+        current_mana = self.get_mana_component().mana
+        if current_mana < spell.cost:
+            print(f"Not enough mana for '{spell_name}'.")
+            raise self.InsufficientManaError(spell_name, spell.cost, current_mana)
+
+        try:
+            self.get_mana_component().consume(spell.cost)
+            spell.cast(target)
+            return True
+        except NoTargetError as e:
+            # Re-raise the exception after consuming mana
+            # In a real game, you might want to refund the mana here
+            print(f"Failed to cast {spell_name}: {e}")
+            raise
+        except Exception as e:
+            # Handle any other exceptions from the spell cast
+            print(f"Error occurred while casting {spell_name}: {e}")
+            raise
+
+    @property
+    def mana(self) -> int:
+        """Get the current mana value."""
+        return self.get_mana_component().mana
+
+    @property
+    def inventory(self) -> Inventory:
+        """Get the hero's inventory."""
+        return self.components["inventory"]
