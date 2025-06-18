@@ -1,4 +1,7 @@
-from components.core_components import HoldComponent, Inventory, Item, ItemNotFoundError, InsufficientQuantityError
+from components.core_components import HoldComponent
+from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
+from game.items import Item
+from interfaces.interface import Combatant
 
 
 class Room:
@@ -85,7 +88,7 @@ class Room:
     # --- NEW: Function to "use" an item in the room ---
     def use_item_in_room(self, item_name: str, user: 'Combatant'):
         """
-        Simulates using an item that is currently in the room.
+        Simulates using an item currently in the room.
         This is for items that affect the room itself (like a torch).
 
         Args:

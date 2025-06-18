@@ -1,10 +1,9 @@
 from character.enemy import Goblin, Troll
 from character.hero import RpgHero
-from game.magic import Spell, NoTargetError
-from interfaces.interface import CanCast, Combatant
-from components.core_components import *
+from components.core_components import Effect
+from components.inventory import ItemNotFoundError, InsufficientQuantityError
+from game.items import Item, UseItemError
 from game.room import Room
-import enum
 from game.util import handle_inventory_operation, handle_spell_cast
 
 def main():
@@ -188,7 +187,7 @@ def main():
     result = handle_inventory_operation(hero_john.inventory.remove_item, "NonExistentItem")
 
     print(f"\nBefore leaving the cave, {hero_john.name} discovered a HealthPotion and tucked it away.")
-    # First add an item to remove
+    # First, add an item to remove
     handle_inventory_operation(hero_john.inventory.add_item, Item("HealthPotion", 5, True, Effect.HEAL, 20))
     print(f"But when he tried to give away negative portions of the potion, strange things happened:")
     result = handle_inventory_operation(hero_john.inventory.remove_item, "HealthPotion", -1)
