@@ -28,6 +28,7 @@ class Combatant(abc.ABC):
     def is_alive(self) -> bool:
         pass
 
+
 # --- Core Components ---
 
 class HoldComponent:
@@ -112,6 +113,9 @@ class Item(CanCast): # Inherit from CanCast
 
     def __str__(self):
         return f"{self.name} x{self.quantity}"
+
+    def __repr__(self):
+        return f"Item('{self.name}', cost={self.cost}, qty={self.quantity}, usable={self.is_usable}, effect={self.effect_type.name}, value={self.effect_value})"
 
 class InventoryError(Exception):
     """Base exception for inventory-related errors."""
@@ -209,6 +213,153 @@ class Inventory:
         """
         return f"<Inventory with: {list(self.items.values())}>"
 
+    def has_component(self, item):
+        if item in self.items:
+            return True
+        else:
+            return False
+
+
+class Room:
+    """
+    Represents a single location or area in the game world.
+    A room has a description and can contain items.
+    """
+    def __init__(self, name: str, description: str):
+        """
+        Initializes a new Room.
+
+        Args:
+            name: The name of the room (e.g., "Forest Clearing", "Dark Cave").
+            description: A detailed description of the room.
+        """
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Room name must be a non-empty string.")
+        if not isinstance(description, str) or not description.strip():
+            raise ValueError("Room description must be a non-empty string.")
+
+        self.name = name
+        self.description = description
+        self._components = HoldComponent()
+        self._components.add_component("inventory", Inventory())
+
+        # --- NEW: Internal state for lighting ---
+        self._is_lit = False # Default state: room is not specifically lit by an in-room action
+        # --- END NEW ---
+
+    @property
+    def inventory(self) -> Inventory:
+        """
+        Returns the Inventory component of the room, allowing access to items within it.
+        """
+        return self._components["inventory"]
+
+    def add_item(self, item: Item):
+        """
+        Adds an item to the room's inventory.
+        """
+        self.inventory.add_item(item)
+        print(f"[{self.name}] A {item.name} x{item.quantity} has appeared.")
+
+    def remove_item(self, item_name: str, quantity: int = 1) -> Item:
+        """
+        Removes an item from the room's inventory.
+
+        Args:
+            item_name: The name of the item to remove.
+            quantity: The quantity to remove (default: 1).
+
+        Returns:
+            The Item object that was removed (or a new Item object representing the quantity removed).
+            Note: For simplicity, this returns a new Item instance with the removed quantity.
+            You might want to refine this if precise object identity is crucial after removal.
+
+        Raises:
+            ItemNotFoundError: If the item is not found in the room.
+            InsufficientQuantityError: If trying to remove more than available.
+        """
+        if not self.inventory.has_component(item_name):
+            raise ItemNotFoundError(item_name)
+
+        original_item = self.inventory[item_name]
+        if quantity > original_item.quantity:
+            raise InsufficientQuantityError(item_name, quantity, original_item.quantity)
+
+        removed_item = Item(original_item.name, original_item.cost, original_item.is_usable,
+                            original_item.effect_type, original_item.effect_value)
+        removed_item.quantity = quantity
+
+        self.inventory.remove_item(item_name, quantity)
+        print(f"[{self.name}] Removed {quantity} of {item_name}.")
+
+        # --- NEW: Check for torch removal impacting _is_lit state ---
+        if item_name == "Torch" and original_item.quantity <= quantity:
+            # If the last torch is removed, ensure the room isn't considered lit by it
+            self._is_lit = False
+            print(f"[{self.name}] The light source is gone, the area grows darker.")
+        # --- END NEW ---
+
+        return removed_item
+
+    # --- NEW: Function to "use" an item in the room ---
+    def use_item_in_room(self, item_name: str, user: 'Combatant'):
+        """
+        Simulates using an item that is currently in the room.
+        This is for items that affect the room itself (like a torch).
+
+        Args:
+            item_name: The name of the item to use.
+            user: The combatant using the item (e.g., the hero).
+        Raises:
+            ItemNotFoundError: If the item is not in the room.
+            ValueError: If the item cannot be "used" in this context.
+        """
+        if not self.inventory.has_component(item_name):
+            raise ItemNotFoundError(item_name)
+
+        item_to_use = self.inventory[item_name]
+
+        if item_name == "Torch":
+            if self.name == "Dark Cave Entrance": # Only works in the dark cave for this example
+                self._is_lit = True
+                print(f"[{self.name}] {user.name} lights the Torch, illuminating a tiny area around you.")
+            else:
+                print(f"[{self.name}] Using the {item_name} here doesn't seem to have much effect.")
+        else:
+            # You can add logic for other usable items here
+            print(f"[{self.name}] You try to use the {item_name}, but nothing happens yet.")
+            raise ValueError(f"Item '{item_name}' cannot be used in this room.")
+    # --- END NEW ---
+
+    def get_description(self) -> str:
+        """
+        Returns the detailed description of the room, including its contents.
+        The description can change based on certain items present or actions taken.
+        """
+        current_description = self.description
+
+        if self.name == "Dark Cave Entrance":
+            if self._is_lit:
+                current_description = "The air is still cold, but the flickering light of the torch reveals a tiny, dusty area around you. Shadows dance at the edges of your vision."
+            elif not self.inventory.has_component("Torch"): # If no torch is physically in the room
+                current_description = "The cave entrance is now pitch black. You can barely see your hand in front of your face."
+            else: # Torch is present but not used/lit
+                current_description = "The air grows cold as you stand at the mouth of a dark, damp cave. You can dimly make out a torch lying on the ground."
+
+
+        items_in_room = self.inventory.items.values()
+        item_list_str = ""
+        if items_in_room:
+            item_list_str = "\n\nYou see here: " + ", ".join(str(item) for item in items_in_room)
+        return f"{current_description}{item_list_str}"
+
+    def __str__(self) -> str:
+        return f"Room: {self.name}"
+
+    def __repr__(self) -> str:
+        return f"Room('{self.name}', '{self.description}')"
+
+
 
 class SpellError(Exception):
     """Base exception for spell-related errors."""
@@ -225,7 +376,7 @@ class NoTargetError(SpellError):
 class Spell(CanCast):
     """Represents a magical spell that can be cast on a target."""
 
-    def __init__(self, name: str, cost: int, caster: 'RpgHero', effect: callable):
+    def __init__(self, name: str, cost: int, caster: 'BaseCharacter', effect: callable):
         """Initialize a spell with a name, mana cost, caster, and effect.
 
         Args:
@@ -556,9 +707,58 @@ class RpgHero(BaseCharacter):
         return self.components["inventory"]
 
 
+def handle_inventory_operation(operation_func, *args, **kwargs):
+    """Helper function to handle common inventory operation exceptions.
+
+    Args:
+        operation_func: The inventory operation function to execute
+        *args, **kwargs: Arguments to pass to the operation function
+
+    Returns:
+        The result of the operation function if successful, None if an exception occurred
+
+    Raises:
+        Any exceptions not caught by this handler
+    """
+    try:
+        return operation_func(*args, **kwargs)
+    except ItemNotFoundError as e:
+        print(f"Error: {e}")
+        return None
+    except InsufficientQuantityError as e:
+        print(f"Error: {e}")
+        return None
+    except ValueError as e:
+        print(f"Error: {e}")
+        return None
+    except TypeError as e:
+        print(f"Error adding item: {e}")
+        return None
+
+def handle_spell_cast(hero, spell_name, target):
+    """Helper function to handle common spell casting exceptions.
+
+    Args:
+        hero: The hero casting the spell
+        spell_name: The name of the spell to cast
+        target: The target of the spell
+
+    Returns:
+        True if the spell was cast successfully, False otherwise
+    """
+    try:
+        return hero.cast_spell(spell_name, target)
+    except RpgHero.SpellCastError as e:
+        print(f"Spell casting failed: {e}")
+    except NoTargetError as e:
+        print(f"Spell casting failed: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    return False
+
 def main():
     """Main function to demonstrate the RPG game mechanics."""
-    print("--- RPG Simulation Start ---")
+    print("Once upon a time in the land of KingBase...")
 
     # Create characters
     hero_bob = RpgHero("Bob", 1)
@@ -566,191 +766,188 @@ def main():
     goblin = Goblin("Goblin", 1)
     troll = Troll("Troll", 1)
 
-    # Demonstrate spell casting
-    print("\n--- Spell Casting Demo ---")
-    print(f"{hero_john.name} casts Magic Missile at {hero_bob.name}")
+    # --- Room Demonstration ---
+    print("\nChapter 1: The Adventure Begins")
+    starting_room = Room("Forest Clearing",
+                         "A peaceful clearing in a dense forest. Sunlight filters through the leaves.")
+    dark_cave = Room("Dark Cave Entrance", "The air grows cold as you stand at the mouth of a dark, damp cave.")
+
+    # Add items to rooms
+    starting_room.add_item(Item("Health Potion", 10, True, Effect.HEAL, 20))
+    starting_room.add_item(Item("Shiny Coin", 1, False))
+    starting_room.add_item(Item("Wooden Shield", 50, False))
+
+    # Add a torch to the dark cave
+    dark_cave.add_item(Item("Torch", 5, True))
+    dark_cave.add_item(Item("Goblin Ear", 1, False))
+
+    print(f"\nOur heroes ventured forth from the Forest Clearing and arrived at the {dark_cave.name}.")
+    print("As they peered into the darkness, this is what they saw:")
+    print(dark_cave.get_description())  # Will show "You can dimly make out a torch"
+
+    # Hero "uses" the torch in the room
+    print(f"\nBrave {hero_john.name} stepped forward and attempted to light the Torch within the {dark_cave.name}.")
     try:
-        hero_john.cast_spell("magic_missile", hero_bob)
-        print(f"{hero_bob.name}'s health is now: {hero_bob.health}")
-        print(f"{hero_john.name}'s mana is now: {hero_john.mana}")
-    except RpgHero.SpellCastError as e:
-        print(f"Spell casting failed: {e}")
-    except NoTargetError as e:
-        print(f"Spell casting failed: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+        dark_cave.use_item_in_room("Torch", hero_john)
+        print("With the torch now illuminating the cave, they could see:")
+        print(dark_cave.get_description())  # Will show the "tiny, dusty area" description
+    except ItemNotFoundError as e:
+        print(f"Failed to use item: {e}")
+    except ValueError as e:
+        print(f"Failed to use item: {e}")
+
+    # Hero picks up the torch
+    print(f"\n'We might need this later,' said {hero_john.name} as he reached for the Torch in the {dark_cave.name}.")
+    try:
+        torch = dark_cave.remove_item("Torch")
+        hero_john.inventory.add_item(torch)
+        print(f"{hero_john.name} added the torch to his belongings: {hero_john.inventory}")
+    except (ItemNotFoundError, InsufficientQuantityError) as e:
+        print(f"Failed to pick up item: {e}")
+
+    print("\nWith the torch now in John's possession, the cave returned to darkness:")
+    print(dark_cave.get_description())  # Will now show the "pitch black" description
+
+    # Demonstrate spell casting
+    print("\nChapter 2: Magical Mishaps")
+    print(f"Suddenly, {hero_john.name} lost his temper and cast Magic Missile at {hero_bob.name}!")
+    if handle_spell_cast(hero_john, "magic_missile", hero_bob):
+        print(f"{hero_bob.name} winced in pain, his health dropping to {hero_bob.health}.")
+        print(f"{hero_john.name} felt his magical energy drain to {hero_john.mana}.")
 
     # Demonstrate mana limitations
-    print(f"\n{hero_bob.name} tries to cast Fireball at {hero_john.name}")
+    print(f"\nEnraged, {hero_bob.name} attempted to retaliate with a Fireball at {hero_john.name}.")
     hero_bob.get_mana_component().consume(99)  # Simulate low mana
     try:
         hero_bob.cast_spell("fireball", hero_john)  # Should fail due to insufficient mana
     except RpgHero.InsufficientManaError as e:
-        print(f"Expected error: {e}")
-    print(f"{hero_bob.name}'s Mana is now: {hero_bob.mana}")
-    print(f"{hero_john.name}'s health is now: {hero_john.health}")
+        print(f"But alas! {e}")
+    print(f"{hero_bob.name} was exhausted, his magical reserves depleted to {hero_bob.mana}.")
+    print(f"{hero_john.name} remained standing with {hero_john.health} health, untouched by Bob's failed spell.")
 
     # Demonstrate non-existent spell
-    print(f"\n{hero_bob.name} tries to cast a non-existent spell")
+    print(f"\nIn desperation, {hero_bob.name} tried to remember a legendary spell from ancient texts...")
     try:
         hero_bob.cast_spell("super_fireball", hero_john)  # Should fail - spell doesn't exist
     except RpgHero.SpellNotFoundError as e:
-        print(f"Expected error: {e}")
+        print(f"But the words escaped him: {e}")
 
     # Demonstrate combat with enemies
-    print("\n--- Combat Demo ---")
-    print(f"{hero_john.name} casts Fireball at the {goblin.name}")
-    try:
-        hero_john.cast_spell("fireball", goblin)
-        print(f"{goblin.name}'s health is now: {goblin.health}")
-    except Exception as e:
-        print(f"Spell casting failed: {e}")
+    print("\nChapter 3: Monsters Emerge")
+    print(f"Their argument was interrupted by a snarling {goblin.name} emerging from the shadows!")
+    print(f"{hero_john.name} quickly gathered his wits and hurled a Fireball at the creature.")
+    if handle_spell_cast(hero_john, "fireball", goblin):
+        print(f"The {goblin.name} shrieked as flames engulfed it, reducing its health to {goblin.health}.")
 
-    print(f"\n{goblin.name} attacks {hero_bob.name}")
+    print(f"\nThough wounded, the {goblin.name} lunged at {hero_bob.name} with its jagged dagger!")
     goblin.attacks(hero_bob)
-    print(f"{hero_bob.name}'s health is now: {hero_bob.health}")
+    print(f"Blood trickled down {hero_bob.name}'s arm as his health fell to {hero_bob.health}.")
 
     # Demonstrate troll abilities
-    print("\n--- Troll Abilities Demo ---")
-    print(f"{hero_bob.name} uses Fireball on {troll.name}")
-    try:
-        # Restore some mana for Bob to cast the spell
-        hero_bob.get_mana_component().mana = 30
-        hero_bob.cast_spell("fireball", troll)
-        print(f"{troll.name}'s health is now: {troll.health}")
-    except RpgHero.SpellCastError as e:
-        print(f"Spell casting failed: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    print("\nChapter 4: The Troll's Lair")
+    print(f"As they ventured deeper into the cave, a massive {troll.name} blocked their path!")
+    print(f"Remembering his magical training, {hero_bob.name} summoned a Fireball against the {troll.name}.")
+    # Restore some mana for Bob to cast the spell
+    hero_bob.get_mana_component().mana = 30
+    if handle_spell_cast(hero_bob, "fireball", troll):
+        print(f"The {troll.name} roared in pain, its thick hide scorched to {troll.health} health.")
 
-    print(f"{troll.name} claws {hero_bob.name}")
+    print(f"\nThe enraged {troll.name} swung its massive claws toward {hero_bob.name}!")
     try:
         troll.attacks(hero_bob)
-        print(f"{hero_bob.name}'s health is now: {hero_bob.health}")
+        print(f"{hero_bob.name} barely dodged the full force of the blow, but his health dropped to {hero_bob.health}.")
     except ValueError as e:
         print(f"Attack failed: {e}")
 
-    print(f"{hero_john.name} casts Fireball at the {troll.name}")
-    try:
-        hero_john.cast_spell("fireball", troll)
-        print(f"{troll.name}'s health is now: {troll.health}")
-    except RpgHero.SpellCastError as e:
-        print(f"Spell casting failed: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    print(f"\n'Stand back!' shouted {hero_john.name} as he conjured another Fireball at the {troll.name}.")
+    if handle_spell_cast(hero_john, "fireball", troll):
+        print(f"The {troll.name} staggered backward, its health reduced to {troll.health}.")
 
     if troll.health < 250:
         troll.regenerate()
-        print(f"{troll.name} health is now: {troll.health}")
+        print(f"To their horror, the {troll.name}'s wounds began to close before their eyes, its health rising to {troll.health}!")
 
     # Demonstrate inventory management
-    print("\n--- Inventory Demo ---")
-    print(f"{hero_john.name} adds a Sword to inventory")
-    hero_john.inventory.add_item(Item("Sword", 10, True, Effect.DAMAGE, 10))
-    print(f"{hero_john.name}'s inventory: {hero_john.inventory}")
-    print(f"Getting 'Sword' from inventory: {hero_john.inventory['Sword']}")
-    print(f"Getting 'Pike' from inventory (should be None): {hero_john.inventory['Pike']}")
+    print("\nChapter 5: Weapons of Destiny")
+    print(f"Amidst the chaos, {hero_john.name} spotted an abandoned Sword gleaming in the corner of the cave.")
+    handle_inventory_operation(hero_john.inventory.add_item, Item("Sword", 10, True, Effect.DAMAGE, 10))
+    print(f"{hero_john.name} added the weapon to his collection: {hero_john.inventory}")
+    print(f"He examined the Sword closely: {hero_john.inventory['Sword']}")
+    print(f"He wished he had a Pike as well, but found none: {hero_john.inventory['Pike']}")
 
-    print(f"\n{hero_john.name} uses Sword on {hero_bob.name}")
+    print(f"\nStill angry about the earlier magical attack, {hero_john.name} swung his new Sword at {hero_bob.name}!")
     try:
         sword = hero_john.inventory["Sword"]
         if sword:
             sword.cast(hero_bob)
-            print(f"{hero_bob.name}'s health is now: {hero_bob.health}")
+            print(f"{hero_bob.name} stumbled backward, his health now at a dangerous {hero_bob.health}.")
         else:
-            print(f"{hero_john.name} doesn't have a Sword")
+            print(f"{hero_john.name} reached for a Sword that wasn't there.")
     except UseItemError as e:
         print(f"Item use failed: {e}")
     except Exception as e:
         print(f"Unexpected error: {e}")
 
-    print(f"\n{hero_bob.name} adds a powerful Sword to inventory")
-    try:
-        hero_bob.inventory.add_item(Item("Greatsword", 100, True, Effect.DAMAGE, 100))
-        print(f"{hero_bob.name}'s inventory: {hero_bob.inventory}")
-    except TypeError as e:
-        print(f"Error adding item: {e}")
+    print(f"\nDesperate to defend himself, {hero_bob.name} discovered an ancient Greatsword embedded in the cave wall.")
+    handle_inventory_operation(hero_bob.inventory.add_item, Item("Greatsword", 100, True, Effect.DAMAGE, 100))
+    print(f"With trembling hands, he added it to his possessions: {hero_bob.inventory}")
 
-    print(f"\n{hero_bob.name} attacks {goblin.name} with Greatsword")
+    print(f"\nWith newfound courage, {hero_bob.name} turned to face the wounded {goblin.name}, Greatsword raised high!")
     try:
         greatsword = hero_bob.inventory["Greatsword"]
         if greatsword:
             greatsword.cast(goblin)
-            print(f"{goblin.name}'s health is now: {goblin.health}")
+            print(f"The mighty blade cleaved through the {goblin.name}, leaving it with just {goblin.health} health.")
         else:
-            print(f"{hero_bob.name} doesn't have a Greatsword")
+            print(f"{hero_bob.name} reached for a weapon that wasn't there.")
     except UseItemError as e:
         print(f"Item use failed: {e}")
     except Exception as e:
         print(f"Unexpected error: {e}")
 
     # Demonstrate combat resolution and XP
-    print("\n--- Combat Resolution ---")
+    print("\nChapter 6: Victory and Growth")
     if goblin.is_alive():
-        print(f"{goblin.name} is still alive!")
+        print(f"Despite their efforts, the {goblin.name} still stood, wounded but defiant!")
     else:
-        print(f"{goblin.name} is defeated!")
+        print(f"With a final groan, the {goblin.name} collapsed to the ground, defeated!")
         hero_bob.add_xp(goblin.xp_value)
 
-    print(f"\n{hero_bob.name}'s XP is now: {hero_bob.xp}")
-    print(f"{hero_bob.name}'s level is now: {hero_bob.level}")
-    print(f"{hero_bob.name}'s mana is now: {hero_bob.mana}")
-    print(f"{hero_bob.name}'s health is now: {hero_bob.health}")
+    print(f"\n{hero_bob.name} felt stronger from the battle, his experience growing to {hero_bob.xp}.")
+    print(f"He could feel the power coursing through him as he reached level {hero_bob.level}.")
+    print(f"His magical reserves settled at {hero_bob.mana}, while his wounds left him with {hero_bob.health} health.")
 
     # Demonstrate item quantity and removal
-    print("\n--- Item Management Demo ---")
-    print(f"{hero_john.name} adds another Sword")
-    try:
-        hero_john.inventory.add_item(Item("Sword", 10, True, Effect.DAMAGE, 10))
-        print(f"{hero_john.name}'s inventory: {hero_john.inventory['Sword']}")
-    except TypeError as e:
-        print(f"Error adding item: {e}")
+    print("\nChapter 7: The Journey Continues")
+    print(f"As they prepared to leave the cave, {hero_john.name} found another Sword among the goblin's belongings.")
+    handle_inventory_operation(hero_john.inventory.add_item, Item("Sword", 10, True, Effect.DAMAGE, 10))
+    print(f"He now had {hero_john.inventory['Sword']} in his collection.")
 
-    print(f"Removing one Sword from {hero_john.name}'s inventory")
-    try:
-        hero_john.inventory.remove_item("Sword")
-        print(f"Inventory after removal: {hero_john.inventory}")
-    except ItemNotFoundError as e:
-        print(f"Error: {e}")
-    except InsufficientQuantityError as e:
-        print(f"Error: {e}")
-    except ValueError as e:
-        print(f"Error: {e}")
+    print(f"\n'This one is poorly balanced,' muttered {hero_john.name}, tossing one Sword aside.")
+    handle_inventory_operation(hero_john.inventory.remove_item, "Sword")
+    print(f"His remaining equipment: {hero_john.inventory}")
 
-    print(f"Removing the last Sword from {hero_john.name}'s inventory")
-    try:
-        hero_john.inventory.remove_item("Sword")
-        print(f"Inventory after second removal: {hero_john.inventory}")
-    except ItemNotFoundError as e:
-        print(f"Error: {e}")
-    except InsufficientQuantityError as e:
-        print(f"Error: {e}")
+    print(f"\n'The other is no better,' he sighed, discarding his last Sword.")
+    handle_inventory_operation(hero_john.inventory.remove_item, "Sword")
+    print(f"With empty hands, he surveyed what remained: {hero_john.inventory}")
 
     # Demonstrate error handling
-    print("\n--- Error Handling Demo ---")
-    print("Trying to remove a non-existent item:")
-    try:
-        hero_john.inventory.remove_item("NonExistentItem")
-    except ItemNotFoundError as e:
-        print(f"Caught exception: {e}")
+    print("\nChapter 8: Lessons Learned")
+    print(f"{hero_john.name} frantically searched his pack for his lucky charm, but it was nowhere to be found:")
+    result = handle_inventory_operation(hero_john.inventory.remove_item, "NonExistentItem")
 
-    print("\nTrying to remove an invalid quantity:")
-    try:
-        # First add an item to remove
-        hero_john.inventory.add_item(Item("HealthPotion", 5, True, Effect.HEAL, 20))
-        hero_john.inventory.remove_item("HealthPotion", -1)
-    except ValueError as e:
-        print(f"Caught exception: {e}")
+    print(f"\nBefore leaving the cave, {hero_john.name} discovered a HealthPotion and tucked it away.")
+    # First add an item to remove
+    handle_inventory_operation(hero_john.inventory.add_item, Item("HealthPotion", 5, True, Effect.HEAL, 20))
+    print(f"But when he tried to give away negative portions of the potion, strange things happened:")
+    result = handle_inventory_operation(hero_john.inventory.remove_item, "HealthPotion", -1)
 
-    print("\nTrying to remove more than available:")
-    try:
-        # Make sure we have exactly one
-        if hero_john.inventory["HealthPotion"]:
-            hero_john.inventory.remove_item("HealthPotion", 2)
-    except InsufficientQuantityError as e:
-        print(f"Caught exception: {e}")
+    print(f"\n'I need two potions for our journey,' declared {hero_john.name}, but reality had other plans:")
+    # Make sure we have exactly one
+    if hero_john.inventory["HealthPotion"]:
+        result = handle_inventory_operation(hero_john.inventory.remove_item, "HealthPotion", 2)
 
-    print("\n--- RPG Simulation End ---")
+    print("\nAnd thus, our heroes' adventure in the cave came to an end, with many lessons learned and battles won.")
 
 
 if __name__ == '__main__':
