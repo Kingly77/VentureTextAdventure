@@ -1,7 +1,7 @@
 from components.core_components import HoldComponent
 from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
 from game.items import Item
-from typing import List, Optional, Dict
+from typing import List
 from interfaces.interface import Combatant # Import Combatant
 from .room_effects import RoomEffect # Import the new RoomEffect base class
 
@@ -10,7 +10,7 @@ class Room:
     Represents a single location or area in the game world.
     A room has a description and can contain items and effects.
     """
-    def __init__(self, name: str, description: str):
+    def __init__(self, name: str, description: str , exits = None):
         if not isinstance(name, str) or not name.strip():
             raise ValueError("Room name must be a non-empty string.")
         if not isinstance(description, str) or not description.strip():
@@ -21,6 +21,7 @@ class Room:
         self._components = HoldComponent()
         self._components.add_component("inventory", Inventory())
         self.effects: List[RoomEffect] = [] # List to hold RoomEffect instances
+        self.exits_to = exits
 
     @property
     def inventory(self) -> Inventory:

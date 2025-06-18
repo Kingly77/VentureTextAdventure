@@ -1,3 +1,4 @@
+from __future__ import annotations
 from character.enemy import Goblin, Troll
 from character.hero import RpgHero
 from components.core_components import Effect
@@ -17,11 +18,15 @@ def main():
     goblin = Goblin("Goblin", 1)
     troll = Troll("Troll", 1)
 
+
     # --- Room Demonstration ---
     print("\nChapter 1: The Adventure Begins")
     starting_room = Room("Forest Clearing",
-                         "A peaceful clearing in a dense forest. Sunlight filters through the leaves.")
-    dark_cave = Room("Dark Cave Entrance", "The air grows cold as you stand at the mouth of a dark, damp cave.")
+                         "A peaceful clearing in a dense forest. Sunlight filters through the leaves." , exits={})
+    dark_cave = Room("Dark Cave Entrance", "The air grows cold as you stand at the mouth of a dark, damp cave.",exits={})
+
+    starting_room.exits_to["north"] = dark_cave
+    dark_cave.exits_to["south"] = starting_room
 
     # Add items to rooms
     starting_room.add_item(Item("Health Potion", 10, True, Effect.HEAL, 20))
@@ -32,6 +37,12 @@ def main():
     dark_cave.add_item(Item("Torch", 5, True))
     dark_cave.add_item(Item("Goblin Ear", 1, False))
     dark_cave.add_effect(DarkCaveLightingEffect(dark_cave))
+
+    if not dark_cave in starting_room.exits_to.values():
+        print("Error: Dark cave not added to starting room.")
+        return
+
+    print(f"\nOur heroes looking at a map seeing the {dark_cave.name} to the north of the forest, they decided to venture towards the {dark_cave.name}")
 
     print(f"\nOur heroes ventured forth from the Forest Clearing and arrived at the {dark_cave.name}.")
     print("As they peered into the darkness, this is what they saw:")
