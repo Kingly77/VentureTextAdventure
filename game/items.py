@@ -7,7 +7,6 @@ class UseItemError(Exception):
         super().__init__("Item cannot be used.")
 
 
-
 class Item(CanCast): # Inherit from CanCast
     def __init__(self, name: str, cost: int, is_usable: bool = False, effect: Effect = Effect.NONE, effect_value: int = 0, is_consumable: bool = False):
         self.name = name

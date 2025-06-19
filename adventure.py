@@ -72,17 +72,18 @@ def main_game_loop():
             exits_str = ", ".join(current_room.exits_to.keys())
             print(f"\nExits: {exits_str}")
 
-        # Check for goblin encounter
-        if current_room == goblin_lair and not goblin_defeated:
-            print(f"\nA snarling {goblin_foe.name} blocks your path!")
-            if handle_combat(hero, goblin_foe):
-                goblin_defeated = True
-                print("You can now explore the lair freely.")
+        if len(current_room.combatants) > 0:
+            print(f"\n{current_room.combatants[0].name} is here!")
+            if handle_combat(hero, current_room.combatants[0]):
+                beat = current_room.combatants.pop(0)
+                print(f"you defeated {beat.name}.")
                 # Add a "Goblin Ear" item to the hero's inventory after defeat
-                handle_inventory_operation(hero.inventory.add_item, Item("Goblin Ear", 1,False))
-                print(f"{hero.name} collected a trophy: a Goblin Ear!")
+                if hasattr(beat,"reward"):
+                    handle_inventory_operation(hero.inventory.add_item, beat.reward)
+                    print(f"{hero.name} collected a trophy: {beat.reward.name} x{beat.reward.quantity}!")
             else:
-                game_over = True # Hero defeated
+                game_over = True
+
 
         if game_over:
             print("\nGame Over! Thanks for playing.")

@@ -9,7 +9,7 @@ class Goblin(BaseCharacter):
     """Goblin enemy class."""
     def __init__(self, name: str, level: int):
         """Initialize a goblin with default attributes."""
-        super().__init__(name, level, base_health=100, xp_value=100)
+        super().__init__(name, level, base_health=1, xp_value=100)
         self.components["inventory"].add_item(Item("sword", 0, True, effect=Effect.DAMAGE, effect_value=10))
 
     @property

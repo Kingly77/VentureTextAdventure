@@ -1,4 +1,5 @@
 from character.hero import RpgHero
+from interfaces.interface import Combatant
 from components.core_components import HoldComponent
 from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
 from game.items import Item
@@ -23,6 +24,7 @@ class Room:
         self._components.add_component("inventory", Inventory())
         self.effects: List[RoomEffect] = [] # List to hold RoomEffect instances
         self.exits_to = exits if exits else {}
+        self._combatants = []
 
 
     def add_exit(self, direction: str, target_room: 'Room'):
@@ -54,6 +56,15 @@ class Room:
         # Create the exit from the other room back to the current room (self)
         other_room.add_exit(direction_from_other, self)
 
+    @property
+    def combatants(self) -> List[Combatant]:
+        return self._combatants
+
+    @combatants.setter
+    def combatants(self, value: Combatant):
+        if not isinstance(value, Combatant):
+            raise TypeError("Only Combatant instances can be added to a room.")
+        self._combatants.append(value)
 
     @property
     def inventory(self) -> Inventory:

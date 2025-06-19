@@ -4,6 +4,7 @@ from components.core_components import Effect
 from game.items import Item
 from game.room import Room
 from game.room_effects import DarkCaveLightingEffect
+from game.util import handle_inventory_operation
 
 
 def _initialize_game_world():
@@ -32,6 +33,9 @@ def _initialize_game_world():
 
     # 6. Place Enemies
     goblin_foe = Goblin("Goblin Grunt", 1)
+    goblin_foe.reward = Item("Goblin Ear", 1,False)
+    goblin_foe.reward.quantity = 1
+    goblins_lair.combatants = goblin_foe
     # The goblin isn't "in the room's inventory," but is a separate entity that exists in the room
     # We might add a list of NPCs/monsters to the Room class, or simply manage it in the game state.
     # For now, let's return it with the rooms and hero.
