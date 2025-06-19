@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 
+
 class QuestLog:
     def __init__(self):
         self.active_quests = {}
@@ -12,10 +13,10 @@ class QuestLog:
     def add_quest(self, title:str, quest:'Quest'):
         self.active_quests[title] = quest
 
-    def complete_quest(self, quest):
+    def complete_quest(self, quest, who:'RpgHero'):
         if quest in self.active_quests.keys():
             q = self.active_quests[quest]
-            if q.complete():
+            if q.complete(who):
                 self.completed_quests.append(q.name)
                 del self.active_quests[quest]
             else:

@@ -158,9 +158,6 @@ class RpgHero(BaseCharacter):
         """Get the hero's inventory."""
         return self.components["inventory"]
 
-    def completed_quest(self):
-        """Mark a quest as completed."""
-        self.quest_log.completed_quest()
 
     def use_item(self, item_name: str, target=None):
         """Use an item from the hero's inventory.

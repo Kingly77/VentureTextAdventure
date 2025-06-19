@@ -114,7 +114,7 @@ def main_game_loop():
                 print(f"Quest Completed: {quest}")
 
         elif action == "turn-in":
-            hero.quest_log.complete_quest(arg)
+            hero.quest_log.complete_quest(arg,hero)
 
         elif action == "inventory":
             print(hero.inventory)

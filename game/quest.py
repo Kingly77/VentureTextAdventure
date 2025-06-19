@@ -16,7 +16,6 @@ class Quest:
         self.name = name
         self.description = description
         self.reward = reward
-        self.who:RpgHero = who
         self.objective = objective
 
     def __str__(self):
@@ -25,14 +24,14 @@ class Quest:
     def __repr__(self):
         return f"Quest('{self.id}', '{self.name}', '{self.description}', reward={self.reward})"
 
-    def complete(self):
+    def complete(self,who:RpgHero):
         if self.objective.type == "collect":
-            if self.who.inventory.has_component(self.objective.target):
-                if self.who.inventory[self.objective.target].quantity <= self.objective.value:
-                    self.who.inventory.remove_item(self.objective.target, self.objective.value)
-                    self.who.add_xp(self.reward)
+            if who.inventory.has_component(self.objective.target):
+                if who.inventory[self.objective.target].quantity >= self.objective.value:
+                    who.inventory.remove_item(self.objective.target, self.objective.value)
+                    who.add_xp(self.reward)
                     print(f"Quest complete: {self.description}")
-                    print(f"You earned {self.reward} experience points. and have {self.who.xp} total experience points")
+                    print(f"You earned {self.reward} experience points. and have {who.xp} Remaining experience points")
                     return True
 
         return False
