@@ -64,3 +64,30 @@ class DarkCaveLightingEffect(RoomDiscEffect):
             print(f"[{self.room.name}] The light source is gone, the area grows darker.")
 
 
+
+
+class BashDoorEffect(RoomDiscEffect):
+
+
+    def __init__(self, room: 'Room'):
+        super().__init__(room)
+        self.door_is_open = False
+        self._this_room = room
+
+
+    def get_modified_description(self, base_description: str) -> str:
+        if self.door_is_open:
+            return base_description + "\n\nThe door is open and a giant bashing sound is heard."
+        else:
+            return base_description + "\n\nThe door is locked."
+
+
+    def handle_item_use(self, item_name: str, user: 'Combatant') -> bool:
+        if item_name.lower() == "sword":
+            print(f"[{self.room.name}] The door swings open, and a giant bashing sound is heard.")
+            self.door_is_open = True
+            for exits in self._this_room.exits_to.values():
+                if exits.name == "Foyer":
+                    exits.is_locked = False
+                    return True
+        return False

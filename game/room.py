@@ -24,6 +24,7 @@ class Room:
         self._components.add_component("inventory", Inventory())
         self.effects: List[RoomDiscEffect] = [] # List to hold RoomEffect instances
         self.exits_to = exits if exits else {}
+        self.is_locked = False
         self._combatants = []
 
 
