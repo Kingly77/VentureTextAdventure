@@ -1,4 +1,3 @@
-# In main.py
 from character.enemy import Goblin
 from character.hero import RpgHero
 from components.inventory import ItemNotFoundError
@@ -31,7 +30,7 @@ def handle_combat(hero: RpgHero, enemy: Goblin):
             continue # Let player try again
 
         if enemy.is_alive():
-            enemy.attacks(hero)
+            enemy.attack(hero)
             print(f"{enemy.name} retaliates! {hero.name}'s health is now {hero.health}.")
 
     if hero.is_alive():
@@ -71,7 +70,7 @@ def main_game_loop():
                 goblin_defeated = True
                 print("You can now explore the lair freely.")
                 # Add a "Goblin Ear" item to the hero's inventory after defeat
-                hero.inventory.add_item(Item("Goblin Ear", 1, False))
+                handle_inventory_operation(hero.inventory.add_item, Item("Goblin Ear", 1,False))
                 print(f"{hero.name} collected a trophy: a Goblin Ear!")
             else:
                 game_over = True # Hero defeated
@@ -171,10 +170,8 @@ def main_game_loop():
             else:
                 try:
                     if current_room.inventory.has_component(arg):
-                        #item = current_room.remove_item(arg)
                         item = handle_inventory_operation(current_room.remove_item, arg)
                         handle_inventory_operation(hero.inventory.add_item, item)
-                        #hero.inventory.add_item(item)
                         print(f"You took the {arg}.")
                     else:
                         print(f"There is no {arg} here to take.")
@@ -186,20 +183,12 @@ def main_game_loop():
             else:
                 try:
                     if hero.inventory.has_component(arg):
-                        item = hero.inventory[arg]
                         quantity = 1  # Default to dropping 1
-
-                        # Create a new item with the same properties but quantity of 1
-                        dropped_item = Item(item.name, item.cost, item.is_usable, 
-                                           item.effect_type, item.effect_value)
-                        dropped_item.quantity = quantity
-
                         # Remove from hero's inventory
-                        hero.inventory.remove_item(arg, quantity)
-
+                        dropped_item = handle_inventory_operation(hero.inventory.remove_item, arg,quantity)
                         # Add to room
-                        current_room.add_item(dropped_item)
-                        print(f"You dropped the {arg}.")
+                        handle_inventory_operation(current_room.add_item, dropped_item)
+                        print(f"You dropped the {dropped_item.name} with quantity {dropped_item.quantity} in the {current_room.name}.")
                     else:
                         print(f"You don't have a {arg} to drop.")
                 except Exception as e:

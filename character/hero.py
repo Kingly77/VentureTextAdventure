@@ -28,7 +28,6 @@ class RpgHero(BaseCharacter):
         self.components.add_component("mana", Mana(self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL))
         self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(25)))
         self.components.add_component("magic_missile", Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)))
-        self.components.add_component("inventory", Inventory())
         self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
         self.components["inventory"].add_item(self._equipped)
         print(
@@ -180,7 +179,8 @@ class RpgHero(BaseCharacter):
             print(f"{self.name} used {item_name} on {target.name if hasattr(target, 'name') else 'self'}.")
 
             # Remove one use of the item
-            self.inventory.remove_item(item_name.lower(), 1)
+            if item.is_consumable:
+                self.inventory.remove_item(item_name.lower(), 1)
             return True
         except Exception as e:
             print(f"Error using {item_name}: {e}")

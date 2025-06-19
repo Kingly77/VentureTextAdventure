@@ -45,7 +45,7 @@ class Inventory:
         else:
             self.items[item.name] = item
 
-    def remove_item(self, item_name: str, quantity: int = 1):
+    def remove_item(self, item_name: str, quantity: int = 1) -> Item:
         """Removes a specified quantity of an item from the inventory.
 
         Args:
@@ -72,11 +72,18 @@ class Inventory:
             raise InsufficientQuantityError(item_name, quantity, current_item.quantity)
 
         current_item -= quantity
+
+        removed_item = Item(current_item.name, current_item.cost, current_item.is_usable,
+                            current_item.effect_type, current_item.effect_value, current_item.is_consumable)
+        removed_item.quantity = quantity
+
         if current_item.quantity <= 0:
             print(f"Item '{item_name}' removed entirely from inventory.")
             del self.items[item_name]
         else:
             print(f"Removed {quantity} of {item_name}. Remaining: {current_item.quantity}")
+        return removed_item
+
 
     def __getitem__(self, item_name: str) -> Item | None:
         """Allows dictionary-like access to retrieve an item.

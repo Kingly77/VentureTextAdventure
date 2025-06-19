@@ -76,7 +76,7 @@ class Room:
             raise InsufficientQuantityError(item_name, quantity, original_item.quantity)
 
         removed_item = Item(original_item.name, original_item.cost, original_item.is_usable,
-                            original_item.effect_type, original_item.effect_value)
+                            original_item.effect_type, original_item.effect_value, original_item.is_consumable)
         removed_item.quantity = quantity
 
         self.inventory.remove_item(item_name, quantity)
@@ -115,7 +115,7 @@ class Room:
                 # Item successfully used by a room effect
                 handled_by_effect = True
                 # Remove the item if it was used (consumable)
-                if user.inventory.has_component(item_name):
+                if user.inventory.has_component(item_name) and user.inventory[item_name].is_consumable:
                     user.inventory.remove_item(item_name, 1)
                 break
 

@@ -1,5 +1,7 @@
 from character.basecharacter import BaseCharacter
+from components import inventory
 from components.core_components import Effect
+from components.inventory import Inventory
 from game.items import Item
 from game.magic import Spell
 from interfaces.interface import Combatant
@@ -10,19 +12,17 @@ class Goblin(BaseCharacter):
     def __init__(self, name: str, level: int):
         """Initialize a goblin with default attributes."""
         super().__init__(name, level, base_health=100, xp_value=100)
-        self.components.add_component("sword", Item("Rusty Sword", 25, True, effect=Effect.DAMAGE, effect_value=10))
+        self.components["inventory"].add_item(Item("sword", 0, True, effect=Effect.DAMAGE, effect_value=10))
 
     @property
     def sword(self) -> Item:
         """Returns the goblin's sword item."""
-        return self.components["sword"]
+        return self.components["inventory"]["sword"]
 
-    def attacks(self, target: Combatant):
+    def attack(self, target: Combatant, weapon_name: str = "sword"):
         """Goblin attacks a target with its sword."""
-        try:
-            self.attack(target, "sword")
-        except ValueError as e:
-            print(str(e))
+        super().attack(target, weapon_name)
+
 
 class Troll(BaseCharacter):
     """Troll enemy class with regeneration ability."""

@@ -25,10 +25,10 @@ def _initialize_game_world():
     dark_cave_entrance.add_effect(dark_cave_effect)
 
     # 5. Populate Rooms with Items
-    forest_clearing.add_item(Item("health potion", 10, True, Effect.HEAL, 20))
-    dark_cave_entrance.add_item(Item("torch", 5, True)) # Essential for the cave!
-    goblins_lair.add_item(Item("shiny coin", 1, False))
-    goblins_lair.add_item(Item("rusty dagger", 5, True, Effect.DAMAGE, 5))
+    forest_clearing.add_item(Item("health potion", 10, True, Effect.HEAL, 20,is_consumable=True))
+    dark_cave_entrance.add_item(Item("torch", 5, True,is_consumable=False)) # Essential for the cave!
+    goblins_lair.add_item(Item("shiny coin", 1, False , is_consumable=True))
+    goblins_lair.add_item(Item("rusty dagger", 5, True, Effect.DAMAGE, 5,is_consumable=False))
 
     # 6. Place Enemies
     goblin_foe = Goblin("Goblin Grunt", 1)

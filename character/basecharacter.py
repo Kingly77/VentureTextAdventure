@@ -1,4 +1,5 @@
 from components.core_components import HoldComponent, Health
+from components.inventory import Inventory
 from interfaces.interface import Combatant
 
 
@@ -18,6 +19,7 @@ class BaseCharacter(Combatant):
         self.xp_value = xp_value
         self.components = HoldComponent()
         self.components.add_component("health", Health(base_health))
+        self.components.add_component("inventory", Inventory())
 
     def get_health_component(self) -> Health:
         """Get the health component of the character."""
@@ -44,14 +46,17 @@ class BaseCharacter(Combatant):
     def max_health(self, value: int):
         """Set the maximum health value."""
         self.get_health_component().max_health = value
-
+    @property
+    def inventory(self) -> Inventory:
+        """Get the character's inventory."""
+        return self.components["inventory"]
 
     @property
     def health(self) -> int:
         """Get the current health value."""
         return self.get_health_component().health
 
-    def attack(self, target: Combatant, weapon_name: str):
+    def attack(self, target: Combatant, weapon_name: str = "fists"):
         """Generic attack method using a specified weapon component.
 
         Args:
@@ -64,7 +69,7 @@ class BaseCharacter(Combatant):
         if target is None:
             raise ValueError(f"{self.name} tried to attack, but no target was provided.")
 
-        if not self.components.has_component(weapon_name):
+        if not self.inventory.has_component(weapon_name):
             raise ValueError(f"{self.name} doesn't have a {weapon_name} to attack with.")
 
-        self.components[weapon_name].cast(target)
+        self.inventory[weapon_name].cast(target)
