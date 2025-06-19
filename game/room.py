@@ -68,7 +68,6 @@ class Room:
         print(f"[{self.name}] A {item.name} x{item.quantity} has appeared.")
 
     def remove_item(self, item_name: str, quantity: int = 1) -> Item:
-        # ... (existing remove_item logic) ...
         if not self.inventory.has_component(item_name):
             raise ItemNotFoundError(item_name)
 

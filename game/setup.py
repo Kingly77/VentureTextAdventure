@@ -37,3 +37,7 @@ def _initialize_game_world():
     # For now, let's return it with the rooms and hero.
 
     return hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe
+
+def setup_game():
+    hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe = _initialize_game_world()
+    return hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe

@@ -3,8 +3,8 @@ from character.enemy import Goblin
 from character.hero import RpgHero
 from components.inventory import ItemNotFoundError
 from game.items import Item, UseItemError
-from game.setup import _initialize_game_world
-from game.util import handle_spell_cast, handle_inventory_operation
+from game.setup import setup_game
+from game.util import handle_spell_cast,handle_item_use,handle_inventory_operation
 
 
 def handle_combat(hero: RpgHero, enemy: Goblin):
@@ -44,7 +44,7 @@ def handle_combat(hero: RpgHero, enemy: Goblin):
         return False # Combat lost
 
 def main_game_loop():
-    hero, forest, cave, goblin_lair, goblin_foe = _initialize_game_world()
+    hero, forest, cave, goblin_lair, goblin_foe = setup_game()
     current_room = forest # Start in the forest
 
     print("\n" + "="*50)
@@ -125,8 +125,7 @@ def main_game_loop():
                     # If the player specified "on room" or "in room", try room context usage
                     if target_str in ["room", "the room", "this room"]:
                         try:
-                            current_room.use_item_in_room(item_name, hero)
-                            print(f"{hero.name} used {item_name} in the {current_room.name}.")
+                            handle_item_use(hero, item_name, room=current_room)
                             # Item removal is handled by the room effect
                         except ValueError as e:
                             print(f"{e}")
@@ -138,8 +137,7 @@ def main_game_loop():
 
                         # Use item on hero
                         old_health = hero.health
-                        item.cast(hero)  # Apply effect to hero
-                        hero.inventory.remove_item(item_name, 1)  # Consume one use
+                        handle_item_use(hero, item_name)
 
                         print(f"{hero.name} used {item_name} on {hero.name}.")
 
@@ -173,8 +171,10 @@ def main_game_loop():
             else:
                 try:
                     if current_room.inventory.has_component(arg):
-                        item = current_room.remove_item(arg)
-                        hero.inventory.add_item(item)
+                        #item = current_room.remove_item(arg)
+                        item = handle_inventory_operation(current_room.remove_item, arg)
+                        handle_inventory_operation(hero.inventory.add_item, item)
+                        #hero.inventory.add_item(item)
                         print(f"You took the {arg}.")
                     else:
                         print(f"There is no {arg} here to take.")

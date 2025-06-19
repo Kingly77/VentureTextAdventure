@@ -1,9 +1,9 @@
 from character.basecharacter import BaseCharacter
 from components.core_components import Mana, Effect
-from components.inventory import Inventory
+from components.inventory import Inventory, ItemNotFoundError
 from game.magic import Spell, NoTargetError
 from interfaces.interface import Combatant
-from game.items import Item
+from game.items import Item, UseItemError
 
 
 class RpgHero(BaseCharacter):

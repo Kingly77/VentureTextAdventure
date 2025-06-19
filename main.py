@@ -29,13 +29,13 @@ def main():
     dark_cave.exits_to["south"] = starting_room
 
     # Add items to rooms
-    starting_room.add_item(Item("Health Potion", 10, True, Effect.HEAL, 20))
-    starting_room.add_item(Item("Shiny Coin", 1, False))
-    starting_room.add_item(Item("Wooden Shield", 50, False))
+    starting_room.add_item(Item("health potion", 10, True, Effect.HEAL, 20))
+    starting_room.add_item(Item("shiny coin", 1, False))
+    starting_room.add_item(Item("wooden shield", 50, False))
 
     # Add a torch to the dark cave
-    dark_cave.add_item(Item("Torch", 5, True))
-    dark_cave.add_item(Item("Goblin Ear", 1, False))
+    dark_cave.add_item(Item("torch", 5, True))
+    dark_cave.add_item(Item("goblin ear", 1, False))
     dark_cave.add_effect(DarkCaveLightingEffect(dark_cave))
 
     if not dark_cave in starting_room.exits_to.values():
@@ -51,6 +51,7 @@ def main():
     # Hero "uses" the torch in the room
     print(f"\nBrave {hero_john.name} stepped forward and attempted to light the Torch within the {dark_cave.name}.")
     try:
+        hero_john.inventory.add_item(dark_cave.inventory["torch"])
         dark_cave.use_item_in_room("Torch", hero_john)
         print("With the torch now illuminating the cave, they could see:")
         print(dark_cave.get_description())  # Will show the "tiny, dusty area" description
