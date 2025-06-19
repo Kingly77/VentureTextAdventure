@@ -42,7 +42,7 @@ class DarkCaveLightingEffect(RoomEffect):
         """
         if self._is_lit:
             return "The air is still cold, but the flickering light of the torch reveals a tiny, dusty area around you. Shadows dance at the edges of your vision."
-        elif not self.room.inventory.has_component("Torch"):
+        elif not self.room.inventory.has_component("torch"):
             return "The cave entrance is now pitch black. You can barely see your hand in front of your face."
         else: # Torch is present but not used/lit
             return base_description # Revert to original if not lit but torch is there
@@ -51,7 +51,7 @@ class DarkCaveLightingEffect(RoomEffect):
         """
         Handles torch usage in the dark cave.
         """
-        if item_name == "Torch":
+        if item_name == "torch":
             self._is_lit = True
             print(f"[{self.room.name}] {user.name} lights the Torch, illuminating a tiny area around you.")
             return True # This effect handled the item use
@@ -59,6 +59,6 @@ class DarkCaveLightingEffect(RoomEffect):
 
     def on_item_removed(self, item_name: str):
         """Called when an item is removed from the room, to update state."""
-        if item_name == "Torch" and not self.room.inventory.has_component("Torch"):
+        if item_name == "torch" and not self.room.inventory.has_component("Torch"):
             self._is_lit = False
             print(f"[{self.room.name}] The light source is gone, the area grows darker.")

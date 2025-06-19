@@ -1,9 +1,10 @@
+from character.hero import RpgHero
 from components.core_components import HoldComponent
 from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
 from game.items import Item
 from typing import List
 from interfaces.interface import Combatant # Import Combatant
-from .room_effects import RoomEffect # Import the new RoomEffect base class
+from game.room_effects import RoomEffect # Import the new RoomEffect base class
 
 class Room:
     """
@@ -21,7 +22,38 @@ class Room:
         self._components = HoldComponent()
         self._components.add_component("inventory", Inventory())
         self.effects: List[RoomEffect] = [] # List to hold RoomEffect instances
-        self.exits_to = exits
+        self.exits_to = exits if exits else {}
+
+
+    def add_exit(self, direction: str, target_room: 'Room'):
+        """Adds a ONE-WAY exit from THIS room to a TARGET room."""
+        if not isinstance(direction, str) or not direction.strip():
+            raise ValueError("Exit direction must be a non-empty string.")
+        if not isinstance(target_room, Room):
+            raise TypeError("Target room must be a Room instance.")
+        self.exits_to[direction] = target_room
+
+    def link_rooms(self, direction_from_self: str, other_room: 'Room', direction_from_other: str):
+        """
+        Links two rooms bidirectionally.
+
+        Args:
+            direction_from_self: The direction to go from THIS room to the OTHER room (e.g., "north").
+            other_room: The other Room instance to link to.
+            direction_from_other: The direction to go from the OTHER room back to THIS room (e.g., "south").
+
+        Example:
+            forest_clearing.link_rooms("north", dark_cave, "south")
+            This means:
+            - From forest_clearing, going "north" leads to dark_cave.
+            - From dark_cave, going "south" leads back to forest_clearing.
+        """
+        # Create the exit from the current room (self) to the other room
+        self.add_exit(direction_from_self, other_room)
+
+        # Create the exit from the other room back to the current room (self)
+        other_room.add_exit(direction_from_other, self)
+
 
     @property
     def inventory(self) -> Inventory:
@@ -58,11 +90,11 @@ class Room:
 
         return removed_item
 
-    def use_item_in_room(self, item_name: str, user: 'Combatant'):
+    def use_item_in_room(self, item_name: str, user: 'RpgHero'):
         """
         Delegates item usage to attached RoomEffects.
         """
-        if not self.inventory.has_component(item_name):
+        if not user.inventory.has_component(item_name) or self.inventory.has_component(item_name):
             raise ItemNotFoundError(item_name)
 
         handled_by_effect = False

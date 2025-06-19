@@ -1,8 +1,9 @@
 from character.basecharacter import BaseCharacter
-from components.core_components import Mana
+from components.core_components import Mana, Effect
 from components.inventory import Inventory
 from game.magic import Spell, NoTargetError
 from interfaces.interface import Combatant
+from game.items import Item
 
 
 class RpgHero(BaseCharacter):
@@ -25,9 +26,16 @@ class RpgHero(BaseCharacter):
 
         # Add hero-specific components
         self.components.add_component("mana", Mana(self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL))
-        self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(10)))
-        self.components.add_component("magic_missile", Spell("Magic Missile", 5, self, lambda target: target.take_damage(1)))
+        self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(25)))
+        self.components.add_component("magic_missile", Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)))
         self.components.add_component("inventory", Inventory())
+        self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
+        self.components["inventory"].add_item(self._equipped)
+        print(
+            f"{self.name} is a level {self.level} hero with {self.xp} XP, "
+            f"{self.mana} mana, and {self.components['inventory']["fists"]} in their inventory."
+        )
+
 
     def _calculate_xp_to_next_level(self) -> int:
         """Calculates the XP required for the next level."""
@@ -46,8 +54,8 @@ class RpgHero(BaseCharacter):
         self.xp -= self.xp_to_next_level
         self.level += 1
         self.xp_to_next_level = self._calculate_xp_to_next_level()
-        self.components["mana"].mana = self.BASE_MANA + self.level * self.MANA_PER_LEVEL
-        self.components["health"].health = self.BASE_HEALTH + self.level * self.HEALTH_PER_LEVEL
+        self.components["mana"].max_mana = self.BASE_MANA + (self.level - 1) * self.MANA_PER_LEVEL
+        self.components["health"].max_health = self.BASE_HEALTH + (self.level - 1) * self.HEALTH_PER_LEVEL
         print(f"{self.name} leveled up to level {self.level}!")
 
     def get_mana_component(self) -> Mana:
@@ -126,6 +134,12 @@ class RpgHero(BaseCharacter):
             # Handle any other exceptions from the spell cast
             print(f"Error occurred while casting {spell_name}: {e}")
             raise
+
+    @property
+    def max_mana(self) -> int:
+        """Get the maximum mana value."""
+        return self.get_mana_component().max_mana
+
 
     @property
     def mana(self) -> int:

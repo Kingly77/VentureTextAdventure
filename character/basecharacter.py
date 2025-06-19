@@ -36,6 +36,17 @@ class BaseCharacter(Combatant):
         return self.get_health_component().health > 0
 
     @property
+    def max_health(self) -> int:
+        """Get the maximum health value."""
+        return self.get_health_component().max_health
+
+    @max_health.setter
+    def max_health(self, value: int):
+        """Set the maximum health value."""
+        self.get_health_component().max_health = value
+
+
+    @property
     def health(self) -> int:
         """Get the current health value."""
         return self.get_health_component().health
