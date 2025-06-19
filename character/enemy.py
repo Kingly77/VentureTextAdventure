@@ -1,7 +1,5 @@
 from character.basecharacter import BaseCharacter
-from components import inventory
 from components.core_components import Effect
-from components.inventory import Inventory
 from game.items import Item
 from game.magic import Spell
 from interfaces.interface import Combatant

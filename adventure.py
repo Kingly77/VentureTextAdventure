@@ -16,10 +16,19 @@ def handle_combat(hero: RpgHero, enemy: Goblin):
         print(f"\n{hero.name} Health: {hero.health}/{hero.max_health} | Mana: {hero.mana}/{hero.max_mana}")
         print(f"{enemy.name} Health: {enemy.health}/{enemy.max_health}")
 
-        action = input("What will you do? (attack, cast [spell_name]): ").lower().strip()
+        command = input("What will you do? (attack, cast [spell_name]): ").lower().strip()
+        action = command.split(' ', 1)[0] if ' ' in command else command
+        arg = command.split(' ', 1)[1] if ' ' in command else ""
 
         if action == "attack":
-            hero.attack(enemy)
+            if not arg:
+                hero.attack(enemy)
+            else:
+                try:
+                    hero.attack(enemy,arg)
+                except ValueError as e:
+                    print(f"{e}")
+                    continue
             print(f"{hero.name} attacks {enemy.name}! {enemy.name}'s health is now {enemy.health}.")
         elif action.startswith("cast "):
             spell_name = action[5:].strip()

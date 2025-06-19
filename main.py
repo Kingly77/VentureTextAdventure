@@ -104,7 +104,7 @@ def main():
         print(f"The {goblin.name} shrieked as flames engulfed it, reducing its health to {goblin.health}.")
 
     print(f"\nThough wounded, the {goblin.name} lunged at {hero_bob.name} with its jagged dagger!")
-    goblin.attacks(hero_bob)
+    goblin.attack(hero_bob)
     print(f"Blood trickled down {hero_bob.name}'s arm as his health fell to {hero_bob.health}.")
 
     # Demonstrate troll abilities
