@@ -5,7 +5,7 @@ from components.core_components import Effect
 from components.inventory import ItemNotFoundError, InsufficientQuantityError
 from game.items import Item, UseItemError
 from game.room import Room
-from game.util import handle_inventory_operation, handle_spell_cast
+from game.util import handle_inventory_operation, handle_spell_cast, handle_item_use
 from game.room_effects import DarkCaveLightingEffect
 
 def main():
@@ -179,6 +179,26 @@ def main():
     print(f"\n{hero_bob.name} felt stronger from the battle, his experience growing to {hero_bob.xp}.")
     print(f"He could feel the power coursing through him as he reached level {hero_bob.level}.")
     print(f"His magical reserves settled at {hero_bob.mana}, while his wounds left him with {hero_bob.health} health.")
+
+    # Demonstrate using items on self vs. in room
+    print("\nChapter 6.5: The Healing and the Light")
+
+    # Give Bob a health potion and demonstrate using it on self
+    hero_bob.inventory.add_item(Item("Health Potion", 10, True, Effect.HEAL, 20))
+    print(f"{hero_bob.name} found a Health Potion and decides to use it on himself.")
+    if handle_item_use(hero_bob, "Health Potion"):
+        print(f"{hero_bob.name}'s wounds begin to close, his health rising to {hero_bob.health}!")
+
+    # Have John use his torch in the dark cave
+    print(f"\nReturning to the {dark_cave.name}, {hero_john.name} decides to light his torch.")
+    if handle_item_use(hero_john, "Torch", room=dark_cave):
+        print(f"The {dark_cave.name} is now illuminated! They can see:")
+        print(dark_cave.get_description())
+
+    # Try to use the torch in the forest (should fail)
+    print(f"\nBack in the {starting_room.name}, {hero_john.name} tries to use the torch again.")
+    if not handle_item_use(hero_john, "Torch", room=starting_room):
+        print(f"The bright sunlight makes the torch unnecessary here.")
 
     # Demonstrate item quantity and removal
     print("\nChapter 7: The Journey Continues")

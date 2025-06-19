@@ -2,7 +2,7 @@
 from character.enemy import Goblin
 from character.hero import RpgHero
 from components.inventory import ItemNotFoundError
-from game.items import Item
+from game.items import Item, UseItemError
 from game.setup import _initialize_game_world
 from game.util import handle_spell_cast, handle_inventory_operation
 
@@ -101,31 +101,70 @@ def main_game_loop():
         elif action == "inventory":
             print(hero.inventory)
         elif action == "use":
+            if not arg:
+                print("What do you want to use?")
+                continue
+
+            # Split argument into item name and target (if provided)
+            # Support both "use X on Y" and "use X in Y" patterns
+            if " on " in arg:
+                parts = arg.split(" on ", 1)
+            elif " in " in arg:
+                parts = arg.split(" in ", 1)
+            else:
+                parts = [arg]
+
+            item_name = parts[0].strip().lower()
+            target_str = parts[1].strip().lower() if len(parts) > 1 else None
+
             try:
                 # First, check if the item is in the hero's inventory
-                if hero.inventory.has_component(arg):
-                    item_to_use = hero.inventory[arg]
-                    # If it's a "usable" item affecting the hero
-                    try:
-                        current_room.use_item_in_room(item_to_use.name, hero)
-                    except ValueError:
-                        print(f"{item_to_use.name} is not usable in this room.")
-                    if item_to_use.is_usable:
-                        # For simplicity, assume all usable items from inventory are "cast" by hero
-                        # In a real game, you'd have more specific logic for potions vs weapons
-                        item_to_use.cast(hero) # Example: Health Potion, applies effect to hero
-                        handle_inventory_operation(hero.inventory.remove_item, arg) # Consume item
-                        print(f"{hero.name} used {arg}.")
-                        print(f"{hero.name}'s health is now {hero.health}, mana is {hero.mana}.")
+                if hero.inventory.has_component(item_name):
+                    item = hero.inventory[item_name]
+
+                    # If the player specified "on room" or "in room", try room context usage
+                    if target_str in ["room", "the room", "this room"]:
+                        try:
+                            current_room.use_item_in_room(item_name, hero)
+                            print(f"{hero.name} used {item_name} in the {current_room.name}.")
+                            # Item removal is handled by the room effect
+                        except ValueError as e:
+                            print(f"{e}")
+                    # If it's a usable item but no specific target, use on self by default
+                    elif target_str is None or target_str in ["self", "me", "myself", hero.name.lower()]:
+                        if not item.is_usable:
+                            print(f"The {item_name} cannot be used on yourself.")
+                            continue
+
+                        # Use item on hero
+                        old_health = hero.health
+                        item.cast(hero)  # Apply effect to hero
+                        hero.inventory.remove_item(item_name, 1)  # Consume one use
+
+                        print(f"{hero.name} used {item_name} on {hero.name}.")
+
+                        # Display effect based on what happened
+                        if hero.health > old_health:
+                            print(f"You feel refreshed! Health increased to {hero.health}.")
+                        elif hero.health < old_health:
+                            print(f"Ouch! That hurt. Health decreased to {hero.health}.")
                     else:
-                        print(f"You can't 'use' the {arg} from your inventory in that way.")
-                # Second, try to use the item if it's IN THE ROOM (like a Torch)
-                elif current_room.inventory.has_component(arg):
-                    current_room.use_item_in_room(arg, hero)
+                        print(f"You don't see '{target_str}' to use the {item_name} on.")
+
+                # If item is in the room, try to use it directly
+                elif current_room.inventory.has_component(item_name):
+                    try:
+                        current_room.use_item_in_room(item_name, hero)
+                        print(f"{hero.name} used the {item_name} in the {current_room.name}.")
+                    except Exception as e:
+                        print(f"Failed to use {item_name}: {e}")
                 else:
-                    print(f"You don't see or have a '{arg}'.")
-            except (ItemNotFoundError, ValueError) as e:
-                print(f"Failed to use item: {e}")
+                    print(f"You don't see or have a '{item_name}'.")
+
+            except ItemNotFoundError as e:
+                print(f"Item not found: {e}")
+            except UseItemError as e:
+                print(f"Cannot use this item: {e}")
             except Exception as e:
                 print(f"An unexpected error occurred: {e}")
         elif action in ["take", "get"]:
@@ -199,7 +238,9 @@ def main_game_loop():
             print("  inventory - Check your inventory")
             print("  take/get [item] - Pick up an item")
             print("  drop [item] - Drop an item")
-            print("  use [item] - Use an item")
+            print("  use [item] - Use an item on yourself")
+            print("  use [item] on room - Use an item in the current room")
+            print("  use [item] on [target] - Use an item on a specific target")
             print("  examine [item] - Examine an item in detail")
             print("  quit - Exit the game")
         elif action == "quit":

@@ -51,9 +51,9 @@ class DarkCaveLightingEffect(RoomEffect):
         """
         Handles torch usage in the dark cave.
         """
-        if item_name == "torch":
+        if item_name.lower() == "torch":
             self._is_lit = True
-            print(f"[{self.room.name}] {user.name} lights the Torch, illuminating a tiny area around you.")
+            print(f"[{self.room.name}] {user.name} lights the torch, illuminating a tiny area around you.")
             return True # This effect handled the item use
         return False
 

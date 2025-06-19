@@ -150,3 +150,38 @@ class RpgHero(BaseCharacter):
     def inventory(self) -> Inventory:
         """Get the hero's inventory."""
         return self.components["inventory"]
+
+    def use_item(self, item_name: str, target=None):
+        """Use an item from the hero's inventory.
+
+        Args:
+            item_name: The name of the item to use
+            target: Optional target for the item (defaults to self)
+
+        Raises:
+            ItemNotFoundError: If the item is not in the inventory
+            UseItemError: If the item cannot be used
+        """
+        if not self.inventory.has_component(item_name.lower()):
+            raise ItemNotFoundError(item_name)
+
+        item = self.inventory[item_name.lower()]
+        if not item.is_usable:
+            print(f"{item_name} cannot be used.")
+            raise UseItemError()
+
+        # Default target is self if none provided
+        if target is None:
+            target = self
+
+        # Use the item on the target
+        try:
+            item.cast(target)
+            print(f"{self.name} used {item_name} on {target.name if hasattr(target, 'name') else 'self'}.")
+
+            # Remove one use of the item
+            self.inventory.remove_item(item_name.lower(), 1)
+            return True
+        except Exception as e:
+            print(f"Error using {item_name}: {e}")
+            raise

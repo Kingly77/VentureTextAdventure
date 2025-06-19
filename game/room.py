@@ -92,21 +92,38 @@ class Room:
 
     def use_item_in_room(self, item_name: str, user: 'RpgHero'):
         """
-        Delegates item usage to attached RoomEffects.
+        Tries to use an item from hero's inventory within the room context.
+        This could be items that affect the room (like a torch or key).
+
+        Args:
+            item_name: The name of the item to use
+            user: The hero using the item
+
+        Raises:
+            ItemNotFoundError: If the item is not in the inventory
+            ValueError: If the item cannot be used in this room
         """
-        if not user.inventory.has_component(item_name) or self.inventory.has_component(item_name):
+        # Check if the item is in the hero's inventory
+        item_name = item_name.lower()  # Normalize for case-insensitive comparison
+
+        if not user.inventory.has_component(item_name):
             raise ItemNotFoundError(item_name)
 
+        # Try to let room effects handle the item usage
         handled_by_effect = False
         for effect in self.effects:
             if effect.handle_item_use(item_name, user):
+                # Item successfully used by a room effect
                 handled_by_effect = True
-                break # Assume only one effect can "handle" a specific item use
+                # Remove the item if it was used (consumable)
+                if user.inventory.has_component(item_name):
+                    user.inventory.remove_item(item_name, 1)
+                break
 
         if not handled_by_effect:
-            # If no specific effect handled it, maybe a generic message or error
-            print(f"[{self.name}] You try to use the {item_name}, but nothing happens here.")
-            raise ValueError(f"Item '{item_name}' cannot be used in this room.")
+            # If no specific effect handled it
+            print(f"[{self.name}] {user.name} tries to use the {item_name}, but nothing special happens in this room.")
+            raise ValueError(f"Item '{item_name}' cannot be used in this particular room.")
 
 
     def get_description(self) -> str:
