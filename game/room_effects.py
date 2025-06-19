@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from game.room import Room
     from interfaces.interface import Combatant # Assuming Combatant is in interfaces/interface.py
 
-class RoomEffect(ABC):
+class RoomDiscEffect(ABC):
     """
     Abstract base class for effects that can modify a Room's description
     or behavior.
@@ -28,7 +28,7 @@ class RoomEffect(ABC):
         return False # By default, effects don't handle item use
 
 
-class DarkCaveLightingEffect(RoomEffect):
+class DarkCaveLightingEffect(RoomDiscEffect):
     """
     Handles dynamic descriptions and torch usage specifically for a dark cave.
     """
@@ -59,6 +59,8 @@ class DarkCaveLightingEffect(RoomEffect):
 
     def on_item_removed(self, item_name: str):
         """Called when an item is removed from the room, to update state."""
-        if item_name == "torch" and not self.room.inventory.has_component("Torch"):
+        if item_name == "torch" and not self.room.inventory.has_component("torch"):
             self._is_lit = False
             print(f"[{self.room.name}] The light source is gone, the area grows darker.")
+
+

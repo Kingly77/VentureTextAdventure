@@ -5,7 +5,7 @@ from components.inventory import Inventory, InsufficientQuantityError, ItemNotFo
 from game.items import Item
 from typing import List
 from interfaces.interface import Combatant # Import Combatant
-from game.room_effects import RoomEffect # Import the new RoomEffect base class
+from game.room_effects import RoomDiscEffect # Import the new RoomEffect base class
 
 class Room:
     """
@@ -22,7 +22,7 @@ class Room:
         self.base_description = description # Store original description
         self._components = HoldComponent()
         self._components.add_component("inventory", Inventory())
-        self.effects: List[RoomEffect] = [] # List to hold RoomEffect instances
+        self.effects: List[RoomDiscEffect] = [] # List to hold RoomEffect instances
         self.exits_to = exits if exits else {}
         self._combatants = []
 
@@ -70,7 +70,7 @@ class Room:
     def inventory(self) -> Inventory:
         return self._components["inventory"]
 
-    def add_effect(self, effect: RoomEffect):
+    def add_effect(self, effect: RoomDiscEffect):
         """Adds a RoomEffect to this room."""
         self.effects.append(effect)
 

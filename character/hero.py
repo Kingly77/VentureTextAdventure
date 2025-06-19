@@ -29,10 +29,10 @@ class RpgHero(BaseCharacter):
         self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(25)))
         self.components.add_component("magic_missile", Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)))
         self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
-        self.components["inventory"].add_item(self._equipped)
+        self.inventory.add_item(self._equipped)
         print(
             f"{self.name} is a level {self.level} hero with {self.xp} XP, "
-            f"{self.mana} mana, and {self.components['inventory']["fists"]} in their inventory."
+            f"{self.mana} mana, and {self.inventory["fists"]} in their inventory."
         )
 
 
@@ -53,8 +53,8 @@ class RpgHero(BaseCharacter):
         self.xp -= self.xp_to_next_level
         self.level += 1
         self.xp_to_next_level = self._calculate_xp_to_next_level()
-        self.components["mana"].max_mana = self.BASE_MANA + (self.level - 1) * self.MANA_PER_LEVEL
-        self.components["health"].max_health = self.BASE_HEALTH + (self.level - 1) * self.HEALTH_PER_LEVEL
+        self.get_mana_component().max_mana = self.BASE_MANA + (self.level - 1) * self.MANA_PER_LEVEL
+        self.get_health_component().max_health = self.BASE_HEALTH + (self.level - 1) * self.HEALTH_PER_LEVEL
         print(f"{self.name} leveled up to level {self.level}!")
 
     def get_mana_component(self) -> Mana:

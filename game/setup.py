@@ -14,11 +14,15 @@ def _initialize_game_world():
 
     # 2. Create Rooms
     forest_clearing = Room("Forest Clearing", "A peaceful clearing in a dense forest. Sunlight filters through the leaves.")
+    manor = Room("Manor", "A small manor with a large garden. The air is warm and the sun shines brightly.")
     dark_cave_entrance = Room("Dark Cave Entrance", "The air grows cold as you stand at the mouth of a dark, damp cave.")
     goblins_lair = Room("Goblin's Lair", "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.")
 
+
+
     # 3. Link Rooms
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
+    forest_clearing.link_rooms("east", manor, "west")
     dark_cave_entrance.link_rooms("east", goblins_lair, "west") # Hidden path
 
     # 4. Apply Room Effects
@@ -26,6 +30,7 @@ def _initialize_game_world():
     dark_cave_entrance.add_effect(dark_cave_effect)
 
     # 5. Populate Rooms with Items
+    manor.add_item(Item("sword", 10, True, Effect.DAMAGE, 10,is_consumable=False))
     forest_clearing.add_item(Item("health potion", 10, True, Effect.HEAL, 20,is_consumable=True))
     dark_cave_entrance.add_item(Item("torch", 5, True,is_consumable=False)) # Essential for the cave!
     goblins_lair.add_item(Item("shiny coin", 1, False , is_consumable=True))
@@ -36,9 +41,6 @@ def _initialize_game_world():
     goblin_foe.reward = Item("Goblin Ear", 1,False)
     goblin_foe.reward.quantity = 1
     goblins_lair.combatants = goblin_foe
-    # The goblin isn't "in the room's inventory," but is a separate entity that exists in the room
-    # We might add a list of NPCs/monsters to the Room class, or simply manage it in the game state.
-    # For now, let's return it with the rooms and hero.
 
     return hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe
 
