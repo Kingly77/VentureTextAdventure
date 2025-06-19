@@ -1,6 +1,7 @@
 from character.basecharacter import BaseCharacter
 from components.core_components import Mana, Effect
 from components.inventory import Inventory, ItemNotFoundError
+from components.quest_log import QuestLog
 from game.magic import Spell, NoTargetError
 from interfaces.interface import Combatant
 from game.items import Item, UseItemError
@@ -28,6 +29,7 @@ class RpgHero(BaseCharacter):
         self.components.add_component("mana", Mana(self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL))
         self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(25)))
         self.components.add_component("magic_missile", Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)))
+        self.components.add_component("quests",QuestLog())
         self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
         self.inventory.add_item(self._equipped)
         print(
@@ -35,6 +37,8 @@ class RpgHero(BaseCharacter):
             f"{self.mana} mana, and {self.inventory["fists"]} in their inventory."
         )
 
+    def __str__(self):
+        return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
 
     def _calculate_xp_to_next_level(self) -> int:
         """Calculates the XP required for the next level."""
@@ -139,6 +143,10 @@ class RpgHero(BaseCharacter):
         """Get the maximum mana value."""
         return self.get_mana_component().max_mana
 
+    @property
+    def quest_log(self) -> QuestLog:
+        """Get the hero's quest log."""
+        return self.components["quests"]
 
     @property
     def mana(self) -> int:
@@ -149,6 +157,10 @@ class RpgHero(BaseCharacter):
     def inventory(self) -> Inventory:
         """Get the hero's inventory."""
         return self.components["inventory"]
+
+    def completed_quest(self):
+        """Mark a quest as completed."""
+        self.quest_log.completed_quest()
 
     def use_item(self, item_name: str, target=None):
         """Use an item from the hero's inventory.

@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from character.enemy import Goblin
 from character.hero import RpgHero
 from components.inventory import ItemNotFoundError
-from game.items import Item, UseItemError
+from game.items import UseItemError
 from game.setup import setup_game
 from game.util import handle_spell_cast,handle_item_use,handle_inventory_operation
 
@@ -104,11 +106,19 @@ def main_game_loop():
         elif action == "look":
             # Already printed at the top of the loop, but good for explicit command
             print(current_room.get_description())
-        elif action == "equip":
-            hero.equip_item(arg)
+        elif action == "status":
+            print(hero)
+            for quest in hero.quest_log.active_quests.values():
+                print(f"Quest: {quest.name} - {quest.description} (ID {quest.id})")
+            for quest in hero.quest_log.completed_quests:
+                print(f"Quest Completed: {quest}")
+
+        elif action == "turn-in":
+            hero.quest_log.complete_quest(arg)
 
         elif action == "inventory":
             print(hero.inventory)
+
         elif action == "use":
             if not arg:
                 print("What do you want to use?")
@@ -240,6 +250,8 @@ def main_game_loop():
             print("  use [item] - Use an item on yourself")
             print("  use [item] on room - Use an item in the current room")
             print("  use [item] on [target] - Use an item on a specific target")
+            print("  status - Check your status")
+            print("  turn-in [quest id] - Complete a quest")
             print("  examine [item] - Examine an item in detail")
             print("  quit - Exit the game")
         elif action == "quit":
