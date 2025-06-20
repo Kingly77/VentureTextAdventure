@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-
+import asyncio
 from character.enemy import Goblin
 from character.hero import RpgHero
 from game.setup import setup_game
@@ -53,8 +53,9 @@ def handle_combat(hero: RpgHero, enemy: Goblin):
         return False # Combat lost
 
 
+
 def main_game_loop():
-    hero, forest, cave, goblin_lair, goblin_foe = setup_game()
+    hero, forest = setup_game()
     current_room = forest # Start in the forest
 
     COMMANDS = {
@@ -99,8 +100,7 @@ def main_game_loop():
             print("\nGame Over! Thanks for playing.")
             break
 
-        command = input("\nWhat will you do? ").lower().strip().split(' ', 1) # Split into command and argument
-
+        command = input ("\nWhat will you do? ").lower().strip().split(' ', 1)
         action = command[0]
         arg = command[1] if len(command) > 1 else ""
 

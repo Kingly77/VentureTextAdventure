@@ -49,8 +49,8 @@ def _initialize_game_world():
     goblin_foe.reward.quantity = 1
     goblins_lair.combatants = goblin_foe
 
-    return hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe
+    return hero, forest_clearing
 
 def setup_game():
-    hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe = _initialize_game_world()
-    return hero, forest_clearing, dark_cave_entrance, goblins_lair, goblin_foe
+    hero, forest_clearing = _initialize_game_world()
+    return hero, forest_clearing
