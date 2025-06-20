@@ -2,10 +2,8 @@ from typing import TYPE_CHECKING
 
 from character.enemy import Goblin
 from character.hero import RpgHero
-from components.inventory import ItemNotFoundError
-from game.items import UseItemError
 from game.setup import setup_game
-from game.util import handle_spell_cast,handle_item_use,handle_inventory_operation
+from game.util import handle_spell_cast,handle_inventory_operation
 from commands.command import help_command, use_command
 
 

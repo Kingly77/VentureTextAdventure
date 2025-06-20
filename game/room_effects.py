@@ -68,7 +68,6 @@ class DarkCaveLightingEffect(RoomDiscEffect):
 
 class BashDoorEffect(RoomDiscEffect):
 
-
     def __init__(self, room: 'Room'):
         super().__init__(room)
         self.door_is_open = False
