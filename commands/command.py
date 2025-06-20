@@ -3,21 +3,24 @@ from game.items import UseItemError
 from game.util import handle_item_use, handle_inventory_operation
 
 
-def help_command():
-    print("\nAvailable commands:")
-    print("  go [direction] - Move in a direction (north, south, east, west)")
-    print("  look - Look around the room")
-    print("  inventory - Check your inventory")
-    print("  take/get [item] - Pick up an item")
-    print("  drop [item] - Drop an item")
-    print("  use [item] - Use an item on yourself")
-    print("  use [item] on room - Use an item in the current room")
-    print("  use [item] on [target] - Use an item on a specific target")
-    print("  status - Check your status")
-    print("  turn-in [quest id] - Complete a quest")
-    print("  examine [item] - Examine an item in detail")
-    print("  quit - Exit the game")
+HELP_TEXT = """
+Available commands:
+  go [direction] - Move in a direction (north, south, east, west)
+  look - Look around the room
+  inventory - Check your inventory
+  take/get [item] - Pick up an item
+  drop [item] - Drop an item
+  use [item] - Use an item on yourself
+  use [item] on room - Use an item in the current room
+  use [item] on [target] - Use an item on a specific target
+  status - Check your status
+  turn-in [quest id] - Complete a quest
+  examine [item] - Examine an item in detail
+  quit - Exit the game
+"""
 
+def help_command(*_, **__):
+    print(HELP_TEXT)
 
 def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'Room'):
     if not arg:
@@ -71,8 +74,6 @@ def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'R
 
     except Exception as e:
         print(f"An error occurred: {e}")
-
-
 
 
 
