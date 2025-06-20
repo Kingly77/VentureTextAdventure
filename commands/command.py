@@ -1,6 +1,6 @@
 from components.inventory import ItemNotFoundError
 from game.items import UseItemError
-from game.util import handle_item_use
+from game.util import handle_item_use, handle_inventory_operation
 
 
 def help_command():
@@ -19,7 +19,64 @@ def help_command():
     print("  quit - Exit the game")
 
 
-def use_command(arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
+def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'Room'):
+    if not arg:
+        print(f"What do you want to {action}?")
+        return
+    room_inv = current_room.inventory
+    hero_inv = hero.inventory
+    # Check hero's inventory first
+    hero_has_item = hero_inv.has_component(arg)
+    try:
+        if action in ["take", "get"]:
+            if room_inv.has_component(arg):
+                item = handle_inventory_operation(current_room.remove_item, arg)
+                handle_inventory_operation( hero_inv.add_item, item)
+                print(f"You took the {arg}.")
+            else:
+                print(f"There is no {arg} here to take.")
+
+        elif action == "drop" and hero_has_item:
+            quantity = 1  # Default to dropping 1
+            # Remove from hero's inventory
+            dropped_item = handle_inventory_operation(hero_inv.remove_item, arg, quantity)
+            handle_inventory_operation(current_room.add_item, dropped_item)
+            print(
+                f"You dropped the {dropped_item.name} with quantity {dropped_item.quantity} in the {current_room.name}.")
+
+        elif action == "examine":
+            item:'Item' = None
+            if hero_has_item:
+                item = hero_inv[arg]
+            elif room_inv.has_component(arg):
+                item = room_inv[arg]
+            else:
+                print(f"There is no {item.name} here to examine.")
+                return
+
+            print(f"You examine the {item.name}:")
+            print(f"  Quantity: {item.quantity}")
+            print(f"  Value: {item.cost} gold")
+            if item.is_usable:
+                effect_desc = "No effect"
+                if item.effect_type.name == "HEAL":
+                    effect_desc = f"Heals for {item.effect_value} health"
+                elif item.effect_type.name == "DAMAGE":
+                    effect_desc = f"Deals {item.effect_value} damage"
+                print(f"  Effect: {effect_desc}")
+            # Then check room inventory
+
+        elif not hero_has_item:
+            print(f"You don't have a {arg} to {action}.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+
+
+
+def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
     if not arg:
         print("What do you want to use?")
         return

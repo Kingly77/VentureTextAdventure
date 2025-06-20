@@ -4,7 +4,7 @@ from character.enemy import Goblin
 from character.hero import RpgHero
 from game.setup import setup_game
 from game.util import handle_spell_cast,handle_inventory_operation
-from commands.command import help_command, use_command
+from commands.command import help_command, use_command, handle_inventory_command
 
 
 def handle_combat(hero: RpgHero, enemy: Goblin):
@@ -52,9 +52,19 @@ def handle_combat(hero: RpgHero, enemy: Goblin):
         print(f"\n{hero.name} has been defeated by {enemy.name}...")
         return False # Combat lost
 
+
 def main_game_loop():
     hero, forest, cave, goblin_lair, goblin_foe = setup_game()
     current_room = forest # Start in the forest
+
+    COMMANDS = {
+                "use":use_command,
+                "take": handle_inventory_command,
+                "get": handle_inventory_command,
+                "drop":handle_inventory_command,
+                "examine":handle_inventory_command,
+                "help":help_command,
+                }
 
     print("\n" + "="*50)
     print("THE QUEST FOR THE GOBLIN EAR")
@@ -89,10 +99,15 @@ def main_game_loop():
             print("\nGame Over! Thanks for playing.")
             break
 
+
         command = input("\nWhat will you do? ").lower().strip().split(' ', 1) # Split into command and argument
 
         action = command[0]
         arg = command[1] if len(command) > 1 else ""
+
+        if action in COMMANDS:
+            COMMANDS[action](action,arg,hero,current_room)
+            continue
 
         if action == "go":
             next_room = current_room.exits_to.get(arg)
@@ -118,64 +133,68 @@ def main_game_loop():
             print(hero.inventory)
 
         elif action == "use":
-           use_command(arg,hero,current_room)
+            use_command(arg,hero,current_room)
 
-        elif action in ["take", "get"]:
-            if not arg:
-                print("What do you want to take?")
-            else:
-                try:
-                    if current_room.inventory.has_component(arg):
-                        item = handle_inventory_operation(current_room.remove_item, arg)
-                        handle_inventory_operation(hero.inventory.add_item, item)
-                        print(f"You took the {arg}.")
-                    else:
-                        print(f"There is no {arg} here to take.")
-                except Exception as e:
-                    print(f"Failed to take item: {e}")
-        elif action == "drop":
-            if not arg:
-                print("What do you want to drop?")
-            else:
-                try:
-                    if hero.inventory.has_component(arg):
-                        quantity = 1  # Default to dropping 1
-                        # Remove from hero's inventory
-                        dropped_item = handle_inventory_operation(hero.inventory.remove_item, arg,quantity)
-                        # Add to room
-                        handle_inventory_operation(current_room.add_item, dropped_item)
-                        print(f"You dropped the {dropped_item.name} with quantity {dropped_item.quantity} in the {current_room.name}.")
-                    else:
-                        print(f"You don't have a {arg} to drop.")
-                except Exception as e:
-                    print(f"Failed to drop item: {e}")
-        elif action == "examine":
-            if not arg:
-                print("What do you want to examine?")
-            else:
-                # Check hero's inventory first
-                if hero.inventory.has_component(arg):
-                    item = hero.inventory[arg]
-                    print(f"You examine the {item.name}:")
-                    print(f"  Quantity: {item.quantity}")
-                    print(f"  Value: {item.cost} gold")
-                    if item.is_usable:
-                        effect_desc = "No effect"
-                        if item.effect_type.name == "HEAL":
-                            effect_desc = f"Heals for {item.effect_value} health"
-                        elif item.effect_type.name == "DAMAGE":
-                            effect_desc = f"Deals {item.effect_value} damage"
-                        print(f"  Effect: {effect_desc}")
-                # Then check room inventory
-                elif current_room.inventory.has_component(arg):
-                    item = current_room.inventory[arg]
-                    print(f"You examine the {item.name}:")
-                    print(f"  Quantity: {item.quantity}")
-                    print(f"  It looks like it's worth about {item.cost} gold.")
-                    if item.is_usable:
-                        print("  It looks like you could use this item.")
-                else:
-                    print(f"You don't see a {arg} here.")
+
+
+        # elif action in ["take", "get"]:
+        #     if not arg:
+        #         print("What do you want to take?")
+        #     else:
+        #         try:
+        #             if current_room.inventory.has_component(arg):
+        #                 item = handle_inventory_operation(current_room.remove_item, arg)
+        #                 handle_inventory_operation(hero.inventory.add_item, item)
+        #                 print(f"You took the {arg}.")
+        #             else:
+        #                 print(f"There is no {arg} here to take.")
+        #         except Exception as e:
+        #             print(f"Failed to take item: {e}")
+        # elif action == "drop":
+        #     if not arg:
+        #         print("What do you want to drop?")
+        #     else:
+        #         try:
+        #             if hero.inventory.has_component(arg):
+        #                 quantity = 1  # Default to dropping 1
+        #                 # Remove from hero's inventory
+        #                 dropped_item = handle_inventory_operation(hero.inventory.remove_item, arg,quantity)
+        #                 # Add to room
+        #                 handle_inventory_operation(current_room.add_item, dropped_item)
+        #                 print(f"You dropped the {dropped_item.name} with quantity {dropped_item.quantity} in the {current_room.name}.")
+        #             else:
+        #                 print(f"You don't have a {arg} to drop.")
+        #         except Exception as e:
+        #             print(f"Failed to drop item: {e}")
+        #
+        #
+        # elif action == "examine":
+        #     if not arg:
+        #         print("What do you want to examine?")
+        #     else:
+        #         # Check hero's inventory first
+        #         if hero.inventory.has_component(arg):
+        #             item = hero.inventory[arg]
+        #             print(f"You examine the {item.name}:")
+        #             print(f"  Quantity: {item.quantity}")
+        #             print(f"  Value: {item.cost} gold")
+        #             if item.is_usable:
+        #                 effect_desc = "No effect"
+        #                 if item.effect_type.name == "HEAL":
+        #                     effect_desc = f"Heals for {item.effect_value} health"
+        #                 elif item.effect_type.name == "DAMAGE":
+        #                     effect_desc = f"Deals {item.effect_value} damage"
+        #                 print(f"  Effect: {effect_desc}")
+        #         # Then check room inventory
+        #         elif current_room.inventory.has_component(arg):
+        #             item = current_room.inventory[arg]
+        #             print(f"You examine the {item.name}:")
+        #             print(f"  Quantity: {item.quantity}")
+        #             print(f"  It looks like it's worth about {item.cost} gold.")
+        #             if item.is_usable:
+        #                 print("  It looks like you could use this item.")
+        #         else:
+        #             print(f"You don't see a {arg} here.")
         elif action == "help":
             help_command()
         elif action == "quit":
