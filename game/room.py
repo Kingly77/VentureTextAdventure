@@ -85,6 +85,16 @@ class Room:
         # Create the exit from the other room back to the current room (self)
         other_room.add_exit(direction_from_other, self)
 
+
+    def add_object(self, room_object: RoomObject):
+        """Adds an object to this room."""
+        if not isinstance(room_object, RoomObject):
+            raise TypeError("Only RoomObject instances can be added to a room.")
+        if room_object.name in self.objects:
+            raise ValueError(f"Object '{room_object.name}' is already added to this room.")
+
+        self.objects[room_object.name] = room_object
+
     @property
     def combatants(self) -> List[Combatant]:
         return self._combatants
@@ -122,9 +132,9 @@ class Room:
         self.inventory.remove_item(item_name, quantity)
         print(f"[{self.name}] Removed {quantity} of {item_name}.")
 
-        # Notify effects about item removal
+        # Notify effects of item removal
         for effect in self.effects:
-            if hasattr(effect, 'on_item_removed'): # Check if effect has this method
+            if hasattr(effect, 'on_item_removed'): # Check if the effect has this method
                 effect.on_item_removed(item_name) # Call the method
 
         return removed_item
@@ -132,7 +142,7 @@ class Room:
     def use_item_in_room(self, item_name: str, user: 'RpgHero'):
         """
         Tries to use an item from hero's inventory within the room context.
-        This could be items that affect the room (like a torch or key).
+        These could be items that affect the room (like a torch or key).
 
         Args:
             item_name: The name of the item to use
@@ -179,16 +189,28 @@ class Room:
     def get_description(self) -> str:
         """
         Applies all active room effects to the base description.
+        Also includes descriptions of items and objects in the room.
         """
         current_description = self.base_description
         for effect in self.effects:
             current_description = effect.get_modified_description(current_description)
 
+        # Add information about items in the room
         items_in_room = self.inventory.items.values()
         item_list_str = ""
         if items_in_room:
             item_list_str = "\n\nYou see here: " + ", ".join(str(item) for item in items_in_room)
-        return f"{current_description}{item_list_str}"
+        
+        # Add information about objects in the room
+        objects_in_room = self.objects.values()
+        object_list_str = ""
+        if objects_in_room:
+            object_descriptions = []
+            for obj in objects_in_room:
+                object_descriptions.append(f"{obj.name}: {obj.description}")
+            object_list_str = "\n\nObjects in the room:\n" + "\n".join(object_descriptions)
+        
+        return f"{current_description}{item_list_str}{object_list_str}"
 
     def __str__(self) -> str:
         return f"Room: {self.name}"

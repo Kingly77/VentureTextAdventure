@@ -29,16 +29,17 @@ class _Event:
         """
         self.events = defaultdict(list)
 
-    def add_event(self, name, handler):
+    def add_event(self, name, handler,one_time=False):
         """
         Register a function to be called when an event with the given name is triggered.
         
         Args:
             name (str): The name of the event to register for
             handler (callable): The functor to call when the event is triggered
+            :param one_time: if true, the handler will be removed after being called
 
         """
-        self.events[name].append(handler)
+        self.events[name].append((handler,one_time))
 
     def remove_event(self, name, handler):
         """
@@ -48,7 +49,6 @@ class _Event:
             name (str): The name of the event to remove from
             handler (callable): The functor to remove
 
-            
         Note:
             Both the function and its arguments must match exactly what was registered.
         """
@@ -70,11 +70,27 @@ class _Event:
             name (str): The name of the event to trigger
             *args: The arguments to pass to each registered function
         """
+
         if name in self.events:
-            for funct in self.events[name]:
+            handlers_to_remove = []
+
+            for index, (funct,one_time) in enumerate(self.events[name]):
                 funct(*args, **kwargs)
+                if one_time:
+                    handlers_to_remove.append(index)
+
+            for index in sorted(handlers_to_remove, reverse=True):
+                self.events[name].pop(index)
+
+                # Clean up empty event lists
+            if not self.events[name]:
+                del self.events[name]
+
         else:
-            print(f"Event '{name}' not found.")
+            raise ValueError("attempt to trigger a non-existent event")
+
+
+
 
 
 Events = _Event()
