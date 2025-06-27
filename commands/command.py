@@ -111,18 +111,18 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
                 if not item.is_usable:
                     print(f"The {item_name} cannot be used on yourself.")
                     return
-
                 # Use item on hero
                 old_health = hero.health
                 handle_item_use(hero, item_name)
-
                 print(f"{hero.name} used {item_name} on {hero.name}.")
-
                 # Display effect based on what happened
                 if hero.health > old_health:
                     print(f"You feel refreshed! Health increased to {hero.health}.")
                 elif hero.health < old_health:
                     print(f"Ouch! That hurt. Health decreased to {hero.health}.")
+            elif target_str in current_room.objects:
+                # Use item on target in room
+                handle_item_use(hero, item_name, room=current_room)
             else:
                 print(f"You don't see '{target_str}' to use the {item_name} on.")
 

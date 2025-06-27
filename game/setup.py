@@ -3,7 +3,7 @@ from character.hero import RpgHero
 from components.core_components import Effect
 from game.items import Item
 from game.quest import Quest, Objective
-from game.room import Room
+from game.room import Room, RoomObject
 from game.room_effects import DarkCaveLightingEffect, BashDoorEffect
 from game.util import handle_inventory_operation
 
@@ -17,7 +17,7 @@ def _initialize_game_world():
     print(f"Welcome, {hero.name}, to the world of KingBase!")
 
     # 2. Create Rooms
-    forest_clearing = Room("Forest Clearing", "A peaceful clearing in a dense forest. Sunlight filters through the leaves.")
+    forest_clearing = Room("Forest Clearing", "A peaceful clearing in a dense forest. Sunlight filters through the leaves, and a stone table stands before you.")
     manor = Room("Manor", "A small manor with a large garden. The air is warm and the sun shines brightly.")
     foyer = Room("Foyer", "A cozy foyer with a large table and chair. There is a large glass door to the east.")
     dark_cave_entrance = Room("Dark Cave Entrance", "The air grows cold as you stand at the mouth of a dark, damp cave.")
@@ -31,10 +31,13 @@ def _initialize_game_world():
     dark_cave_entrance.link_rooms("east", goblins_lair, "west") # Hidden path
     manor.link_rooms("north", foyer, "south")
 
+    forest_table = RoomObject("table", "A large Stone table with a small wooden chair sitting on top.")
+    forest_table.add_interaction("torch", lambda val_hero: "You light the torch and lite the table center with a flash of light.")
     # 4. Apply Room Effects
     dark_cave_effect = DarkCaveLightingEffect(dark_cave_entrance)
     dark_cave_entrance.add_effect(dark_cave_effect)
     manor.add_effect(BashDoorEffect(manor))
+    forest_clearing.objects["table"] = forest_table
 
     # 5. Populate Rooms with Items
     manor.add_item(Item("sword", 10, True, Effect.DAMAGE, 10,is_consumable=False))

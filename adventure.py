@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-import asyncio
 from character.enemy import Goblin
 from character.hero import RpgHero
 from game.setup import setup_game

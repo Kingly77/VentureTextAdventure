@@ -1,11 +1,38 @@
-from character.hero import RpgHero
-from interfaces.interface import Combatant
 from components.core_components import HoldComponent
 from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
 from game.items import Item
-from typing import List
+from typing import List, Callable, Dict
 from interfaces.interface import Combatant # Import Combatant
 from game.room_effects import RoomDiscEffect # Import the new RoomEffect base class
+
+class RoomObject:
+    """Represents an interactive object within a room (e.g., a door, a chest, a lever)."""
+    def __init__(self, name: str, description: str):
+        self.name = name.lower()
+        self.description = description
+        # A dictionary where keys are item names, and values are functions
+        # to execute when that item is used on this object.
+        self.interaction_events: Dict[str, Callable[['RpgHero'], str]] = {}
+        self.is_locked: bool = False # Example property for a door can be customized
+
+    def add_interaction(self, item_name: str, event_function: Callable[['RpgHero'], str]):
+        """
+        Adds an event that triggers when a specific item is used on this object.
+        The event_function should take the RpgHero as an argument and return a message.
+        """
+        self.interaction_events[item_name.lower()] = event_function
+
+    def use_item_on_object(self, item_name: str, user: 'RpgHero') -> str:
+        """
+        Attempts to use an item on this specific room object.
+        Returns a message about the outcome.
+        """
+        item_name_lower = item_name.lower()
+        if item_name_lower in self.interaction_events:
+            return self.interaction_events[item_name_lower](user)
+        return f"Using {item_name} has no effect on the {self.name}."
+
+
 
 class Room:
     """
@@ -23,6 +50,7 @@ class Room:
         self._components = HoldComponent()
         self._components.add_component("inventory", Inventory())
         self.effects: List[RoomDiscEffect] = [] # List to hold RoomEffect instances
+        self.objects: Dict[str, RoomObject] = {}
         self.exits_to = exits if exits else {}
         self.is_locked = False
         self._combatants = []
@@ -119,6 +147,17 @@ class Room:
 
         if not user.inventory.has_component(item_name):
             raise ItemNotFoundError(item_name)
+
+        for obj_name, room_object in self.objects.items():
+            if item_name in room_object.interaction_events:
+                # If the item has a specific interaction with this object,
+                # execute it and potentially consume the item.
+                message = room_object.use_item_on_object(item_name, user)
+                print(f"[{self.name}] {user.name} uses {item_name} on the {room_object.name}: {message}")
+
+                if user.inventory[item_name].is_consumable:
+                    user.inventory.remove_item(item_name, 1)
+                return  # Item successfully used on an object, we're done
 
         # Try to let room effects handle the item usage
         handled_by_effect = False
