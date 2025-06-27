@@ -4,9 +4,8 @@ from components.core_components import Effect
 from game.items import Item
 from game.quest import Quest, Objective
 from game.room import Room, RoomObject
-from game.room_effects import DarkCaveLightingEffect, BashDoorEffect
-from game.util import handle_inventory_operation
-from game.underlings.events import Events as event
+from game.room_effects import DarkCaveLightingEffect
+from game.underlings.events import Events as Event
 
 def unlock_foyer(exits):
     """Function to unlock the Foyer room"""
@@ -32,7 +31,7 @@ def _initialize_game_world():
     goblins_lair = Room("Goblin's Lair", "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.")
     foyer.is_locked = True
 
-    event.add_event("unlock_foyer", lambda: unlock_foyer(manor.exits_to),True)
+    Event.add_event("unlock_foyer", lambda: unlock_foyer(manor.exits_to), True)
 
     # 3. Link Rooms
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
@@ -49,7 +48,7 @@ def _initialize_game_world():
     def use_sword_on_door(val_hero):
         if foyer.is_locked:  # Direct reference or through some getter
             try:
-                event.trigger_event("unlock_foyer")
+                Event.trigger_event("unlock_foyer")
                 return "You use your sword to bash the door open! The door swings wide and a giant bashing sound is heard."
             except ValueError as e:
                 return f"Error: {str(e)}"  # Better error message
@@ -59,7 +58,7 @@ def _initialize_game_world():
     def change_door_description():
         manor_door.description = "The door is wide open, It appears to be the entrance to the Foyer."
 
-    event.add_event("unlock_foyer", lambda: change_door_description(),True)
+    Event.add_event("unlock_foyer", lambda: change_door_description(), True)
 
 
 
