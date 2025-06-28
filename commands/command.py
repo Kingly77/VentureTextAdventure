@@ -32,6 +32,12 @@ def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'R
     hero_has_item = hero_inv.has_component(arg)
     try:
         if action in ["take", "get","grab"]:
+
+            for effect in current_room.effects:
+                if hasattr(effect, 'handle_take'):
+                    if effect.handle_take(hero, arg):
+                        return
+
             if room_inv.has_component(arg):
                 item = handle_inventory_operation(current_room.remove_item, arg)
                 handle_inventory_operation( hero_inv.add_item, item)
@@ -40,6 +46,11 @@ def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'R
                 print(f"There is no {arg} here to take.")
 
         elif action == "drop" and hero_has_item:
+
+            for effect in current_room.effects:
+                if hasattr(effect, "handle_drop") and effect.handle_drop(hero, arg):
+                    return
+
             quantity = 1  # Default to dropping 1
             # Remove from hero's inventory
             dropped_item = handle_inventory_operation(hero_inv.remove_item, arg, quantity)

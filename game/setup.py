@@ -15,6 +15,7 @@ def _initialize_game_world():
     goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,who=hero,objective=Objective("collect","goblin ear",1))
     hero.quest_log.add_quest(goblin_ear.id,goblin_ear)
     #hero.inventory.add_item(Item("goblin ear", 1,False))
+    hero.inventory.add_item(Item("gold", 1, False, quantity=10))
     print(f"Welcome, {hero.name}, to the world of KingBase!")
 
     # 2. Create Rooms

@@ -31,6 +31,9 @@ def handle_inventory_operation(operation_func, *args, **kwargs):
     except TypeError as e:
         print(f"Error adding item: {e}")
         return None
+    except Exception as e:
+        print(f"Unexpected inventory error: {e}")
+        return None
 
 
 def handle_spell_cast(hero, spell_name, target):

@@ -1,6 +1,7 @@
 from character.hero import RpgHero
 from game.items import Item
 from game.room_effects import RoomDiscEffect
+from game.util import handle_inventory_operation
 
 
 class ShopEffect(RoomDiscEffect):
@@ -49,4 +50,24 @@ class ShopEffect(RoomDiscEffect):
         self.room.remove_item(item_name)
         hero.inventory.add_item(item)
         print(f"{self.shopkeeper_name} sells you the {item.name} for {price} gold.")
+        return True
+
+    def handle_drop(self, hero: 'RpgHero', item_name: str) -> bool:
+        if not hero.inventory.has_component(item_name):
+            return False
+
+        item = hero.inventory[item_name]
+        if not self.can_sell(item):
+            print(f"{self.shopkeeper_name} says: 'I’m not buying that.'")
+            return True
+
+        if not handle_inventory_operation(hero.inventory.remove_item, item_name, 1):
+            print("how did you get here?")
+            return False
+
+        gold = self.get_sell_price(item)
+        hero.gold += gold
+        #hero.inventory.remove_item(item_name, 1)
+        self.room.add_item(item)
+        print(f"{self.shopkeeper_name} gives you {gold} gold for the {item.name}.")
         return True
