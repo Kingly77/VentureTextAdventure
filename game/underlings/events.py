@@ -48,8 +48,8 @@ class _Event:
         Remove a previously registered function from an event.
         
         Args:
-            name (str): The name of the event to remove from
-            handler (callable): The functor to remove
+            :param name: The name of the event to remove from
+            :param handler: The functor to remove
 
         Note:
             Both the function and its arguments must match exactly what was registered.

@@ -158,6 +158,23 @@ class RpgHero(BaseCharacter):
         """Get the hero's inventory."""
         return self.components["inventory"]
 
+    @property
+    def gold(self) -> int:
+        """Get the hero's gold."""
+        if not self.inventory.has_component("gold"):
+            return 0
+        return self.inventory["gold"].quantity
+
+    @gold.setter
+    def gold(self, value: int):
+        """Set the hero's gold."""
+        if value < 0:
+            raise ValueError("Gold cannot be negative.")
+        if not self.inventory.has_component("gold"):
+            self.inventory.add_item(Item("gold",cost=1,quantity = value))
+        else:
+            self.inventory["gold"].quantity = value
+
 
     def use_item(self, item_name: str, target=None):
         """Use an item from the hero's inventory.

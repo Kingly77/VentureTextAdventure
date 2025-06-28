@@ -8,10 +8,10 @@ class UseItemError(Exception):
 
 
 class Item(CanCast): # Inherit from CanCast
-    def __init__(self, name: str, cost: int, is_usable: bool = False, effect: Effect = Effect.NONE, effect_value: int = 0, is_consumable: bool = False):
+    def __init__(self, name: str, cost: int, is_usable: bool = False, effect: Effect = Effect.NONE, effect_value: int = 0, is_consumable: bool = False , **kwargs):
         self.name = name
         self.cost = cost
-        self.quantity = 1
+        self.quantity = kwargs.get("quantity", 1)
         self.is_usable = is_usable
         self.effect_type: Effect = effect
         self.effect_value = effect_value

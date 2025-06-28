@@ -109,7 +109,7 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
             # If it's a usable item but no specific target, use on self by default
             elif target_str is None or target_str in ["self", "me", "myself", hero.name.lower()]:
                 if not item.is_usable:
-                    print(f"The {item_name} cannot be used on yourself.")
+                    print(f"The {item_name} cannot be used on yourself. it maybe used on a room instead.")
                     return
                 # Use item on hero
                 old_health = hero.health
@@ -120,6 +120,7 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
                     print(f"You feel refreshed! Health increased to {hero.health}.")
                 elif hero.health < old_health:
                     print(f"Ouch! That hurt. Health decreased to {hero.health}.")
+
             elif target_str in current_room.objects:
                 # Use item on target in room
                 handle_item_use(hero, item_name, room=current_room)

@@ -1,10 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING # For type hinting without circular imports
 
-if TYPE_CHECKING:
-    from game.room import Room
-    from interfaces.interface import Combatant # Assuming Combatant is in interfaces/interface.py
-
 class RoomDiscEffect(ABC):
     """
     Abstract base class for effects that can modify a Room's description

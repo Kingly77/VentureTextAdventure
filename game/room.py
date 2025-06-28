@@ -5,6 +5,7 @@ from typing import List, Callable, Dict
 from interfaces.interface import Combatant # Import Combatant
 from game.room_effects import RoomDiscEffect # Import the new RoomEffect base class
 
+
 class RoomObject:
     """Represents an interactive object within a room (e.g., a door, a chest, a lever)."""
     def __init__(self, name: str, description: str):
@@ -36,7 +37,6 @@ class RoomObject:
         if item_name_lower in self.interaction_events:
             return self.interaction_events[item_name_lower](user)
         return f"Using {item_name} has no effect on the {self.name}."
-
 
 
 class Room:
