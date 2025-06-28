@@ -6,7 +6,9 @@ from game.items import Item
 from game.quest import Quest, Objective
 from game.room import Room, RoomObject
 from game.room_effects import DarkCaveLightingEffect
+from game.shop_effect import ShopEffect
 from game.underlings.events import Events as Event
+from game.util import handle_inventory_operation
 
 
 def _initialize_game_world():
@@ -14,7 +16,6 @@ def _initialize_game_world():
     hero = RpgHero("Aidan", 1)
     goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,who=hero,objective=Objective("collect","goblin ear",1))
     hero.quest_log.add_quest(goblin_ear.id,goblin_ear)
-    #hero.inventory.add_item(Item("goblin ear", 1,False))
     hero.inventory.add_item(Item("gold", 1, False, quantity=10))
     print(f"Welcome, {hero.name}, to the world of KingBase!")
 
@@ -25,12 +26,18 @@ def _initialize_game_world():
     dark_cave_entrance = Room("Dark Cave Entrance", "The air grows cold as you stand at the mouth of a dark, damp cave.")
     goblins_lair = Room("Goblin's Lair", "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.")
     foyer.is_locked = True
+    shack_shop = Room("Shack Shop", "A small, cozy shack with a large table and chair. There is a large glass door to the east.")
+    shack_shop.add_effect(ShopEffect(shack_shop,"Maribel Tinkertop"))
+    handle_inventory_operation(shack_shop.add_item, Item("marble ball", 1, False))
+    handle_inventory_operation(shack_shop.add_item, Item("10 foot pole", 3, False))
 
+    # Add events to unlock the door
     Event.add_event("unlock_foyer", foyer.unlock, True)
 
     # 3. Link Rooms
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
     forest_clearing.link_rooms("east", manor, "west")
+    forest_clearing.link_rooms("south", shack_shop, "north")
     dark_cave_entrance.link_rooms("east", goblins_lair, "west") # Hidden path
     manor.link_rooms("north", foyer, "south")
 

@@ -175,6 +175,17 @@ class RpgHero(BaseCharacter):
         else:
             self.inventory["gold"].quantity = value
 
+    def add_gold(self, amount: int):
+        if amount < 0:
+            raise ValueError("Cannot add negative gold.")
+        self.gold += amount
+
+    def spend_gold(self, amount: int):
+        if amount < 0:
+            raise ValueError("Cannot spend negative gold.")
+        if self.gold < amount:
+            raise ValueError("Not enough gold.")
+        self.gold -= amount
 
     def use_item(self, item_name: str, target=None):
         """Use an item from the hero's inventory.
@@ -187,6 +198,9 @@ class RpgHero(BaseCharacter):
             ItemNotFoundError: If the item is not in the inventory
             UseItemError: If the item cannot be used
         """
+        if not isinstance(item_name,str):
+            raise TypeError("Item name must be string")
+
         if not self.inventory.has_component(item_name.lower()):
             raise ItemNotFoundError(item_name)
 

@@ -133,7 +133,61 @@ class Game:
 
     def _handle_inventory(self, _):
         """Handles the 'inventory' command."""
-        print(self.hero.inventory)
+        inventory = self.hero.inventory
+        items = list(inventory.items.values())
+        
+        if not items or (len(items) == 1 and items[0].name == "gold"):
+            print("\n📦 Your inventory is empty.")
+            return
+        
+        print("\n📦 Inventory:")
+        print("------------------------")
+        
+        # Group items by type for better organization
+        usable_items = []
+        equipment = []
+        misc_items = []
+        
+        for item in items:
+            # Skip gold as it will be displayed separately
+            if item.name.lower() == "gold":
+                continue
+            
+            if item.is_usable:
+                usable_items.append(item)
+            elif hasattr(item, 'is_equipment') and item.is_equipment:
+                equipment.append(item)
+            else:
+                misc_items.append(item)
+        
+        # Print usable items
+        if usable_items:
+            print("🧪 Usable Items:")
+            for item in usable_items:
+                effect_text = ""
+                if item.effect_type.name == "HEAL":
+                    effect_text = f" (Heals {item.effect_value})"
+                elif item.effect_type.name == "DAMAGE":
+                    effect_text = f" (Damage {item.effect_value})"
+                
+                print(f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each")
+            print()
+        
+        # Print equipment
+        if equipment:
+            print("⚔️ Equipment:")
+            for item in equipment:
+                print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
+            print()
+        
+        # Print misc items
+        if misc_items:
+            print("🔮 Other Items:")
+            for item in misc_items:
+                print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
+    
+        print("------------------------")
+        print(f"💰 Gold: {self.hero.gold}")
 
     def _handle_quit(self, _):
         """Handles the 'quit' and 'exit' commands."""

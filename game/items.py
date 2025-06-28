@@ -9,6 +9,16 @@ class UseItemError(Exception):
 
 class Item(CanCast): # Inherit from CanCast
     def __init__(self, name: str, cost: int, is_usable: bool = False, effect: Effect = Effect.NONE, effect_value: int = 0, is_consumable: bool = False , **kwargs):
+        if not isinstance(name, str) or not name:
+            raise ValueError("Item name must be a non-empty string.")
+        quantity = kwargs.get("quantity", 1)
+        if quantity:
+            if not isinstance(quantity, int) or quantity < 0:
+                raise ValueError("Item quantity must be a non-negative integer.")
+
+        if not isinstance(cost, int) or cost < 0:
+            raise ValueError("Item cost must be a non-negative integer.")
+
         self.name = name
         self.cost = cost
         self.quantity = kwargs.get("quantity", 1)

@@ -1,5 +1,3 @@
-from character.hero import RpgHero
-from game.items import Item
 from game.room_effects import RoomDiscEffect
 from game.util import handle_inventory_operation
 
@@ -33,6 +31,7 @@ class ShopEffect(RoomDiscEffect):
 
     def handle_take(self, hero: 'RpgHero', item_name: str) -> bool:
         inv = self.room.inventory
+
         if not inv.has_component(item_name):
             return False
 
@@ -46,9 +45,9 @@ class ShopEffect(RoomDiscEffect):
             print(f"{self.shopkeeper_name} says: 'That one's not for sale.'")
             return True
 
-        hero.gold -= price
+        hero.spend_gold(price)
         self.room.remove_item(item_name)
-        hero.inventory.add_item(item)
+        handle_inventory_operation(hero.inventory.add_item, item)
         print(f"{self.shopkeeper_name} sells you the {item.name} for {price} gold.")
         return True
 
@@ -61,13 +60,14 @@ class ShopEffect(RoomDiscEffect):
             print(f"{self.shopkeeper_name} says: 'I’m not buying that.'")
             return True
 
-        if not handle_inventory_operation(hero.inventory.remove_item, item_name, 1):
+        dropped = handle_inventory_operation(hero.inventory.remove_item, item_name, 1)
+        # If the item was not in the hero's inventory, something is wrong
+        if not dropped:
             print("how did you get here?")
             return False
 
         gold = self.get_sell_price(item)
-        hero.gold += gold
-        #hero.inventory.remove_item(item_name, 1)
-        self.room.add_item(item)
+        hero.add_gold(gold)
+        self.room.add_item(dropped)
         print(f"{self.shopkeeper_name} gives you {gold} gold for the {item.name}.")
         return True
