@@ -178,7 +178,7 @@ class Room:
 
                 if user.inventory[item_name].is_consumable:
                     user.inventory.remove_item(item_name, 1)
-                return  # Item successfully used on an object, we're done
+                return True # Item successfully used on an object, we're done
 
         # Try to let room effects handle the item usage
         handled_by_effect = False

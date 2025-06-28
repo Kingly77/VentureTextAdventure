@@ -1,0 +1,210 @@
+from character.enemy import Goblin
+from character.hero import RpgHero
+from game.setup import setup_game
+from game.util import handle_spell_cast, handle_inventory_operation
+from commands.command import help_command, use_command, handle_inventory_command
+
+
+class Game:
+    """
+    Encapsulates the main game logic, state, and player command processing.
+    """
+
+    def __init__(self):
+        """Initializes the game, setting up the hero, world, and command handlers."""
+        self.hero, self.current_room = setup_game()
+        self.game_over = False
+
+        # Handlers for commands that are methods of this class
+        self._method_handlers = {
+            "go": self._handle_go,
+            "look": self._handle_look,
+            "status": self._handle_status,
+            "turn-in": self._handle_turn_in,
+            "inventory": self._handle_inventory,
+            "quit": self._handle_quit,
+            "exit": self._handle_quit,
+            "debug": self._handle_debug,
+        }
+
+        # Handlers for commands that are external functions
+        self._function_handlers = {
+            "use": use_command,
+            "take": handle_inventory_command,
+            "get": handle_inventory_command,
+            "grab": handle_inventory_command,
+            "drop": handle_inventory_command,
+            "examine": handle_inventory_command,
+            "help": help_command,
+        }
+
+    def run(self):
+        """Starts and runs the main game loop."""
+        print("\n" + "=" * 50)
+        print("THE QUEST FOR THE GOBLIN EAR")
+        print("=" * 50 + "\n")
+
+        while not self.game_over:
+            self._update_turn()
+
+        print("\nAdventure End.")
+
+    def _update_turn(self):
+        """Processes a single turn of the game."""
+        self._print_room_info()
+        self._check_for_combat()
+
+        if self.game_over:
+            print("\nGame Over! Thanks for playing.")
+            return
+
+        self._process_input()
+
+    def _print_room_info(self):
+        """Prints the description and exits of the current room."""
+        print(f"\n--- You are in the {self.current_room.name} ---")
+        print(self.current_room.get_description())
+
+        if self.current_room.exits_to:
+            exits_str = ", ".join(self.current_room.exits_to.keys())
+            print(f"\nExits: {exits_str}")
+
+    def _check_for_combat(self):
+        """Checks for and initiates combat if enemies are in the room."""
+        while self.current_room.combatants and not self.game_over:
+            enemy = self.current_room.combatants[0]
+            print(f"\n{enemy.name} is here!")
+            if self._handle_combat(enemy):
+                defeated_enemy = self.current_room.combatants.pop(0)
+                print(f"You defeated {defeated_enemy.name}.")
+                if hasattr(defeated_enemy, "reward"):
+                    handle_inventory_operation(self.hero.inventory.add_item, defeated_enemy.reward)
+                    print(
+                        f"{self.hero.name} collected a trophy: {defeated_enemy.reward.name} x{defeated_enemy.reward.quantity}!")
+            else:
+                self.game_over = True
+
+    def _parse_command(self, command_str: str):
+        """Splits a command string into (action, arg)."""
+        parts = command_str.strip().split(' ', 1)
+        return parts[0], parts[1] if len(parts) > 1 else ""
+
+    def _dispatch_command(self, action: str, arg: str):
+        """Routes the input command to the appropriate handler."""
+        if action in self._method_handlers:
+            self._method_handlers[action](arg)
+        elif action in self._function_handlers:
+            self._function_handlers[action](action, arg, self.hero, self.current_room)
+        else:
+            print("Unknown command. Try 'help' for a list of commands.")
+
+    def _process_input(self):
+        """Gets and processes player input."""
+        command_input = input("\nWhat will you do? ").lower()
+        action, arg = self._parse_command(command_input)
+        self._dispatch_command(action, arg)
+
+    def _handle_go(self, direction: str):
+        """Handles the 'go' command to move the player to another room."""
+        next_room = self.current_room.exits_to.get(direction)
+        if next_room and not next_room.is_locked:
+            self.current_room = next_room
+            print(f"You go {direction}.")
+            if hasattr(self.current_room, "on_enter"):
+                self.current_room.on_enter(self.hero)
+        else:
+            print("You can't go that way.")
+
+    def _handle_look(self, _):
+        """Handles the 'look' command to re-display the room description."""
+        print(self.current_room.get_description())
+
+    def _handle_status(self, _):
+        """Handles the 'status' command to display player and quest status."""
+        print(self.hero)
+        for quest in self.hero.quest_log.active_quests.values():
+            print(f"Quest: {quest.name} - {quest.description} (ID {quest.id})")
+        for quest in self.hero.quest_log.completed_quests:
+            print(f"Quest Completed: {quest}")
+
+    def _handle_turn_in(self, arg: str):
+        """Handles the 'turn-in' command for completing quests."""
+        self.hero.quest_log.complete_quest(arg, self.hero)
+
+    def _handle_inventory(self, _):
+        """Handles the 'inventory' command."""
+        print(self.hero.inventory)
+
+    def _handle_quit(self, _):
+        """Handles the 'quit' and 'exit' commands."""
+        self.game_over = True
+
+    def _handle_debug(self, arg: str):
+        """Debug-only commands for development purposes."""
+        if arg == "heal":
+            self.hero.health = self.hero.max_health
+            print(f"{self.hero.name} fully healed.")
+        elif arg == "mana":
+            self.hero.mana = self.hero.max_mana
+            print(f"{self.hero.name} restored mana.")
+        elif arg == "xp":
+            self.hero.add_xp(100)
+            print("Gained 100 XP.")
+        elif arg == "tp":
+            print("Rooms:")
+            for name in self.hero.room_registry:
+                print("-", name)
+            dest = input("Enter destination room: ")
+            room = self.hero.room_registry.get(dest)
+            if room:
+                self.current_room = room
+                print(f"Teleported to {room.name}.")
+            else:
+                print("Invalid room.")
+        else:
+            print("Unknown debug command. Options: heal, mana, xp, tp")
+
+    def _handle_combat(self, enemy: Goblin) -> bool:
+        """
+        Manages the combat sequence between the hero and an enemy.
+        Returns True if the hero wins, False otherwise.
+        """
+        hero = self.hero
+        print(f"\n--- COMBAT INITIATED: {hero.name} vs. {enemy.name} ---")
+        while hero.is_alive() and enemy.is_alive():
+            print(f"\n{hero.name} Health: {hero.health}/{hero.max_health} | Mana: {hero.mana}/{hero.max_mana}")
+            print(f"{enemy.name} Health: {enemy.health}/{enemy.max_health}")
+
+            command = input("What will you do? (attack [weapon], cast [spell]): ").lower()
+            action, arg = self._parse_command(command)
+
+            if action == "attack":
+                try:
+                    hero.attack(enemy, arg or None)
+                except ValueError as e:
+                    print(f"{e}")
+                    continue
+                print(f"{hero.name} attacks {enemy.name}! {enemy.name}'s health is now {enemy.health}.")
+            elif action == "cast":
+                handle_spell_cast(hero, arg, enemy)
+            else:
+                print("Invalid action. Try 'attack [weapon]' or 'cast [spell]'.")
+                continue
+
+            if enemy.is_alive():
+                enemy.attack(hero)
+                print(f"{enemy.name} retaliates! {hero.name}'s health is now {hero.health}.")
+
+        if hero.is_alive():
+            print(f"\n{hero.name} defeated {enemy.name}!")
+            hero.add_xp(enemy.xp_value)
+            print(f"{hero.name} gained {enemy.xp_value} XP. Total XP: {hero.xp}, Level: {hero.level}.")
+            return True
+        else:
+            print(f"\n{hero.name} has been defeated by {enemy.name}...")
+            return False
+
+
+if __name__ == '__main__':
+    game = Game()
+    game.run()
