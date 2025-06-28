@@ -1,8 +1,11 @@
+import types
+
 from character.basecharacter import BaseCharacter
 from components.core_components import Mana, Effect
 from components.inventory import Inventory, ItemNotFoundError
 from components.quest_log import QuestLog
 from game.magic import Spell, NoTargetError
+from game.underlings.events import Events
 from interfaces.interface import Combatant
 from game.items import Item, UseItemError
 
@@ -37,6 +40,17 @@ class RpgHero(BaseCharacter):
             f"{self.mana} mana, and {self.inventory["fists"]} in their inventory."
         )
 
+        self.current = self.inventory.add_item
+        hero = self
+
+        def add_item(self, item: Item):
+            hero.check_quest_item(item.name)
+            hero.current(item)
+
+        self.inventory.add_item = types.MethodType(add_item,self.inventory)
+
+
+
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
 
@@ -64,6 +78,20 @@ class RpgHero(BaseCharacter):
     def get_mana_component(self) -> Mana:
         """Get the mana component of the hero."""
         return self.components["mana"]
+
+    def check_quest_item(self, item_name: str):
+        out = None
+        try:
+            for quest in self.quest_log.active_quests.values():
+                if item_name in quest.objective.target:
+                    out = Events.trigger_event(quest.progress_event_name,self)
+                if out:
+                    print(out)
+
+        except Exception as e:
+            print(f"No quests to need {item_name} for progress: {e}")
+
+
 
     def get_spell(self, spell_name: str) -> Spell | None:
         """Retrieves a spell by name if it exists and is a Spell.

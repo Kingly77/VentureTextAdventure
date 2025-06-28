@@ -1,3 +1,5 @@
+from character.hero import RpgHero
+from game.items import Item
 from game.room_effects import RoomDiscEffect
 from game.util import handle_inventory_operation
 
@@ -6,7 +8,7 @@ class ShopEffect(RoomDiscEffect):
     def __init__(self, room: 'Room', shopkeeper_name="The Merchant", prices=None):
         super().__init__(room)
         self.shopkeeper_name = shopkeeper_name
-        self.prices = prices or {}  # item.id -> price override
+        self.prices = prices or {}  # item.name -> price override
 
     def get_modified_description(self, base_description: str) -> str:
         # Append shop info to room description
@@ -17,19 +19,19 @@ class ShopEffect(RoomDiscEffect):
             lines.append(f" - {item.name} ({price}g)")
         return "\n".join(lines)
 
-    def get_price(self, item: 'Item') -> int:
+    def get_price(self, item: Item) -> int:
         return self.prices.get(item.name, item.cost)
 
-    def get_sell_price(self, item: 'Item') -> int:
+    def get_sell_price(self, item: Item) -> int:
         return self.get_price(item) // 2
 
-    def can_buy(self, item: 'Item') -> bool:
+    def can_buy(self, item: Item) -> bool:
         return True
 
-    def can_sell(self, item: 'Item') -> bool:
+    def can_sell(self, item: Item) -> bool:
         return getattr(item, "sellable", True)
 
-    def handle_take(self, hero: 'RpgHero', item_name: str) -> bool:
+    def handle_take(self, hero: RpgHero, item_name: str) -> bool:
         inv = self.room.inventory
 
         if not inv.has_component(item_name):

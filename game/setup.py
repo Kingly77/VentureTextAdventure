@@ -7,6 +7,7 @@ from game.quest import Quest, Objective
 from game.room import Room, RoomObject
 from game.room_effects import DarkCaveLightingEffect
 from game.shop_effect import ShopEffect
+from game.underlings import events
 from game.underlings.events import Events as Event
 from game.util import handle_inventory_operation
 
@@ -14,8 +15,12 @@ from game.util import handle_inventory_operation
 def _initialize_game_world():
     # 1. Create Hero
     hero = RpgHero("Aidan", 1)
+    # Add a quest to collect the goblin ear
+
     goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,who=hero,objective=Objective("collect","goblin ear",1))
+
     hero.quest_log.add_quest(goblin_ear.id,goblin_ear)
+    hero.inventory.add_item(Item("goblin ear", 1, False))
     hero.inventory.add_item(Item("gold", 1, False, quantity=10))
     print(f"Welcome, {hero.name}, to the world of KingBase!")
 

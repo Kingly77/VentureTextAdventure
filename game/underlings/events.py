@@ -54,12 +54,26 @@ class _Event:
         Note:
             Both the function and its arguments must match exactly what was registered.
         """
-        try:
-            self.events[name].remove(handler)
-            if not self.events[name]:
+        if name not in self.events:
+            print(f"Event '{name}' does not exist.")
+            return
+
+        handlers_to_keep = []
+        found_handler = False
+        for existing_handler_func, existing_one_time_flag in self.events[name]:
+            if existing_handler_func is handler:  # Use 'is' to compare by object identity
+                found_handler = True
+                # Don't add this handler to handlers_to_keep, effectively removing it
+            else:
+                handlers_to_keep.append((existing_handler_func, existing_one_time_flag))
+
+        if found_handler:
+            self.events[name] = handlers_to_keep
+            if not self.events[name]:  # Clean up if the list becomes empty
                 del self.events[name]
-        except (ValueError, KeyError):
-            print(f"Function with specified arguments not found in event '{name}'")
+        else:
+            print(f"Handler function not found in event '{name}'.")
+
 
     def trigger_event(self, name, *args, **kwargs):
         """
@@ -74,9 +88,9 @@ class _Event:
 
         if name in self.events:
             handlers_to_remove = []
-
+            out = None
             for index, (funct, one_time) in enumerate(self.events[name]):
-                funct(*args, **kwargs)
+                out = [funct(*args, **kwargs)]
                 if one_time:
                     handlers_to_remove.append(index)
 
@@ -87,6 +101,7 @@ class _Event:
             if not self.events[name]:
                 del self.events[name]
 
+            return out
         else:
             raise ValueError("attempt to trigger a non-existent event")
 

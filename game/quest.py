@@ -1,6 +1,7 @@
 import uuid
 
 from character.hero import RpgHero
+from game.underlings.events import Events
 
 
 class Objective:
@@ -13,10 +14,29 @@ class Objective:
 class Quest:
     def __init__(self, name, description, reward:int ,who = None, objective:Objective = None):
         self.id = str(uuid.uuid4())[:8]
-        self.name = name
+        self.name:str = name
         self.description = description
         self.reward = reward
         self.objective = objective
+        self.tentative_complete = False
+        self.event_name = f"complete_{self.name.replace(' ','_')}"
+        self.progress = 0
+        self.progress_event_name = f"{self.objective.target.replace(' ','_')}_collected"
+
+        def progress_handler(val_hero):
+            self.progress += 1
+            if self.progress >= self.objective.value:
+                return Events.trigger_event(self.event_name,val_hero)
+            return f"{val_hero.name} made progress in {self.name}"
+
+        def event_handler(val_hero):
+            self.tentative_complete = True
+            Events.remove_event(self.progress_event_name,progress_handler)
+            return f"{val_hero.name} completed the quest: {self.name}"
+
+
+        Events.add_event(self.progress_event_name, progress_handler)
+        Events.add_event(self.event_name, event_handler,True)
 
     def __str__(self):
         return f"({self.id}) {self.name}: {self.description}"
