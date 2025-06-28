@@ -31,7 +31,7 @@ def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'R
     # Check hero's inventory first
     hero_has_item = hero_inv.has_component(arg)
     try:
-        if action in ["take", "get"]:
+        if action in ["take", "get","grab"]:
             if room_inv.has_component(arg):
                 item = handle_inventory_operation(current_room.remove_item, arg)
                 handle_inventory_operation( hero_inv.add_item, item)

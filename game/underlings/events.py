@@ -1,8 +1,9 @@
 from collections import defaultdict
 import abc
 
+
 class Handler(abc.ABC):
-    def __init__(self,event=None):
+    def __init__(self, event=None):
         self.event = event
 
     def __eq__(self, other):
@@ -13,6 +14,7 @@ class Handler(abc.ABC):
     @abc.abstractmethod
     def __call__(self):
         pass
+
 
 class _Event:
     """
@@ -29,17 +31,17 @@ class _Event:
         """
         self.events = defaultdict(list)
 
-    def add_event(self, name, handler,one_time=False):
+    def add_event(self, name, handler, one_time=False):
         """
         Register a function to be called when an event with the given name is triggered.
         
         Args:
-            name (str): The name of the event to register for
-            handler (callable): The functor to call when the event is triggered
-            :param one_time: if true, the handler will be removed after being called
+            :param handler: The functor to call when the event is triggered
+            :param name: the name of the event to register for
+            :param one_time: If true, the handler will be removed after being called
 
         """
-        self.events[name].append((handler,one_time))
+        self.events[name].append((handler, one_time))
 
     def remove_event(self, name, handler):
         """
@@ -56,9 +58,8 @@ class _Event:
             self.events[name].remove(handler)
             if not self.events[name]:
                 del self.events[name]
-        except (ValueError,KeyError):
+        except (ValueError, KeyError):
             print(f"Function with specified arguments not found in event '{name}'")
-
 
     def trigger_event(self, name, *args, **kwargs):
         """
@@ -74,7 +75,7 @@ class _Event:
         if name in self.events:
             handlers_to_remove = []
 
-            for index, (funct,one_time) in enumerate(self.events[name]):
+            for index, (funct, one_time) in enumerate(self.events[name]):
                 funct(*args, **kwargs)
                 if one_time:
                     handlers_to_remove.append(index)
@@ -88,9 +89,6 @@ class _Event:
 
         else:
             raise ValueError("attempt to trigger a non-existent event")
-
-
-
 
 
 Events = _Event()

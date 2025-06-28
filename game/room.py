@@ -15,6 +15,11 @@ class RoomObject:
         self.interaction_events: Dict[str, Callable[['RpgHero'], str]] = {}
         self.is_locked: bool = False # Example property for a door can be customized
 
+
+    def change_description(self, new_description: str):
+        """Changes the description of this object."""
+        self.description = new_description
+
     def add_interaction(self, item_name: str, event_function: Callable[['RpgHero'], str]):
         """
         Adds an event that triggers when a specific item is used on this object.
@@ -85,6 +90,12 @@ class Room:
         # Create the exit from the other room back to the current room (self)
         other_room.add_exit(direction_from_other, self)
 
+    def unlock(self):
+        """Unlocks the room."""
+        if self.is_locked:
+            self.is_locked = False
+        else:
+            print(f"[{self.name}] The door is already unlocked.")
 
     def add_object(self, room_object: RoomObject):
         """Adds an object to this room."""
