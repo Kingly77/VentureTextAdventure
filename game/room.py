@@ -30,6 +30,10 @@ class Room:
         self._combatants = []
 
 
+    def change_description(self, new_description: str):
+        """Changes the description of the room."""
+        self.base_description = new_description
+
     def add_exit(self, direction: str, target_room: 'Room'):
         """Adds a ONE-WAY exit from THIS room to a TARGET room."""
         if not isinstance(direction, str) or not direction.strip():

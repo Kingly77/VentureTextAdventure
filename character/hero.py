@@ -1,5 +1,4 @@
 import types
-
 from character.basecharacter import BaseCharacter
 from components.core_components import Mana, Effect
 from components.inventory import Inventory, ItemNotFoundError
@@ -87,6 +86,7 @@ class RpgHero(BaseCharacter):
 
                 if out:
                     print(out)
+                    break
 
         except Exception as e:
             print(f"No quests to need {item.name} for progress: {e}")

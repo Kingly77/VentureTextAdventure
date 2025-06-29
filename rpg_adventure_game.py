@@ -121,11 +121,37 @@ class Game:
 
     def _handle_status(self, _):
         """Handles the 'status' command to display player and quest status."""
-        print(self.hero)
-        for quest in self.hero.quest_log.active_quests.values():
-            print(f"Quest: {quest.name} - {quest.description} (ID {quest.id})")
-        for quest in self.hero.quest_log.completed_quests:
-            print(f"Quest Completed: {quest}")
+        # Character stats section
+        print("\n📊 Character Status:")
+        print("=" * 40)
+        print(f"🧙 {self.hero.name} | Level {self.hero.level} | XP: {self.hero.xp}/{self.hero.xp_to_next_level}")
+        print(f"❤️  Health: {self.hero.health}/{self.hero.max_health}")
+        print(f"✨ Mana: {self.hero.mana}/{self.hero.max_mana}")
+        print(f"💰 Gold: {self.hero.gold}")
+        
+        # Quest log section
+        active_quests = list(self.hero.quest_log.active_quests.values())
+        completed_quests = self.hero.quest_log.completed_quests
+        
+        if active_quests or completed_quests:
+            print("\n📜 Quest Log:")
+            print("-" * 40)
+            
+            # Show active quests
+            if active_quests:
+                print("🔸 Active Quests:")
+                for quest in active_quests:
+                    print(f"  • {quest.name} - {quest.description} (ID: {quest.id})")
+            
+            # Show completed quests
+            if completed_quests:
+                print("\n🔹 Completed Quests:")
+                for quest in completed_quests:
+                    print(f"  • {quest}")
+        else:
+            print("\n📜 Quest Log: No quests available")
+        
+        print("=" * 40)
 
     def _handle_turn_in(self, arg: str):
         """Handles the 'turn-in' command for completing quests."""

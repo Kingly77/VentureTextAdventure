@@ -21,7 +21,11 @@ class Quest:
         self.tentative_complete = False
         self.event_name = f"complete_{self.name.replace(' ','_')}"
         self.progress = 0
-        self.progress_event_name = f"{self.objective.target.replace(' ','_')}_collected"
+
+        if objective is None:
+            raise ValueError("Objective must be provided.")
+        if objective.value <= 0:
+            raise ValueError("Objective value must be positive.")
 
         def progress_handler(val_hero,*_):
             self.progress += 1
@@ -51,7 +55,8 @@ class Quest:
                     who.inventory.remove_item(self.objective.target, self.objective.value)
                     who.add_xp(self.reward)
                     print(f"Quest complete: {self.description}")
-                    print(f"You earned {self.reward} experience points. and have {who.xp} Remaining experience points")
+                    print(f"You earned {self.reward} experience points. XP remaining until next level: {who.xp_to_next_level}")
+
                     return True
 
         return False
