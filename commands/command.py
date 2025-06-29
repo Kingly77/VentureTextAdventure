@@ -1,5 +1,6 @@
+from __future__ import annotations
 from components.inventory import ItemNotFoundError
-from game.items import UseItemError
+from game.items import UseItemError, Item
 from game.util import handle_item_use, handle_inventory_operation
 
 
@@ -59,7 +60,7 @@ def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'R
                 f"You dropped the {dropped_item.name} with quantity {dropped_item.quantity} in the {current_room.name}.")
 
         elif action == "examine":
-            item:'Item' = None
+            item:Item = None
             if hero_has_item:
                 item = hero_inv[arg]
             elif room_inv.has_component(arg):
@@ -113,7 +114,7 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
             # If the player specified "on room" or "in room", try room context usage
             if target_str in ["room", "the room", "this room"]:
                 try:
-                    handle_item_use(hero, item_name, room=current_room)
+                    handle_item_use(hero, item, room=current_room)
                     # Item removal is handled by the room effect
                 except ValueError as e:
                     print(f"{e}")
@@ -122,9 +123,9 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
                 if not item.is_usable:
                     print(f"The {item_name} cannot be used on yourself. it maybe used on a room instead.")
                     return
-                # Use item on hero
+                # Use item on the hero
                 old_health = hero.health
-                handle_item_use(hero, item_name)
+                handle_item_use(hero, item)
                 print(f"{hero.name} used {item_name} on {hero.name}.")
                 # Display effect based on what happened
                 if hero.health > old_health:
@@ -133,12 +134,21 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
                     print(f"Ouch! That hurt. Health decreased to {hero.health}.")
 
             elif target_str in current_room.objects:
-                # Use item on target in room
-                handle_item_use(hero, item_name, room=current_room)
+                # Use item on target in a room
+                obj = current_room.objects[target_str]
+
+                handle_item_use(hero, item, obj , current_room,)
+
+                # if "use" in obj.interaction_events:
+                #      result = obj.try_interact("use",item ,hero, current_room)
+                #      print(result)
+                # else:
+                #    print(f"The {obj.name} cannot be used on itself. it maybe used on a room instead.")
+
             else:
                 print(f"You don't see '{target_str}' to use the {item_name} on.")
 
-        # If item is in the room, try to use it directly
+        # If an item is in the room, try to use it directly
         elif current_room.inventory.has_component(item_name):
             try:
                 current_room.use_item_in_room(item_name, hero)

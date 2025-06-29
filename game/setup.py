@@ -7,7 +7,6 @@ from game.quest import Quest, Objective
 from game.room import Room, RoomObject
 from game.room_effects import DarkCaveLightingEffect
 from game.shop_effect import ShopEffect
-from game.underlings import events
 from game.underlings.events import Events as Event
 from game.util import handle_inventory_operation
 
@@ -17,7 +16,7 @@ def _initialize_game_world():
     hero = RpgHero("Aidan", 1)
     # Add a quest to collect the goblin ear
 
-    goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,who=hero,objective=Objective("collect","goblin ear",1))
+    goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,objective=Objective("collect","goblin ear",1))
 
     hero.quest_log.add_quest(goblin_ear.id,goblin_ear)
     hero.inventory.add_item(Item("goblin ear", 1, False))
@@ -46,13 +45,22 @@ def _initialize_game_world():
     dark_cave_entrance.link_rooms("east", goblins_lair, "west") # Hidden path
     manor.link_rooms("north", foyer, "south")
 
+    def torch_on_table(val_hero,item:Item,*args):
+        if not item.has_tag("torch"):
+            return "You do not have a torch to use on the table."
+        return "You light the torch and lite the table center with a flash of light."
+
+
     forest_table = RoomObject("table", "A large Stone table with a small wooden chair sitting on top.")
-    forest_table.add_interaction("torch", lambda val_hero: "You light the torch and lite the table center with a flash of light.")
+
+    forest_table.add_interaction("use", torch_on_table)
 
     manor_door = RoomObject("door",
                             "A sturdy wooden door with a heavy lock. It appears to be the entrance to the Foyer.")
 
-    def use_sword_on_door(val_hero):
+    def use_sword_on_door(val_hero,item:Item,*args):
+        if not item.has_tag("weapon"):
+            return "You do not have a sword to use on the door."
         if foyer.is_locked:  # Direct reference or through some getter
             try:
                 Event.trigger_event("unlock_foyer")
@@ -64,7 +72,7 @@ def _initialize_game_world():
 
     Event.add_event("unlock_foyer", functools.partial(manor_door.change_description, "The door is wide open, It appears to be the entrance to the Foyer."), True)
 
-    manor_door.add_interaction("sword", use_sword_on_door)
+    manor_door.add_interaction("use", use_sword_on_door)
     manor.add_object(manor_door)
 
     # 4. Apply Room Effects
@@ -73,9 +81,9 @@ def _initialize_game_world():
     forest_clearing.add_object(forest_table)
 
     # 5. Populate Rooms with Items
-    manor.add_item(Item("sword", 10, True, Effect.DAMAGE, 10,is_consumable=False))
+    manor.add_item(Item("sword", 10, True, Effect.DAMAGE, 10,is_consumable=False,tags=["weapon"]))
     forest_clearing.add_item(Item("health potion", 10, True, Effect.HEAL, 20,is_consumable=True))
-    dark_cave_entrance.add_item(Item("torch", 5, True,is_consumable=False)) # Essential for the cave!
+    dark_cave_entrance.add_item(Item("torch", 5, True,is_consumable=False,tags=["torch"])) # Essential for the cave!
     goblins_lair.add_item(Item("shiny coin", 1, False , is_consumable=True))
     goblins_lair.add_item(Item("rusty dagger", 5, True, Effect.DAMAGE, 5,is_consumable=False))
 

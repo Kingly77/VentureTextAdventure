@@ -1,6 +1,6 @@
 from character.hero import RpgHero
 from components.inventory import ItemNotFoundError, InsufficientQuantityError
-from game.items import UseItemError
+from game.items import UseItemError, Item
 from game.magic import NoTargetError
 
 
@@ -57,35 +57,42 @@ def handle_spell_cast(hero, spell_name, target):
         print(f"Unexpected error: {e}")
     return False
 
-def handle_item_use(hero, item_name, target=None, room=None):
-    """Helper function to handle item usage with proper error handling.
 
-    This function tries to use an item either directly on a target or in a room context.
-
-    Args:
-        hero: The hero using the item
-        item_name: The name of the item to use
-        target: Optional target for the item (defaults to hero if not in room context)
-        room: Optional room context for environment-specific item usage
-
-    Returns:
-        True if the item was used successfully, False otherwise
-    """
+def handle_item_use(hero, item: Item, target=None, room=None, *args):
     try:
-        # If a room is specified, try to use the item in room context
-        if room is not None:
-            room.use_item_in_room(item_name, hero)
-            print(f"{hero.name} successfully used {item_name} in {room.name}.")
+
+        if target is None:
+            room.use_item_in_room(item, hero)
             return True
-        # Otherwise use the item directly on the target
+
+        if room:
+            # First try room-object based interactions
+            for obj in room.objects.values():
+                if obj.name != target.name:
+                    continue
+                if "use" in obj.interaction_events:
+                    result = obj.try_interact("use", hero, item, room)
+                    if result:
+                        print(result)
+                        return True
+
+            # Then try generic tag matches
+            for obj in room.objects.values():
+                if obj.has_tag("flammable") and item.has_tag("light-source"):
+                    obj.change_description("A smoldering pile of ash.")
+                    print("You set fire to the object. It burns with surprising intensity!")
+                    return True
+
+            # Fallback: nothing happened
+            print(f"Nothing happens when you use the {item.name} in this room.")
+            return False
+
         else:
-            return hero.use_item(item_name, target)
-    except ItemNotFoundError as e:
-        print(f"Cannot use item: {e}")
-    except UseItemError as e:
-        print(f"Item cannot be used: {e}")
-    except ValueError as e:
+            # Use item directly (on self or target)
+            return hero.use_item(item.name, target)
+
+    except (ItemNotFoundError, UseItemError, ValueError) as e:
         print(f"Error using item: {e}")
     except Exception as e:
-        print(f"Unexpected error using item: {e}")
+        print(f"Unexpected error: {e}")
     return False

@@ -74,7 +74,7 @@ class Inventory:
         current_item -= quantity
 
         removed_item = Item(current_item.name, current_item.cost, current_item.is_usable,
-                            current_item.effect_type, current_item.effect_value, current_item.is_consumable)
+                            current_item.effect_type, current_item.effect_value, current_item.is_consumable,current_item.tags)
         removed_item.quantity = quantity
 
         if current_item.quantity <= 0:

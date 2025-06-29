@@ -44,11 +44,10 @@ class RpgHero(BaseCharacter):
         hero = self
 
         def add_item(self, item: Item):
-            hero.check_quest_item(item.name)
+            hero.check_quest_item(item)
             hero.current(item)
 
         self.inventory.add_item = types.MethodType(add_item,self.inventory)
-
 
 
     def __str__(self):
@@ -59,7 +58,7 @@ class RpgHero(BaseCharacter):
         return self.BASE_XP_TO_NEXT_LEVEL + (self.level * 50)
 
     def add_xp(self, xp: int):
-        """Adds experience points to the hero and levels up if threshold reached."""
+        """Adds experience points to the hero and levels up if a threshold reached."""
         if xp < 0:
             raise ValueError("XP cannot be negative.")
         self.xp += xp
@@ -79,17 +78,18 @@ class RpgHero(BaseCharacter):
         """Get the mana component of the hero."""
         return self.components["mana"]
 
-    def check_quest_item(self, item_name: str):
+    def check_quest_item(self, item: Item):
         out = None
         try:
             for quest in self.quest_log.active_quests.values():
-                if item_name in quest.objective.target:
-                    out = Events.trigger_event(quest.progress_event_name,self)
+                if item.name in quest.objective.target:
+                    out = Events.trigger_event("item_collected",self,item)
+
                 if out:
                     print(out)
 
         except Exception as e:
-            print(f"No quests to need {item_name} for progress: {e}")
+            print(f"No quests to need {item.name} for progress: {e}")
 
 
 
@@ -119,7 +119,7 @@ class RpgHero(BaseCharacter):
             super().__init__(f"Spell '{spell_name}' doesn't exist.")
 
     class InsufficientManaError(SpellCastError):
-        """Exception raised when there is not enough mana to cast a spell."""
+        """Exception raised when there is not enough manna to cast a spell."""
         def __init__(self, spell_name: str, cost: int, available: int):
             self.spell_name = spell_name
             self.cost = cost
@@ -127,7 +127,7 @@ class RpgHero(BaseCharacter):
             super().__init__(f"Not enough mana for '{spell_name}'. Required: {cost}, Available: {available}")
 
     def cast_spell(self, spell_name: str, target: Combatant) -> bool:
-        """Cast a spell on a target if the hero has enough mana.
+        """Cast a spell on a target if the hero has enough manna.
 
         Args:
             spell_name: The name of the spell to cast
@@ -223,7 +223,7 @@ class RpgHero(BaseCharacter):
             target: Optional target for the item (defaults to self)
 
         Raises:
-            ItemNotFoundError: If the item is not in the inventory
+            ItemNotFoundError: If the item is not in the inventory,
             UseItemError: If the item cannot be used
         """
         if not isinstance(item_name,str):
@@ -237,7 +237,7 @@ class RpgHero(BaseCharacter):
             print(f"{item_name} cannot be used.")
             raise UseItemError()
 
-        # Default target is self if none provided
+        # The default target is self if none provided
         if target is None:
             target = self
 

@@ -1,42 +1,11 @@
 from components.core_components import HoldComponent
 from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
 from game.items import Item
-from typing import List, Callable, Dict
+from typing import List, Callable, Dict, Protocol, runtime_checkable
+
+from game.room_objs import RoomObject
 from interfaces.interface import Combatant # Import Combatant
 from game.room_effects import RoomDiscEffect # Import the new RoomEffect base class
-
-
-class RoomObject:
-    """Represents an interactive object within a room (e.g., a door, a chest, a lever)."""
-    def __init__(self, name: str, description: str):
-        self.name = name.lower()
-        self.description = description
-        # A dictionary where keys are item names, and values are functions
-        # to execute when that item is used on this object.
-        self.interaction_events: Dict[str, Callable[['RpgHero'], str]] = {}
-        self.is_locked: bool = False # Example property for a door can be customized
-
-
-    def change_description(self, new_description: str):
-        """Changes the description of this object."""
-        self.description = new_description
-
-    def add_interaction(self, item_name: str, event_function: Callable[['RpgHero'], str]):
-        """
-        Adds an event that triggers when a specific item is used on this object.
-        The event_function should take the RpgHero as an argument and return a message.
-        """
-        self.interaction_events[item_name.lower()] = event_function
-
-    def use_item_on_object(self, item_name: str, user: 'RpgHero') -> str:
-        """
-        Attempts to use an item on this specific room object.
-        Returns a message about the outcome.
-        """
-        item_name_lower = item_name.lower()
-        if item_name_lower in self.interaction_events:
-            return self.interaction_events[item_name_lower](user)
-        return f"Using {item_name} has no effect on the {self.name}."
 
 
 class Room:
@@ -132,15 +101,7 @@ class Room:
         if not self.inventory.has_component(item_name):
             raise ItemNotFoundError(item_name)
 
-        original_item = self.inventory[item_name]
-        if quantity > original_item.quantity:
-            raise InsufficientQuantityError(item_name, quantity, original_item.quantity)
-
-        removed_item = Item(original_item.name, original_item.cost, original_item.is_usable,
-                            original_item.effect_type, original_item.effect_value, original_item.is_consumable)
-        removed_item.quantity = quantity
-
-        self.inventory.remove_item(item_name, quantity)
+        removed_item = self.inventory.remove_item(item_name, quantity)
         print(f"[{self.name}] Removed {quantity} of {item_name}.")
 
         # Notify effects of item removal
@@ -150,7 +111,7 @@ class Room:
 
         return removed_item
 
-    def use_item_in_room(self, item_name: str, user: 'RpgHero'):
+    def use_item_in_room(self, item, user: 'RpgHero'):
         """
         Tries to use an item from hero's inventory within the room context.
         These could be items that affect the room (like a torch or key).
@@ -164,21 +125,10 @@ class Room:
             ValueError: If the item cannot be used in this room
         """
         # Check if the item is in the hero's inventory
-        item_name = item_name.lower()  # Normalize for case-insensitive comparison
+        item_name = item.name.lower()
 
         if not user.inventory.has_component(item_name):
             raise ItemNotFoundError(item_name)
-
-        for obj_name, room_object in self.objects.items():
-            if item_name in room_object.interaction_events:
-                # If the item has a specific interaction with this object,
-                # execute it and potentially consume the item.
-                message = room_object.use_item_on_object(item_name, user)
-                print(f"[{self.name}] {user.name} uses {item_name} on the {room_object.name}: {message}")
-
-                if user.inventory[item_name].is_consumable:
-                    user.inventory.remove_item(item_name, 1)
-                return True # Item successfully used on an object, we're done
 
         # Try to let room effects handle the item usage
         handled_by_effect = False
@@ -195,7 +145,7 @@ class Room:
             # If no specific effect handled it
             print(f"[{self.name}] {user.name} tries to use the {item_name}, but nothing special happens in this room.")
             raise ValueError(f"Item '{item_name}' cannot be used in this particular room.")
-
+        return False
 
     def get_description(self) -> str:
         """

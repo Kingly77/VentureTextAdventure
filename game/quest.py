@@ -5,14 +5,14 @@ from game.underlings.events import Events
 
 
 class Objective:
-    def __init__(self, type:str, target:str, value:int):
-        self.type = type
+    def __init__(self, type_str:str, target:str, value:int):
+        self.type = type_str
         self.target = target
         self.value = value
 
 
 class Quest:
-    def __init__(self, name, description, reward:int ,who = None, objective:Objective = None):
+    def __init__(self, name, description, reward:int, objective:Objective = None):
         self.id = str(uuid.uuid4())[:8]
         self.name:str = name
         self.description = description
@@ -23,19 +23,19 @@ class Quest:
         self.progress = 0
         self.progress_event_name = f"{self.objective.target.replace(' ','_')}_collected"
 
-        def progress_handler(val_hero):
+        def progress_handler(val_hero,*_):
             self.progress += 1
             if self.progress >= self.objective.value:
                 return Events.trigger_event(self.event_name,val_hero)
             return f"{val_hero.name} made progress in {self.name}"
 
-        def event_handler(val_hero):
+        def event_handler(val_hero,*_):
             self.tentative_complete = True
-            Events.remove_event(self.progress_event_name,progress_handler)
+            Events.remove_event("item_collected",progress_handler)
             return f"{val_hero.name} completed the quest: {self.name}"
 
 
-        Events.add_event(self.progress_event_name, progress_handler)
+        Events.add_event("item_collected", progress_handler)
         Events.add_event(self.event_name, event_handler,True)
 
     def __str__(self):
