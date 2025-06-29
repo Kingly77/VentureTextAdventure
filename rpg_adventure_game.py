@@ -10,9 +10,9 @@ class Game:
     Encapsulates the main game logic, state, and player command processing.
     """
 
-    def __init__(self):
+    def __init__(self,hero,room):
         """Initializes the game, setting up the hero, world, and command handlers."""
-        self.hero, self.current_room = setup_game()
+        self.hero, self.current_room = hero, room
         self.game_over = False
 
         # Handlers for commands that are methods of this class
@@ -88,6 +88,10 @@ class Game:
         """Splits a command string into (action, arg)."""
         parts = command_str.strip().split(' ', 1)
         return parts[0], parts[1] if len(parts) > 1 else ""
+
+    def parse_and_execute(self, command_str:str):
+        action, arg = self._parse_command(command_str)
+        self._dispatch_command(action, arg)
 
     def _dispatch_command(self, action: str, arg: str):
         """Routes the input command to the appropriate handler."""
@@ -286,5 +290,6 @@ class Game:
 
 
 if __name__ == '__main__':
-    game = Game()
+
+    game = Game(*setup_game())
     game.run()

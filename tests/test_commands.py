@@ -1,8 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
-
 from character.hero import RpgHero
-from components.inventory import Inventory
 from components.core_components import Health, Effect
 from game.items import Item
 from game.room import Room
