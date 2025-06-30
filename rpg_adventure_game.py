@@ -1,3 +1,5 @@
+import logging
+
 from character.enemy import Goblin
 from character.hero import RpgHero
 from game.setup import setup_game
@@ -266,7 +268,14 @@ class Game:
                 try:
                     hero.attack(enemy, arg or None)
                 except ValueError as e:
-                    print(f"{e}")
+                    
+                    logging.debug(f"{e}")
+                    weapons = [name for name, item in hero.inventory.items.items()
+                               if hasattr(item, 'is_equipment') and item.is_equipment]
+                    if weapons:
+                        print(f"Available weapons: {', '.join(weapons)}")
+                    else:
+                        print("No weapons available. Use 'attack' without a weapon to fight bare-handed.")
                     continue
                 print(f"{hero.name} attacks {enemy.name}! {enemy.name}'s health is now {enemy.health}.")
             elif action == "cast":

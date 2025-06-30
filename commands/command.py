@@ -114,7 +114,7 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
             # If the player specified "on room" or "in room", try room context usage
             if target_str in ["room", "the room", "this room"]:
                 try:
-                    handle_item_use(hero, item, room=current_room)
+                    handle_item_use(hero, item, target=None, room=current_room)
                     # Item removal is handled by the room effect
                 except ValueError as e:
                     print(f"{e}")
@@ -137,7 +137,7 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
                 # Use item on target in a room
                 obj = current_room.objects[target_str]
 
-                handle_item_use(hero, item, obj , current_room,)
+                handle_item_use(hero, item, target = obj , room = current_room,)
 
                 # if "use" in obj.interaction_events:
                 #      result = obj.try_interact("use",item ,hero, current_room)

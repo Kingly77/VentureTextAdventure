@@ -1,3 +1,5 @@
+from typing import Optional
+
 from character.hero import RpgHero
 from components.inventory import ItemNotFoundError, InsufficientQuantityError
 from game.items import UseItemError, Item
@@ -58,14 +60,14 @@ def handle_spell_cast(hero, spell_name, target):
     return False
 
 
-def handle_item_use(hero, item: Item, target=None, room=None, *args):
+def handle_item_use(hero:RpgHero, item: Item, target:Optional[any], room:Optional['Room']):
     try:
 
         if target is None:
             room.use_item_in_room(item, hero)
             return True
 
-        if room:
+        if room is not None:
             # First try room-object based interactions
             for obj in room.objects.values():
                 if obj.name != target.name:

@@ -1,4 +1,11 @@
-from typing import Dict, Callable, runtime_checkable, Protocol
+from typing import Dict, Callable, runtime_checkable, Protocol, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.room import Room
+
+from game.items import Item
+from character.hero import RpgHero
+
 
 class RoomObject:
     """Represents an interactive object within a room (e.g., a door, a chest, a lever)."""
@@ -8,14 +15,14 @@ class RoomObject:
         # A dictionary where keys are item names, and values are functions
         # to execute when that item is used on this object.
         self.tags:set =  set(tags or [])
-        self.interaction_events: Dict[str, Callable[['RpgHero',...], str]] = {}
+        self.interaction_events: Dict[str, Callable[['RpgHero','Item','Room',...], str]] = {}
         self.is_locked: bool = False # Example property for a door can be customized
 
 
 
     @runtime_checkable
     class InteractionEvent(Protocol):
-        def __call__(self, item_name: str, user: 'RpgHero', *args) -> str: ...
+        def __call__(self, user: 'RpgHero',item:Item,room:'Room', *args) -> str: ...
 
     def change_description(self, new_description: str):
         """Changes the description of this object."""
@@ -33,13 +40,13 @@ class RoomObject:
         """Checks if this object has a specific tag."""
         return tag in self.tags
 
-    def try_interact(self,verb, user, item = None,room = None):
+    def try_interact(self,verb:str, user:RpgHero, item:Item = None,room:'Room' = None):
         """
         Tries to interact with this object.
         Returns a message about the outcome.
         """
         if verb in self.interaction_events:
-            return self.interaction_events[verb](user,item,room)
+            return self.interaction_events[verb](user,item, room)
         else:
             return f"You cannot {verb} the {self.name}."
 

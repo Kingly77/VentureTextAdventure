@@ -12,7 +12,7 @@ class Objective:
 
 
 class Quest:
-    def __init__(self, name, description, reward:int, objective:Objective = None):
+    def __init__(self, name, description:str, reward:int, objective:Objective = None):
         self.id = str(uuid.uuid4())[:8]
         self.name:str = name
         self.description = description
