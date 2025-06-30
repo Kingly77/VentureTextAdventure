@@ -14,9 +14,8 @@ from game.util import handle_inventory_operation
 
 
 def _initialize_game_world():
-    # 1. Create Hero
+
     hero = RpgHero("Aidan", 1)
-    # Add a quest to collect the goblin ear
 
     goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,objective=Objective("collect","goblin ear",1))
 
@@ -25,7 +24,7 @@ def _initialize_game_world():
     hero.inventory.add_item(Item("gold", 1, False, quantity=10))
     print(f"Welcome, {hero.name}, to the world of KingBase!")
 
-    # 2. Create Rooms
+
     forest_clearing = Room("Forest Clearing", "A peaceful clearing in a dense forest. Sunlight filters through the leaves, and a stone table stands before you.")
     manor = Room("Manor", "A small manor with a large garden. The air is warm and the sun shines brightly.")
     foyer = Room("Foyer", "A cozy foyer with a large table and chair. There is a large glass door to the east.")
@@ -37,10 +36,9 @@ def _initialize_game_world():
     handle_inventory_operation(shack_shop.add_item, Item("marble ball", 1, False))
     handle_inventory_operation(shack_shop.add_item, Item("10 foot pole", 3, False))
 
-    # Add events to unlock the door
+
     Event.add_event("unlock_foyer", foyer.unlock, True)
 
-    # 3. Link Rooms
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
     forest_clearing.link_rooms("east", manor, "west")
     forest_clearing.link_rooms("south", shack_shop, "north")
@@ -88,19 +86,19 @@ def _initialize_game_world():
     manor_door.add_interaction("use", use_sword_on_door)
     manor.add_object(manor_door)
 
-    # 4. Apply Room Effects
+
     dark_cave_effect = DarkCaveLightingEffect(dark_cave_entrance)
     dark_cave_entrance.add_effect(dark_cave_effect)
     forest_clearing.add_object(forest_table)
 
-    # 5. Populate Rooms with Items
+
     manor.add_item(Item("sword", 10, True, Effect.DAMAGE, 10,is_consumable=False,tags=["weapon"]))
     forest_clearing.add_item(Item("health potion", 10, True, Effect.HEAL, 20,is_consumable=True))
     dark_cave_entrance.add_item(Item("torch", 5, True,is_consumable=False,tags=["fire"])) # Essential for the cave!
     goblins_lair.add_item(Item("shiny coin", 1, False , is_consumable=True))
     goblins_lair.add_item(Item("rusty dagger", 5, True, Effect.DAMAGE, 5,is_consumable=False))
 
-    # 6. Place Enemies
+
     goblin_foe = Goblin("Goblin Grunt", 1)
     goblin_foe.reward = Item("goblin ear", 1,False)
     goblin_foe.reward.quantity = 1
