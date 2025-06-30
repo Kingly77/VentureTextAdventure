@@ -299,6 +299,5 @@ class Game:
 
 
 if __name__ == '__main__':
-
     game = Game(*setup_game())
     game.run()
