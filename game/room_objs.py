@@ -18,7 +18,26 @@ class RoomObject:
         self.interaction_events: Dict[str, Callable[['RpgHero','Item','Room',...], str]] = {}
         self.is_locked: bool = False # Example property for a door can be customized
 
+    def with_tagset(self, tagset:set):
+        """Returns a copy of this object with a different tagset."""
+        return RoomObject(self.name, self.description, tagset.copy())
 
+    def with_added_tags(self, *tags):
+        new_tags = self.tags.copy()
+        new_tags.update(tags)
+        return RoomObject(self.name, self.description, new_tags)
+
+    def with_interaction(self, verb:str, event_function: 'RoomObject.InteractionEvent'):
+        """Returns a copy of this object with a different interaction event."""
+        new_obj = RoomObject(self.name, self.description, self.tags)
+        new_obj.interaction_events[verb.lower()] = event_function
+        return new_obj
+
+    def with_added_interaction(self, verb: str, event_function):
+        new_obj = RoomObject(self.name, self.description, self.tags.copy())
+        new_obj.interaction_events = self.interaction_events.copy()
+        new_obj.interaction_events[verb.lower()] = event_function
+        return new_obj
 
     @runtime_checkable
     class InteractionEvent(Protocol):

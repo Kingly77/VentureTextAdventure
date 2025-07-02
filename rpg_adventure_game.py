@@ -1,10 +1,9 @@
 import logging
 
 from character.enemy import Goblin
-from character.hero import RpgHero
+from commands.command import help_command, use_command, handle_inventory_command
 from game.setup import setup_game
 from game.util import handle_spell_cast, handle_inventory_operation
-from commands.command import help_command, use_command, handle_inventory_command
 
 
 class Game:
@@ -114,10 +113,23 @@ class Game:
         """Handles the 'go' command to move the player to another room."""
         next_room = self.current_room.exits_to.get(direction)
         if next_room and not next_room.is_locked:
+            self.hero.last_room = self.current_room
             self.current_room = next_room
             print(f"You go {direction}.")
             if hasattr(self.current_room, "on_enter"):
                 self.current_room.on_enter(self.hero)
+
+        elif direction == "back":
+            if self.hero.last_room is None:
+                print("You can't go back any further.")
+                return
+            temp = self.current_room
+            self.current_room = self.hero.last_room
+            self.hero.last_room = temp
+
+            print("You go back.")
+        elif next_room.is_locked:
+            print("The door is locked.")
         else:
             print("You can't go that way.")
 
@@ -147,7 +159,7 @@ class Game:
             if active_quests:
                 print("🔸 Active Quests:")
                 for quest in active_quests:
-                    print(f"  • {quest.name} - {quest.description} (ID: {quest.id})")
+                    print(f"  • {quest.name} - {quest.description} ({quest.progress}/{quest.objective.value}) (ID: {quest.id})")
             
             # Show completed quests
             if completed_quests:

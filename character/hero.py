@@ -27,6 +27,8 @@ class RpgHero(BaseCharacter):
         self.xp = 0
         self.xp_to_next_level = self._calculate_xp_to_next_level()
 
+        self.last_room:'Room' = None
+
         # Add hero-specific components
         self.components.add_component("mana", Mana(self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL))
         self.components.add_component("fireball", Spell("Fireball", 25, self, lambda target: target.take_damage(25)))

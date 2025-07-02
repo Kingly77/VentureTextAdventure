@@ -20,7 +20,7 @@ def _initialize_game_world():
     goblin_ear = Quest("goblin ear", "Collect the goblin ear to defeat the goblin foe.",100,objective=Objective("collect","goblin ear",1))
 
     hero.quest_log.add_quest(goblin_ear.id,goblin_ear)
-    hero.inventory.add_item(Item("goblin ear", 1, False))
+    #hero.inventory.add_item(Item("goblin ear", 1, False))
     hero.inventory.add_item(Item("gold", 1, False, quantity=10))
     print(f"Welcome, {hero.name}, to the world of KingBase!")
 
@@ -45,7 +45,8 @@ def _initialize_game_world():
     dark_cave_entrance.link_rooms("east", goblins_lair, "west") # Hidden path
     manor.link_rooms("north", foyer, "south")
 
-    forest_table = RoomObject("table", "A massive stone table dominates the area, with a small wooden chair peculiarly placed on its surface. In the center of the table, a carefully constructed fire pit contains a neat pile of firewood, ready to be lit.")
+    forest_table = (RoomObject("table",
+                              "A massive stone table dominates the area, with a small wooden chair peculiarly placed on its surface. In the center of the table, a carefully constructed fire pit contains a neat pile of firewood, ready to be lit."))
 
     def torch_on_table(val_hero, item: Item, *args):
         if forest_table.has_tag("lit"):
