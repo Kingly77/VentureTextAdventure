@@ -21,7 +21,7 @@ class Item(CanCast): # Inherit from CanCast
 
         self.name = name
         self.cost = cost
-        self.quantity = kwargs.get("quantity", 1)
+        self.quantity = quantity
         self.is_usable = is_usable
         self.effect_type: Effect = effect
         self.effect_value = effect_value

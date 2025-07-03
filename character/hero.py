@@ -41,6 +41,7 @@ class RpgHero(BaseCharacter):
             f"{self.mana} mana, and {self.inventory["fists"]} in their inventory."
         )
 
+        #Don't ask :)
         self.current = self.inventory.add_item
         hero = self
 

@@ -2,14 +2,13 @@ import logging
 
 from character.enemy import Goblin
 from commands.command import help_command, use_command, handle_inventory_command
+from components.core_components import Effect
+from game.items import Item
 from game.setup import setup_game
 from game.util import handle_spell_cast, handle_inventory_operation
 
 
 class Game:
-    """
-    Encapsulates the main game logic, state, and player command processing.
-    """
 
     def __init__(self,hero,room):
         """Initializes the game, setting up the hero, world, and command handlers."""
@@ -106,6 +105,27 @@ class Game:
     def _process_input(self):
         """Gets and processes player input."""
         command_input = input("\nWhat will you do? ").lower()
+        if " and " in command_input:
+            command_parts = command_input.split(" and ")
+
+            parsed_commands = [self._parse_command(part) for part in command_parts]
+
+            # Special handling for "take X and drop X"
+            if len(parsed_commands) == 2 and \
+                    parsed_commands[0][0] == "take" and \
+                    parsed_commands[1][0] == "drop" and \
+                    parsed_commands[0][1] == parsed_commands[1][1] and \
+                    parsed_commands[0][1] != "":  # Ensure there's an actual item
+                item_name = parsed_commands[0][1]
+                print(f"You picked up and dropped the {item_name}.")
+                return
+
+
+
+            # Process each parsed command sequentially
+            for action, arg in parsed_commands:
+                self._dispatch_command(action, arg)
+            return
         action, arg = self._parse_command(command_input)
         self._dispatch_command(action, arg)
 
@@ -238,7 +258,7 @@ class Game:
         self.game_over = True
 
     def _handle_debug(self, arg: str):
-        """Debug-only commands for development purposes."""
+        """Debug-only commands for development purposes. Half do nothing. :)"""
         if arg == "heal":
             self.hero.health = self.hero.max_health
             print(f"{self.hero.name} fully healed.")
@@ -248,17 +268,43 @@ class Game:
         elif arg == "xp":
             self.hero.add_xp(100)
             print("Gained 100 XP.")
-        elif arg == "tp":
-            print("Rooms:")
-            for name in self.hero.room_registry:
-                print("-", name)
-            dest = input("Enter destination room: ")
-            room = self.hero.room_registry.get(dest)
-            if room:
-                self.current_room = room
-                print(f"Teleported to {room.name}.")
-            else:
-                print("Invalid room.")
+
+        elif arg == "add":
+            item_name = input("Enter item name: ")
+            item_quantity = int(input("Enter item quantity: "))
+            item_cost = int(input("Enter item cost: "))
+            item_effect_type = input("Enter effect type (HEAL/DAMAGE/NONE): ")
+            if item_effect_type.upper() not in ["HEAL", "DAMAGE", "NONE"]:
+                print("Invalid effect type. Must be HEAL, DAMAGE, or NONE.")
+                return
+            item_effect_value = input("Enter effect value: ")
+            try:
+                int(item_effect_value)
+            except ValueError:
+                print("Effect value must be an integer.")
+                return
+
+            item_is_usable = input("Is item usable? (y/n): ").lower() == "y"
+            item_is_consumable = input("Is item consumable? (y/n): ").lower() == "n"
+            self.hero.inventory.add_item(Item(name=item_name,
+                                              cost=item_cost,
+                                              is_usable=True if item_is_usable == "y" else False,
+                                              effect=Effect[item_effect_type.upper()],
+                                              effect_value=int(item_effect_value),
+                                              is_consumable=True if item_is_consumable == "y" else False),
+                                              quantity=item_quantity)
+
+        # elif arg == "tp":
+            # print("Rooms:")
+            # for name in self.hero.room_registry:
+            #     print("-", name)
+            # dest = input("Enter destination room: ")
+            # room = self.hero.room_registry.get(dest)
+            # if room:
+            #     self.current_room = room
+            #     print(f"Teleported to {room.name}.")
+            # else:
+            #     print("Invalid room.")
         else:
             print("Unknown debug command. Options: heal, mana, xp, tp")
 

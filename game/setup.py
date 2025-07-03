@@ -42,7 +42,7 @@ def _initialize_game_world():
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
     forest_clearing.link_rooms("east", manor, "west")
     forest_clearing.link_rooms("south", shack_shop, "north")
-    dark_cave_entrance.link_rooms("east", goblins_lair, "west") # Hidden path
+    dark_cave_entrance.link_rooms("east", goblins_lair, "west")
     manor.link_rooms("north", foyer, "south")
 
     forest_table = (RoomObject("table",
