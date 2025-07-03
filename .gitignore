@@ -1,0 +1,59 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyc
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Testing
+.cache/
+.coverage
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Pytest
+.pytest_cache/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.sublime*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Logs and databases
+*.log
+*.db
+
+# Custom application files
+*.pid
+
+# Local config
+*.env
+.envrc
+
+# Miscellaneous
+*.bak
+*.tmp
