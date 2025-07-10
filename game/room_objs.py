@@ -12,8 +12,6 @@ class RoomObject:
     def __init__(self, name: str, description: str , tags = None):
         self.name = name.lower()
         self.description = description
-        # A dictionary where keys are item names, and values are functions
-        # to execute when that item is used on this object.
         self.tags:set =  set(tags or [])
         self.interaction_events: Dict[str, Callable[['RpgHero','Item','Room',...], str]] = {}
         self.is_locked: bool = False # Example property for a door can be customized

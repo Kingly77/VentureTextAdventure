@@ -36,7 +36,6 @@ def _initialize_game_world():
     handle_inventory_operation(shack_shop.add_item, Item("marble ball", 1, False))
     handle_inventory_operation(shack_shop.add_item, Item("10 foot pole", 3, False))
 
-
     Event.add_event("unlock_foyer", foyer.unlock, True)
 
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")

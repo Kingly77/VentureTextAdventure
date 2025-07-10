@@ -125,7 +125,7 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
                     return
                 # Use item on the hero
                 old_health = hero.health
-                handle_item_use(hero, item)
+                handle_item_use(hero, item,None,None)
                 print(f"{hero.name} used {item_name} on {hero.name}.")
                 # Display effect based on what happened
                 if hero.health > old_health:
