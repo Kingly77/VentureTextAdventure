@@ -66,6 +66,8 @@ Follow these steps to install and set up the game:
 To start your adventure, simply run the main game entry point:
 ## Installation
 
+#### *Optional if you want to use tests*
+
 1. Clone this repository
 2. Create a virtual environment:
    ```bash
@@ -82,9 +84,9 @@ To start your adventure, simply run the main game entry point:
    pip install -r requirements.txt
    ```
 
-## Usage
+## Run
 
 Run the game using:
 ```bash
-python rpg_adventure_game.py
+python ./game/main.py
 ```
