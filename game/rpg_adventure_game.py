@@ -355,3 +355,6 @@ class Game:
             return False
 
 
+if __name__ == '__main__':
+    game = Game(*setup_game())
+    game.run()
