@@ -4,7 +4,8 @@ from character.enemy import Goblin
 from commands.command import help_command, use_command, handle_inventory_command
 from components.core_components import Effect
 from game.items import Item
-from game.setup import setup_game
+#from game.setup import setup_game
+from game.game_world_initializer import setup_game
 from game.util import handle_spell_cast, handle_inventory_operation
 
 
@@ -356,6 +357,3 @@ class Game:
             return False
 
 
-if __name__ == '__main__':
-    game = Game(*setup_game())
-    game.run()
