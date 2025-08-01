@@ -1,5 +1,22 @@
 from collections import defaultdict
 import abc
+import logging
+
+
+# Custom exception classes for better error handling
+class EventError(Exception):
+    """Base exception for event system errors."""
+    pass
+
+
+class EventNotFoundError(EventError):
+    """Raised when trying to access a non-existent event."""
+    pass
+
+
+class HandlerNotFoundError(EventError):
+    """Raised when trying to remove a non-existent handler."""
+    pass
 
 
 class Handler(abc.ABC):
@@ -14,6 +31,19 @@ class Handler(abc.ABC):
     @abc.abstractmethod
     def __call__(self):
         pass
+
+
+class EventHandler(Handler):
+    """Enhanced handler with priority and metadata support."""
+    def __init__(self, func, priority=0, description="", one_time=False):
+        super().__init__()
+        self.func = func
+        self.priority = priority
+        self.description = description
+        self.one_time = one_time
+    
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
 
 
 class _Event:
@@ -53,10 +83,13 @@ class _Event:
 
         Note:
             Both the function and its arguments must match exactly what was registered.
+            
+        Raises:
+            EventNotFoundError: If the event doesn't exist
+            HandlerNotFoundError: If the handler is not found in the event
         """
         if name not in self.events:
-            print(f"Event '{name}' does not exist.")
-            return
+            raise EventNotFoundError(f"Event '{name}' does not exist.")
 
         handlers_to_keep = []
         found_handler = False
@@ -71,8 +104,9 @@ class _Event:
             self.events[name] = handlers_to_keep
             if not self.events[name]:  # Clean up if the list becomes empty
                 del self.events[name]
+            logging.debug(f"Removed handler from event '{name}'")
         else:
-            print(f"Handler function not found in event '{name}'.")
+            raise HandlerNotFoundError(f"Handler function not found in event '{name}'.")
 
 
     def trigger_event(self, name, *args, **kwargs):
@@ -84,26 +118,77 @@ class _Event:
         Args:
             name (str): The name of the event to trigger
             *args: The arguments to pass to each registered function
+            **kwargs: The keyword arguments to pass to each registered function
+            
+        Returns:
+            list: A list of results from all handlers, or None if no results
+            
+        Raises:
+            EventNotFoundError: If the event doesn't exist
         """
-
         if name in self.events:
+            results = []
             handlers_to_remove = []
-            out = None
-            for index, (funct, one_time) in enumerate(self.events[name]):
-                out = [funct(*args, **kwargs)]
-                if one_time:
-                    handlers_to_remove.append(index)
-
+            
+            for index, (handler, one_time) in enumerate(self.events[name]):
+                try:
+                    result = handler(*args, **kwargs)
+                    if result is not None:
+                        results.append(result)
+                    if one_time:
+                        handlers_to_remove.append(index)
+                except Exception as e:
+                    # Log error but continue with other handlers
+                    logging.error(f"Error in event handler for '{name}': {e}")
+            
+            # Remove one-time handlers
             for index in sorted(handlers_to_remove, reverse=True):
                 self.events[name].pop(index)
-
-                # Clean up empty event lists
+            
+            # Clean up empty event lists
             if not self.events[name]:
                 del self.events[name]
-
-            return out
+            
+            logging.debug(f"Triggered event '{name}' with {len(results)} results")
+            return results if results else None
         else:
-            raise ValueError("attempt to trigger a non-existent event")
+            raise EventNotFoundError(f"Event '{name}' does not exist")
+
+    def list_events(self):
+        """Return a dictionary of all registered events and their handler counts."""
+        return {name: len(handlers) for name, handlers in self.events.items()}
+
+    def get_event_info(self, name):
+        """Get detailed information about an event.
+        
+        Args:
+            name (str): The name of the event to get info for
+            
+        Returns:
+            dict: Event information including name, handler count, and handler details
+            
+        Raises:
+            EventNotFoundError: If the event doesn't exist
+        """
+        if name not in self.events:
+            raise EventNotFoundError(f"Event '{name}' does not exist")
+        
+        return {
+            'name': name,
+            'handler_count': len(self.events[name]),
+            'handlers': [
+                {
+                    'function': handler.__name__ if hasattr(handler, '__name__') else str(handler),
+                    'one_time': one_time
+                }
+                for handler, one_time in self.events[name]
+            ]
+        }
+
+    def clear_all_events(self):
+        """Clear all registered events. Useful for testing and cleanup."""
+        self.events.clear()
+        logging.debug("Cleared all events")
 
 
 Events = _Event()

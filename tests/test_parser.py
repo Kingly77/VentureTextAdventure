@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from character.hero import RpgHero
 from game.items import Item
 from game.room import Room
-from rpg_adventure_game import Game
+from game.rpg_adventure_game import Game
 from components.core_components import Effect
 
 
@@ -87,9 +87,9 @@ def test_parse_command():
 def test_dispatch_command_methods():
     """Test the _dispatch_command method with internal method handlers."""
     # Use patch to mock the methods
-    with patch('rpg_adventure_game.Game._handle_look') as mock_look:
-        with patch('rpg_adventure_game.Game._handle_inventory') as mock_inventory:
-            with patch('rpg_adventure_game.Game._handle_go') as mock_go:
+    with patch('game.rpg_adventure_game.Game._handle_look') as mock_look:
+        with patch('game.rpg_adventure_game.Game._handle_inventory') as mock_inventory:
+            with patch('game.rpg_adventure_game.Game._handle_go') as mock_go:
                 # Create a game instance with the patched methods
                 game = Game(MagicMock(), MagicMock())
 

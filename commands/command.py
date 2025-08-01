@@ -89,13 +89,50 @@ def handle_inventory_command(action:str, arg:str, hero:'RpgHero',current_room:'R
 
 
 
-def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
+def use_command(_, arg: str, hero: 'RpgHero' = None, current_room: 'Room' = None):
+    """
+    Enhanced use command that handles item usage with better structure and error handling.
+    
+    Supports:
+    - use [item] - Use item on self
+    - use [item] on [target] - Use item on specific target
+    - use [item] on room - Use item in room context
+    - use [item] in room - Alternative syntax for room usage
+    """
     if not arg:
         print("What do you want to use?")
         return
+    
+    if not hero or not current_room:
+        print("Invalid game state.")
+        return
 
-        # Split argument into item name and target (if provided)
-        # Support both "use X on Y" and "use X in Y" patterns
+    # Parse the command arguments
+    item_name, target_str = _parse_use_arguments(arg)
+    
+    try:
+        # Check if item exists in hero's inventory or room
+        item_location = _find_item_location(item_name, hero, current_room)
+        
+        if item_location == "hero":
+            _handle_hero_item_usage(item_name, target_str, hero, current_room)
+        elif item_location == "room":
+            _handle_room_item_usage(item_name, hero, current_room)
+        else:
+            print(f"You don't see or have a '{item_name}'.")
+            
+    except ItemNotFoundError as e:
+        print(f"Item not found: {e}")
+    except UseItemError as e:
+        print(f"Cannot use this item: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+
+def _parse_use_arguments(arg: str) -> tuple[str, str]:
+    """Parse use command arguments into item name and target."""
+    # Split argument into item name and target (if provided)
+    # Support both "use X on Y" and "use X in Y" patterns
     if " on " in arg:
         parts = arg.split(" on ", 1)
     elif " in " in arg:
@@ -105,62 +142,82 @@ def use_command(_ , arg: str, hero:'RpgHero'=None, current_room:'Room'=None):
 
     item_name = parts[0].strip().lower()
     target_str = parts[1].strip().lower() if len(parts) > 1 else None
+    
+    return item_name, target_str
 
+
+def _find_item_location(item_name: str, hero: 'RpgHero', current_room: 'Room') -> str:
+    """Determine where the item is located (hero inventory, room, or nowhere)."""
+    if hero.inventory.has_component(item_name):
+        return "hero"
+    elif current_room.inventory.has_component(item_name):
+        return "room"
+    else:
+        return "none"
+
+
+def _handle_hero_item_usage(item_name: str, target_str: str, hero: 'RpgHero', current_room: 'Room'):
+    """Handle usage of items from hero's inventory."""
+    item = hero.inventory[item_name]
+    
+    # Determine the target for item usage
+    if target_str is None or target_str in ["self", "me", "myself", hero.name.lower()]:
+        _use_item_on_self(item, item_name, hero)
+    elif target_str in ["room", "the room", "this room"]:
+        _use_item_on_room(item, hero, current_room)
+    elif target_str in current_room.objects:
+        _use_item_on_object(item, target_str, hero, current_room)
+    else:
+        print(f"You don't see '{target_str}' to use the {item_name} on.")
+
+
+def _use_item_on_self(item: 'Item', item_name: str, hero: 'RpgHero'):
+    """Use an item on the hero themselves."""
+    if not item.is_usable:
+        print(f"The {item_name} cannot be used on yourself. It may be used on a room instead.")
+        return
+    
+    old_health = hero.health
+    handle_item_use(hero, item, None, None)
+    print(f"{hero.name} used {item_name} on themselves.")
+    
+    # Display effect based on what happened
+    if hero.health > old_health:
+        print(f"You feel refreshed! Health increased to {hero.health}.")
+    elif hero.health < old_health:
+        print(f"Ouch! That hurt. Health decreased to {hero.health}.")
+
+
+def _use_item_on_room(item: 'Item', hero: 'RpgHero', current_room: 'Room'):
+    """Use an item in the room context."""
     try:
-        # First, check if the item is in the hero's inventory
-        if hero.inventory.has_component(item_name):
-            item = hero.inventory[item_name]
+        handle_item_use(hero, item, target=None, room=current_room)
+        print(f"You used the {item.name} in the {current_room.name}.")
+    except ValueError as e:
+        print(f"{e}")
 
-            # If the player specified "on room" or "in room", try room context usage
-            if target_str in ["room", "the room", "this room"]:
-                try:
-                    handle_item_use(hero, item, target=None, room=current_room)
-                    # Item removal is handled by the room effect
-                except ValueError as e:
-                    print(f"{e}")
-            # If it's a usable item but no specific target, use on self by default
-            elif target_str is None or target_str in ["self", "me", "myself", hero.name.lower()]:
-                if not item.is_usable:
-                    print(f"The {item_name} cannot be used on yourself. it maybe used on a room instead.")
-                    return
-                # Use item on the hero
-                old_health = hero.health
-                handle_item_use(hero, item,None,None)
-                print(f"{hero.name} used {item_name} on {hero.name}.")
-                # Display effect based on what happened
-                if hero.health > old_health:
-                    print(f"You feel refreshed! Health increased to {hero.health}.")
-                elif hero.health < old_health:
-                    print(f"Ouch! That hurt. Health decreased to {hero.health}.")
 
-            elif target_str in current_room.objects:
-                # Use item on target in a room
-                obj = current_room.objects[target_str]
-
-                handle_item_use(hero, item, target = obj , room = current_room,)
-
-                # if "use" in obj.interaction_events:
-                #      result = obj.try_interact("use",item ,hero, current_room)
-                #      print(result)
-                # else:
-                #    print(f"The {obj.name} cannot be used on itself. it maybe used on a room instead.")
-
-            else:
-                print(f"You don't see '{target_str}' to use the {item_name} on.")
-
-        # If an item is in the room, try to use it directly
-        elif current_room.inventory.has_component(item_name):
-            try:
-                current_room.use_item_in_room(item_name, hero)
-                print(f"{hero.name} used the {item_name} in the {current_room.name}.")
-            except Exception as e:
-                print(f"Failed to use {item_name}: {e}")
+def _use_item_on_object(item: 'Item', target_str: str, hero: 'RpgHero', current_room: 'Room'):
+    """Use an item on a specific object in the room."""
+    obj = current_room.objects[target_str]
+    
+    try:
+        # Try to use the object's interaction system first
+        if hasattr(obj, 'try_interact'):
+            result = obj.try_interact("use", hero, item, current_room)
+            print(result)
         else:
-            print(f"You don't see or have a '{item_name}'.")
-
-    except ItemNotFoundError as e:
-        print(f"Item not found: {e}")
-    except UseItemError as e:
-        print(f"Cannot use this item: {e}")
+            # Fall back to the general item use handler
+            handle_item_use(hero, item, target=obj, room=current_room)
+            print(f"You used the {item.name} on the {obj.name}.")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"Cannot use {item.name} on {obj.name}: {e}")
+
+
+def _handle_room_item_usage(item_name: str, hero: 'RpgHero', current_room: 'Room'):
+    """Handle usage of items found in the room."""
+    try:
+        current_room.use_item_in_room(item_name, hero)
+        print(f"{hero.name} used the {item_name} in the {current_room.name}.")
+    except Exception as e:
+        print(f"Failed to use {item_name}: {e}")

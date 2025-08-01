@@ -30,7 +30,11 @@ class Quest:
         def progress_handler(val_hero,*_):
             self.progress += 1
             if self.progress >= self.objective.value:
-                return Events.trigger_event(self.event_name,val_hero)
+                results = Events.trigger_event(self.event_name, val_hero)
+                # Return the first result if available, or a default completion message
+                if results and len(results) > 0:
+                    return results[0]
+                return f"{val_hero.name} completed the quest: {self.name}"
             return f"{val_hero.name} made progress in {self.name}"
 
         def event_handler(val_hero,*_):

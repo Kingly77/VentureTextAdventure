@@ -131,6 +131,10 @@ class Game:
     def _handle_go(self, direction: str):
         """Handles the 'go' command to move the player to another room."""
         next_room = self.current_room.exits_to.get(direction)
+        if not next_room:
+            print("You can't go that way.")
+            return
+
         if next_room and not next_room.is_locked:
             self.hero.last_room = self.current_room
             self.current_room = next_room
@@ -353,8 +357,3 @@ class Game:
         else:
             print(f"\n{hero.name} has been defeated by {enemy.name}...")
             return False
-
-
-if __name__ == '__main__':
-    game = Game(*setup_game())
-    game.run()

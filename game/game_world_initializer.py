@@ -10,7 +10,7 @@ from game.quest import Quest, Objective
 from game.room import Room, RoomObject
 from game.room_effects import DarkCaveLightingEffect
 from game.shop_effect import ShopEffect
-from game.underlings.events import Events as Event
+from game.underlings.events import Events as Event, EventNotFoundError
 from game.util import handle_inventory_operation
 
 
@@ -124,7 +124,7 @@ def _create_door_interaction(foyer: Room, manor_door: RoomObject) -> callable:
                 Event.trigger_event("unlock_foyer")
                 return (f"You use your {item.name} to bash the door open! "
                        f"The door swings wide and a giant bashing sound is heard.")
-            except ValueError as e:
+            except EventNotFoundError as e:
                 return f"Error: {str(e)}"
         else:
             return "Door already unlocked and open."

@@ -81,16 +81,16 @@ class RpgHero(BaseCharacter):
         return self.components["mana"]
 
     def check_quest_item(self, item: Item):
-        out = None
         try:
             for quest in self.quest_log.active_quests.values():
                 if item.name in quest.objective.target:
-                    out = Events.trigger_event("item_collected",self,item)
-
-                if out:
-                    print(out)
-                    break
-
+                    results = Events.trigger_event("item_collected", self, item)
+                    if results:
+                        # Handle list of results from multiple handlers
+                        for result in results:
+                            if result:
+                                print(result)
+                        break
         except Exception as e:
             print(f"No quests to need {item.name} for progress: {e}")
 
