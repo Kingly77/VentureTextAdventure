@@ -3,11 +3,13 @@ from interfaces.interface import Combatant, CanCast
 
 class SpellError(Exception):
     """Base exception for spell-related errors."""
+
     pass
 
 
 class NoTargetError(SpellError):
     """Exception raised when attempting to cast a spell without a target."""
+
     def __init__(self, spell_name: str):
         self.spell_name = spell_name
         super().__init__(f"No target provided for spell '{spell_name}'.")
@@ -16,7 +18,7 @@ class NoTargetError(SpellError):
 class Spell(CanCast):
     """Represents a magical spell that can be cast on a target."""
 
-    def __init__(self, name: str, cost: int, caster: 'BaseCharacter', effect: callable):
+    def __init__(self, name: str, cost: int, caster: "BaseCharacter", effect: callable):
         """Initialize a spell with a name, mana cost, caster, and effect.
 
         Args:

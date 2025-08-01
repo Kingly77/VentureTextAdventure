@@ -9,7 +9,7 @@ from game.util import handle_spell_cast, handle_inventory_operation
 
 class Game:
 
-    def __init__(self,hero,room):
+    def __init__(self, hero, room):
         """Initializes the game, setting up the hero, world, and command handlers."""
         self.hero, self.current_room = hero, room
         self.game_over = False
@@ -42,7 +42,7 @@ class Game:
         print("\n" + "=" * 50)
         print("THE QUEST FOR THE GOBLIN EAR")
         print("=" * 50 + "\n")
-
+        logging.debug(f"Hero: {self.hero}")
         while not self.game_over:
             self._update_turn()
 
@@ -77,18 +77,21 @@ class Game:
                 defeated_enemy = self.current_room.combatants.pop(0)
                 print(f"You defeated {defeated_enemy.name}.")
                 if hasattr(defeated_enemy, "reward"):
-                    handle_inventory_operation(self.hero.inventory.add_item, defeated_enemy.reward)
+                    handle_inventory_operation(
+                        self.hero.inventory.add_item, defeated_enemy.reward
+                    )
                     print(
-                        f"{self.hero.name} collected a trophy: {defeated_enemy.reward.name} x{defeated_enemy.reward.quantity}!")
+                        f"{self.hero.name} collected a trophy: {defeated_enemy.reward.name} x{defeated_enemy.reward.quantity}!"
+                    )
             else:
                 self.game_over = True
 
     def _parse_command(self, command_str: str):
         """Splits a command string into (action, arg)."""
-        parts = command_str.strip().split(' ', 1)
+        parts = command_str.strip().split(" ", 1)
         return parts[0], parts[1] if len(parts) > 1 else ""
 
-    def parse_and_execute(self, command_str:str):
+    def parse_and_execute(self, command_str: str):
         action, arg = self._parse_command(command_str)
         self._dispatch_command(action, arg)
 
@@ -110,16 +113,16 @@ class Game:
             parsed_commands = [self._parse_command(part) for part in command_parts]
 
             # Special handling for "take X and drop X"
-            if len(parsed_commands) == 2 and \
-                    parsed_commands[0][0] == "take" and \
-                    parsed_commands[1][0] == "drop" and \
-                    parsed_commands[0][1] == parsed_commands[1][1] and \
-                    parsed_commands[0][1] != "":  # Ensure there's an actual item
+            if (
+                len(parsed_commands) == 2
+                and parsed_commands[0][0] == "take"
+                and parsed_commands[1][0] == "drop"
+                and parsed_commands[0][1] == parsed_commands[1][1]
+                and parsed_commands[0][1] != ""
+            ):  # Ensure there's an actual item
                 item_name = parsed_commands[0][1]
                 print(f"You picked up and dropped the {item_name}.")
                 return
-
-
 
             # Process each parsed command sequentially
             for action, arg in parsed_commands:
@@ -165,25 +168,29 @@ class Game:
         # Character stats section
         print("\n📊 Character Status:")
         print("=" * 40)
-        print(f"🧙 {self.hero.name} | Level {self.hero.level} | XP: {self.hero.xp}/{self.hero.xp_to_next_level}")
+        print(
+            f"🧙 {self.hero.name} | Level {self.hero.level} | XP: {self.hero.xp}/{self.hero.xp_to_next_level}"
+        )
         print(f"❤️  Health: {self.hero.health}/{self.hero.max_health}")
         print(f"✨ Mana: {self.hero.mana}/{self.hero.max_mana}")
         print(f"💰 Gold: {self.hero.gold}")
-        
+
         # Quest log section
         active_quests = list(self.hero.quest_log.active_quests.values())
         completed_quests = self.hero.quest_log.completed_quests
-        
+
         if active_quests or completed_quests:
             print("\n📜 Quest Log:")
             print("-" * 40)
-            
+
             # Show active quests
             if active_quests:
                 print("🔸 Active Quests:")
                 for quest in active_quests:
-                    print(f"  • {quest.name} - {quest.description} ({quest.progress}/{quest.objective.value}) (ID: {quest.id})")
-            
+                    print(
+                        f"  • {quest.name} - {quest.description} ({quest.progress}/{quest.objective.value}) (ID: {quest.id})"
+                    )
+
             # Show completed quests
             if completed_quests:
                 print("\n🔹 Completed Quests:")
@@ -191,7 +198,7 @@ class Game:
                     print(f"  • {quest}")
         else:
             print("\n📜 Quest Log: No quests available")
-        
+
         print("=" * 40)
 
     def _handle_turn_in(self, arg: str):
@@ -202,31 +209,31 @@ class Game:
         """Handles the 'inventory' command."""
         inventory = self.hero.inventory
         items = list(inventory.items.values())
-        
+
         if not items or (len(items) == 1 and items[0].name == "gold"):
             print("\n📦 Your inventory is empty.")
             return
-        
+
         print("\n📦 Inventory:")
         print("------------------------")
-        
+
         # Group items by type for better organization
         usable_items = []
         equipment = []
         misc_items = []
-        
+
         for item in items:
             # Skip gold as it will be displayed separately
             if item.name.lower() == "gold":
                 continue
-            
+
             if item.is_usable:
                 usable_items.append(item)
-            elif hasattr(item, 'is_equipment') and item.is_equipment:
+            elif hasattr(item, "is_equipment") and item.is_equipment:
                 equipment.append(item)
             else:
                 misc_items.append(item)
-        
+
         # Print usable items
         if usable_items:
             print("🧪 Usable Items:")
@@ -236,23 +243,25 @@ class Game:
                     effect_text = f" (Heals {item.effect_value})"
                 elif item.effect_type.name == "DAMAGE":
                     effect_text = f" (Damage {item.effect_value})"
-                
-                print(f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each")
+
+                print(
+                    f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each"
+                )
             print()
-        
+
         # Print equipment
         if equipment:
             print("⚔️ Equipment:")
             for item in equipment:
                 print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
             print()
-        
+
         # Print misc items
         if misc_items:
             print("🔮 Other Items:")
             for item in misc_items:
                 print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
-    
+
         print("------------------------")
         print(f"💰 Gold: {self.hero.gold}")
 
@@ -289,25 +298,29 @@ class Game:
 
             item_is_usable = input("Is item usable? (y/n): ").lower() == "y"
             item_is_consumable = input("Is item consumable? (y/n): ").lower() == "n"
-            self.hero.inventory.add_item(Item(name=item_name,
-                                              cost=item_cost,
-                                              is_usable=True if item_is_usable == "y" else False,
-                                              effect=Effect[item_effect_type.upper()],
-                                              effect_value=int(item_effect_value),
-                                              is_consumable=True if item_is_consumable == "y" else False),
-                                              quantity=item_quantity)
+            self.hero.inventory.add_item(
+                Item(
+                    name=item_name,
+                    cost=item_cost,
+                    is_usable=True if item_is_usable == "y" else False,
+                    effect=Effect[item_effect_type.upper()],
+                    effect_value=int(item_effect_value),
+                    is_consumable=True if item_is_consumable == "y" else False,
+                ),
+                quantity=item_quantity,
+            )
 
         # elif arg == "tp":
-            # print("Rooms:")
-            # for name in self.hero.room_registry:
-            #     print("-", name)
-            # dest = input("Enter destination room: ")
-            # room = self.hero.room_registry.get(dest)
-            # if room:
-            #     self.current_room = room
-            #     print(f"Teleported to {room.name}.")
-            # else:
-            #     print("Invalid room.")
+        # print("Rooms:")
+        # for name in self.hero.room_registry:
+        #     print("-", name)
+        # dest = input("Enter destination room: ")
+        # room = self.hero.room_registry.get(dest)
+        # if room:
+        #     self.current_room = room
+        #     print(f"Teleported to {room.name}.")
+        # else:
+        #     print("Invalid room.")
         else:
             print("Unknown debug command. Options: heal, mana, xp, tp")
 
@@ -319,26 +332,37 @@ class Game:
         hero = self.hero
         print(f"\n--- COMBAT INITIATED: {hero.name} vs. {enemy.name} ---")
         while hero.is_alive() and enemy.is_alive():
-            print(f"\n{hero.name} Health: {hero.health}/{hero.max_health} | Mana: {hero.mana}/{hero.max_mana}")
+            print(
+                f"\n{hero.name} Health: {hero.health}/{hero.max_health} | Mana: {hero.mana}/{hero.max_mana}"
+            )
             print(f"{enemy.name} Health: {enemy.health}/{enemy.max_health}")
 
-            command = input("What will you do? (attack [weapon], cast [spell]): ").lower()
+            command = input(
+                "What will you do? (attack [weapon], cast [spell]): "
+            ).lower()
             action, arg = self._parse_command(command)
 
             if action == "attack":
                 try:
                     hero.attack(enemy, arg or None)
                 except ValueError as e:
-                    
+
                     logging.debug(f"{e}")
-                    weapons = [name for name, item in hero.inventory.items.items()
-                               if hasattr(item, 'is_equipment') and item.is_equipment]
+                    weapons = [
+                        name
+                        for name, item in hero.inventory.items.items()
+                        if hasattr(item, "is_equipment") and item.is_equipment
+                    ]
                     if weapons:
                         print(f"Available weapons: {', '.join(weapons)}")
                     else:
-                        print("No weapons available. Use 'attack' without a weapon to fight bare-handed.")
+                        print(
+                            "No weapons available. Use 'attack' without a weapon to fight bare-handed."
+                        )
                     continue
-                print(f"{hero.name} attacks {enemy.name}! {enemy.name}'s health is now {enemy.health}.")
+                print(
+                    f"{hero.name} attacks {enemy.name}! {enemy.name}'s health is now {enemy.health}."
+                )
             elif action == "cast":
                 handle_spell_cast(hero, arg, enemy)
             else:
@@ -347,12 +371,16 @@ class Game:
 
             if enemy.is_alive():
                 enemy.attack(hero)
-                print(f"{enemy.name} retaliates! {hero.name}'s health is now {hero.health}.")
+                print(
+                    f"{enemy.name} retaliates! {hero.name}'s health is now {hero.health}."
+                )
 
         if hero.is_alive():
             print(f"\n{hero.name} defeated {enemy.name}!")
             hero.add_xp(enemy.xp_value)
-            print(f"{hero.name} gained {enemy.xp_value} XP. Total XP: {hero.xp}, Level: {hero.level}.")
+            print(
+                f"{hero.name} gained {enemy.xp_value} XP. Total XP: {hero.xp}, Level: {hero.level}."
+            )
             return True
         else:
             print(f"\n{hero.name} has been defeated by {enemy.name}...")
