@@ -7,10 +7,13 @@ from interfaces.interface import Combatant
 
 class Goblin(BaseCharacter):
     """Goblin enemy class."""
+
     def __init__(self, name: str, level: int):
         """Initialize a goblin with default attributes."""
         super().__init__(name, level, base_health=1, xp_value=100)
-        self.components["inventory"].add_item(Item("sword", 0, True, effect=Effect.DAMAGE, effect_value=10))
+        self.components["inventory"].add_item(
+            Item("sword", 0, True, effect=Effect.DAMAGE, effect_value=10)
+        )
 
     @property
     def sword(self) -> Item:
@@ -24,13 +27,18 @@ class Goblin(BaseCharacter):
 
 class Troll(BaseCharacter):
     """Troll enemy class with regeneration ability."""
+
     def __init__(self, name: str, level: int):
         """Initialize a troll with default attributes."""
         super().__init__(name, level, base_health=250, xp_value=150)
         # Trolls have natural regeneration and a different attack
-        self.components.add_component("claws", Item("Troll Claws", 0, True, effect=Effect.DAMAGE, effect_value=20))
+        self.components.add_component(
+            "claws", Item("Troll Claws", 0, True, effect=Effect.DAMAGE, effect_value=20)
+        )
         # Special regeneration ability
-        self.components.add_component("regeneration", Spell("Regenerate", 0, self, lambda target: target.heal(15)))
+        self.components.add_component(
+            "regeneration", Spell("Regenerate", 0, self, lambda target: target.heal(15))
+        )
 
     @property
     def claws(self) -> Item:

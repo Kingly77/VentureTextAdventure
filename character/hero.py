@@ -85,7 +85,6 @@ class RpgHero(BaseCharacter):
         #
         # self.inventory.add_item = types.MethodType(add_item,self.inventory)
 
-
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
 
@@ -224,7 +223,6 @@ class RpgHero(BaseCharacter):
     def mana(self) -> int:
         """Get the current mana value."""
         return self.get_mana_component().mana
-
 
     @property
     def inventory(self) -> QuestAwareInventory:

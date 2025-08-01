@@ -1,5 +1,6 @@
 import enum
 
+
 class Mana:
     def __init__(self, mana: int):
         self._mana = mana
@@ -9,7 +10,7 @@ class Mana:
         """Consumes a specified amount of mana."""
         if amount < 0:
             raise ValueError("Mana consumption cannot be negative.")
-        self.mana -= amount # Use the setter to ensure validation
+        self.mana -= amount  # Use the setter to ensure validation
 
     @property
     def mana(self) -> int:
@@ -18,10 +19,10 @@ class Mana:
     @mana.setter
     def mana(self, mana: int):
         if mana < 0:
-            self._mana = 0 # Direct assignment to avoid recursion
+            self._mana = 0  # Direct assignment to avoid recursion
             # You might want to log a warning here if mana goes below zero
         elif mana > self._max_mana:
-            self._mana = self._max_mana # Cap mana at max_mana
+            self._mana = self._max_mana  # Cap mana at max_mana
         else:
             self._mana = mana
 
@@ -48,13 +49,15 @@ class Health:
         """Reduces health by the specified damage amount."""
         if damage < 0:
             raise ValueError("Damage cannot be negative.")
-        self.health -= damage # Use the setter to ensure validation
+        self.health -= damage  # Use the setter to ensure validation
 
     def heal(self, amount: int):
         """Increases health by the specified amount, up to max_health."""
         if amount < 0:
             raise ValueError("Healing amount cannot be negative.")
-        self.health += amount # Use the setter to ensure validation (which will cap at max_health)
+        self.health += (
+            amount  # Use the setter to ensure validation (which will cap at max_health)
+        )
 
     @property
     def health(self) -> int:
@@ -63,9 +66,9 @@ class Health:
     @health.setter
     def health(self, health: int):
         if health < 0:
-            self._health = 0 # Direct assignment to avoid recursion
+            self._health = 0  # Direct assignment to avoid recursion
         elif health > self._max_health:
-            self._health = self._max_health # Cap health at max_health
+            self._health = self._max_health  # Cap health at max_health
         else:
             self._health = health
 
@@ -121,7 +124,7 @@ class HoldComponent:
 
     def __repr__(self):
         """Returns readable class representation for debugging."""
-        components = ', '.join(self._components.keys())
+        components = ", ".join(self._components.keys())
         return f"<HoldComponent with: {components}>"
 
 

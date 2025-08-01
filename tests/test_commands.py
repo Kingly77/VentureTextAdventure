@@ -18,10 +18,17 @@ def test_hero():
 def test_items():
     """Fixture that creates some test items."""
     return {
-        "health_potion": Item("health potion", 10, True, is_consumable=True, 
-                             effect=Effect.HEAL, effect_value=20),
-        "sword": Item("sword", 25, True, is_equipment=True,
-                     effect=Effect.DAMAGE, effect_value=15),
+        "health_potion": Item(
+            "health potion",
+            10,
+            True,
+            is_consumable=True,
+            effect=Effect.HEAL,
+            effect_value=20,
+        ),
+        "sword": Item(
+            "sword", 25, True, is_equipment=True, effect=Effect.DAMAGE, effect_value=15
+        ),
         "key": Item("rusty key", 0, False),
         "treasure": Item("gold coin", 1, False, quantity=10),
     }
@@ -49,15 +56,12 @@ def two_room_world(test_items):
     treasure_room.add_item(test_items["treasure"])
 
     # Register rooms in a registry
-    room_registry = {
-        "starting_room": starting_room,
-        "treasure_room": treasure_room
-    }
+    room_registry = {"starting_room": starting_room, "treasure_room": treasure_room}
 
     return {
         "starting_room": starting_room,
         "treasure_room": treasure_room,
-        "registry": room_registry
+        "registry": room_registry,
     }
 
 
@@ -160,7 +164,11 @@ def test_drop_multiple_items(game_setup, test_items):
 
     # Verify quantities
     assert hero.inventory["gold coin"].quantity == 5  # Started with 10
-    room_treasure = next(value for key, value in current_room.inventory.items.items() if key == "gold coin")
+    room_treasure = next(
+        value
+        for key, value in current_room.inventory.items.items()
+        if key == "gold coin"
+    )
     assert room_treasure.quantity == 5
 
 
@@ -171,6 +179,3 @@ def test_drop_nonexistent_item(game_setup):
     # Attempt to drop non-existent item
     with pytest.raises(Exception):
         hero.inventory.remove_item("nonexistent item")
-
-
-

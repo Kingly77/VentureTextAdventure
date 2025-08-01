@@ -5,6 +5,7 @@ from interfaces.interface import Combatant
 
 class BaseCharacter(Combatant):
     """Base class for all characters in the game."""
+
     def __init__(self, name: str, level: int, base_health: int, xp_value: int = 0):
         """Initialize a base character with common attributes.
 
@@ -46,6 +47,7 @@ class BaseCharacter(Combatant):
     def max_health(self, value: int):
         """Set the maximum health value."""
         self.get_health_component().max_health = value
+
     @property
     def inventory(self) -> Inventory:
         """Get the character's inventory."""
@@ -67,9 +69,13 @@ class BaseCharacter(Combatant):
             ValueError: If target is None or weapon doesn't exist
         """
         if target is None:
-            raise ValueError(f"{self.name} tried to attack, but no target was provided.")
+            raise ValueError(
+                f"{self.name} tried to attack, but no target was provided."
+            )
 
         if not self.inventory.has_component(weapon_name):
-            raise ValueError(f"{self.name} doesn't have a {weapon_name} to attack with.")
+            raise ValueError(
+                f"{self.name} doesn't have a {weapon_name} to attack with."
+            )
 
         self.inventory[weapon_name].cast(target)

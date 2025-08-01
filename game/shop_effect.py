@@ -5,7 +5,7 @@ from game.util import handle_inventory_operation
 
 
 class ShopEffect(RoomDiscEffect):
-    def __init__(self, room: 'Room', shopkeeper_name="The Merchant", prices=None):
+    def __init__(self, room: "Room", shopkeeper_name="The Merchant", prices=None):
         super().__init__(room)
         self.shopkeeper_name = shopkeeper_name
         self.prices = prices or {}  # item.name -> price override
@@ -53,7 +53,7 @@ class ShopEffect(RoomDiscEffect):
         print(f"{self.shopkeeper_name} sells you the {item.name} for {price} gold.")
         return True
 
-    def handle_drop(self, hero: 'RpgHero', item_name: str) -> bool:
+    def handle_drop(self, hero: "RpgHero", item_name: str) -> bool:
         if not hero.inventory.has_component(item_name):
             return False
 

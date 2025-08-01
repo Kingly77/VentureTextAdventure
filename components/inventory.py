@@ -3,11 +3,13 @@ from game.items import Item
 
 class InventoryError(Exception):
     """Base exception for inventory-related errors."""
+
     pass
 
 
 class ItemNotFoundError(InventoryError):
     """Exception raised when an item is not found in the inventory."""
+
     def __init__(self, item_name: str):
         self.item_name = item_name
         super().__init__(f"Item '{item_name}' not found in inventory.")
@@ -15,6 +17,7 @@ class ItemNotFoundError(InventoryError):
 
 class InsufficientQuantityError(InventoryError):
     """Exception raised when trying to remove more items than available."""
+
     def __init__(self, item_name: str, requested: int, available: int):
         self.item_name = item_name
         self.requested = requested
@@ -68,22 +71,32 @@ class Inventory:
         current_item = self.items[item_name]
         if quantity > current_item.quantity:
             # Still print for user feedback but also raise exception for proper handling
-            print(f"Cannot remove {quantity} of {item_name}, only {current_item.quantity} items are available.")
+            print(
+                f"Cannot remove {quantity} of {item_name}, only {current_item.quantity} items are available."
+            )
             raise InsufficientQuantityError(item_name, quantity, current_item.quantity)
 
         current_item -= quantity
 
-        removed_item = Item(current_item.name, current_item.cost, current_item.is_usable,
-                            current_item.effect_type, current_item.effect_value, current_item.is_consumable,current_item.tags)
+        removed_item = Item(
+            current_item.name,
+            current_item.cost,
+            current_item.is_usable,
+            current_item.effect_type,
+            current_item.effect_value,
+            current_item.is_consumable,
+            current_item.tags,
+        )
         removed_item.quantity = quantity
 
         if current_item.quantity <= 0:
             print(f"Item '{item_name}' removed entirely from inventory.")
             del self.items[item_name]
         else:
-            print(f"Removed {quantity} of {item_name}. Remaining: {current_item.quantity}")
+            print(
+                f"Removed {quantity} of {item_name}. Remaining: {current_item.quantity}"
+            )
         return removed_item
-
 
     def __getitem__(self, item_name: str) -> Item | None:
         """Allows dictionary-like access to retrieve an item.
@@ -109,4 +122,3 @@ class Inventory:
             return True
         else:
             return False
-

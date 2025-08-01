@@ -22,11 +22,25 @@ def test_items():
     return {
         "key": Item("key", 5, True, tags=["key"]),
         "torch": Item("torch", 3, True, tags=["light-source"]),
-        "sword": Item("sword", 25, True, is_equipment=True,
-                     effect=Effect.DAMAGE, effect_value=15, tags=["weapon"]),
-        "potion": Item("health potion", 10, True, is_consumable=True,
-                      effect=Effect.HEAL, effect_value=20, tags=["potion"]),
-        "gold": Item("gold coins", 1, False, quantity=10)
+        "sword": Item(
+            "sword",
+            25,
+            True,
+            is_equipment=True,
+            effect=Effect.DAMAGE,
+            effect_value=15,
+            tags=["weapon"],
+        ),
+        "potion": Item(
+            "health potion",
+            10,
+            True,
+            is_consumable=True,
+            effect=Effect.HEAL,
+            effect_value=20,
+            tags=["potion"],
+        ),
+        "gold": Item("gold coins", 1, False, quantity=10),
     }
 
 
@@ -47,8 +61,17 @@ def test_game(test_hero, test_room):
     """Fixture that creates a game instance with a hero and room."""
     # Add some items to hero's inventory
     test_hero.inventory.add_item(Item("torch", 3, True, tags=["light-source"]))
-    test_hero.inventory.add_item(Item("health potion", 10, True, is_consumable=True,
-                                     effect=Effect.HEAL, effect_value=20, tags=["potion"]))
+    test_hero.inventory.add_item(
+        Item(
+            "health potion",
+            10,
+            True,
+            is_consumable=True,
+            effect=Effect.HEAL,
+            effect_value=20,
+            tags=["potion"],
+        )
+    )
 
     # Create the game instance
     game = Game(test_hero, test_room)
@@ -87,9 +110,9 @@ def test_parse_command():
 def test_dispatch_command_methods():
     """Test the _dispatch_command method with internal method handlers."""
     # Use patch to mock the methods
-    with patch('game.rpg_adventure_game.Game._handle_look') as mock_look:
-        with patch('game.rpg_adventure_game.Game._handle_inventory') as mock_inventory:
-            with patch('game.rpg_adventure_game.Game._handle_go') as mock_go:
+    with patch("game.rpg_adventure_game.Game._handle_look") as mock_look:
+        with patch("game.rpg_adventure_game.Game._handle_inventory") as mock_inventory:
+            with patch("game.rpg_adventure_game.Game._handle_go") as mock_go:
                 # Create a game instance with the patched methods
                 game = Game(MagicMock(), MagicMock())
 
@@ -120,7 +143,7 @@ def test_dispatch_command_functions():
     game._function_handlers = {
         "use": mock_use,
         "take": mock_inventory,
-        "help": mock_help
+        "help": mock_help,
     }
 
     # Test dispatching to function handlers
@@ -132,7 +155,6 @@ def test_dispatch_command_functions():
 
     game._dispatch_command("help", "")
     mock_help.assert_called_once_with("help", "", hero, room)
-
 
 
 def test_parse_and_execute(test_game):
@@ -160,7 +182,7 @@ def test_parse_and_execute(test_game):
 def test_integration_with_game_object(test_game):
     """Test integration of parser with actual game object."""
     # Mock print to capture output
-    with patch('builtins.print') as mock_print:
+    with patch("builtins.print") as mock_print:
         # Test inventory command
         test_game.parse_and_execute("inventory")
         # Check that inventory was displayed (at least one call to print)
@@ -170,7 +192,10 @@ def test_integration_with_game_object(test_game):
         # Test look command
         test_game.parse_and_execute("look")
         # Check that room description was displayed
-        assert any("simple room for testing" in str(args).lower() for args, _ in mock_print.call_args_list)
+        assert any(
+            "simple room for testing" in str(args).lower()
+            for args, _ in mock_print.call_args_list
+        )
         mock_print.reset_mock()
 
         # Test take command
@@ -182,22 +207,26 @@ def test_integration_with_game_object(test_game):
         # Test use command
         test_game.parse_and_execute("use health potion")
         # Check that potion was used (health message displayed)
-        assert any("health" in str(args).lower() for args, _ in mock_print.call_args_list)
+        assert any(
+            "health" in str(args).lower() for args, _ in mock_print.call_args_list
+        )
 
 
 def test_unknown_command(test_game):
     """Test handling of unknown commands."""
     # Mock print to capture output
-    with patch('builtins.print') as mock_print:
+    with patch("builtins.print") as mock_print:
         test_game.parse_and_execute("dance")
         # Check that unknown command message was displayed
-        mock_print.assert_called_with("Unknown command. Try 'help' for a list of commands.")
+        mock_print.assert_called_with(
+            "Unknown command. Try 'help' for a list of commands."
+        )
 
 
 def test_complex_commands(test_game):
     """Test more complex command scenarios."""
     # Mock print to capture output
-    with patch('builtins.print') as mock_print:
+    with patch("builtins.print") as mock_print:
         # Test use item on target
         test_game.parse_and_execute("use torch on room")
         # Check that command was processed
@@ -207,4 +236,6 @@ def test_complex_commands(test_game):
         # Test examine item
         test_game.parse_and_execute("examine torch")
         # Check that item details were displayed
-        assert any("torch" in str(args).lower() for args, _ in mock_print.call_args_list)
+        assert any(
+            "torch" in str(args).lower() for args, _ in mock_print.call_args_list
+        )

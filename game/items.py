@@ -7,8 +7,18 @@ class UseItemError(Exception):
         super().__init__("Item cannot be used.")
 
 
-class Item(CanCast): # Inherit from CanCast
-    def __init__(self, name: str, cost: int, is_usable: bool = False, effect: Effect = Effect.NONE, effect_value: int = 0, is_consumable: bool = False,tags = None, **kwargs):
+class Item(CanCast):  # Inherit from CanCast
+    def __init__(
+        self,
+        name: str,
+        cost: int,
+        is_usable: bool = False,
+        effect: Effect = Effect.NONE,
+        effect_value: int = 0,
+        is_consumable: bool = False,
+        tags=None,
+        **kwargs,
+    ):
         if not isinstance(name, str) or not name:
             raise ValueError("Item name must be a non-empty string.")
         quantity = kwargs.get("quantity", 1)
@@ -30,7 +40,7 @@ class Item(CanCast): # Inherit from CanCast
 
     def add_tag(self, tag: str):
         self.tags.add(tag)
-        
+
     def has_tag(self, tag: str):
         return tag in self.tags
 
@@ -48,7 +58,7 @@ class Item(CanCast): # Inherit from CanCast
         self.quantity += quantity
         return self
 
-    def __isub__(self, quantity: int): # Added for decrementing quantity
+    def __isub__(self, quantity: int):  # Added for decrementing quantity
         self.quantity -= quantity
         return self
 

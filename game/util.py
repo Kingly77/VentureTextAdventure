@@ -60,14 +60,16 @@ def handle_spell_cast(hero, spell_name, target):
     return False
 
 
-def handle_item_use(hero:RpgHero, item: Item, target:Optional[any], room:Optional['Room']):
+def handle_item_use(
+    hero: RpgHero, item: Item, target: Optional[any], room: Optional["Room"]
+):
     try:
         if room is not None:
             # Handle case where there's no target - use item in room
             if target is None:
                 room.use_item_in_room(item, hero)
                 return True
-            
+
             # First try room-object based interactions
             for obj in room.objects.values():
                 if obj.name != target.name:
@@ -82,7 +84,9 @@ def handle_item_use(hero:RpgHero, item: Item, target:Optional[any], room:Optiona
             for obj in room.objects.values():
                 if obj.has_tag("flammable") and item.has_tag("light-source"):
                     obj.change_description("A smoldering pile of ash.")
-                    print("You set fire to the object. It burns with surprising intensity!")
+                    print(
+                        "You set fire to the object. It burns with surprising intensity!"
+                    )
                     return True
 
             # Fallback: nothing happened

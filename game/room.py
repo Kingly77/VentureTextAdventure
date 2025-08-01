@@ -4,8 +4,8 @@ from game.items import Item
 from typing import List, Callable, Dict, Protocol, runtime_checkable
 
 from game.room_objs import RoomObject
-from interfaces.interface import Combatant # Import Combatant
-from game.room_effects import RoomDiscEffect # Import the new RoomEffect base class
+from interfaces.interface import Combatant  # Import Combatant
+from game.room_effects import RoomDiscEffect  # Import the new RoomEffect base class
 
 
 class Room:
@@ -13,28 +13,28 @@ class Room:
     Represents a single location or area in the game world.
     A room has a description and can contain items and effects.
     """
-    def __init__(self, name: str, description: str , exits = None):
+
+    def __init__(self, name: str, description: str, exits=None):
         if not isinstance(name, str) or not name.strip():
             raise ValueError("Room name must be a non-empty string.")
         if not isinstance(description, str) or not description.strip():
             raise ValueError("Room description must be a non-empty string.")
 
         self.name = name
-        self.base_description = description # Store original description
+        self.base_description = description  # Store original description
         self._components = HoldComponent()
         self._components.add_component("inventory", Inventory())
-        self.effects: List[RoomDiscEffect] = [] # List to hold RoomEffect instances
+        self.effects: List[RoomDiscEffect] = []  # List to hold RoomEffect instances
         self.objects: Dict[str, RoomObject] = {}
         self.exits_to = exits if exits else {}
         self.is_locked = False
         self._combatants = []
 
-
     def change_description(self, new_description: str):
         """Changes the description of the room."""
         self.base_description = new_description
 
-    def add_exit(self, direction: str, target_room: 'Room'):
+    def add_exit(self, direction: str, target_room: "Room"):
         """Adds a ONE-WAY exit from THIS room to a TARGET room."""
         if not isinstance(direction, str) or not direction.strip():
             raise ValueError("Exit direction must be a non-empty string.")
@@ -42,7 +42,9 @@ class Room:
             raise TypeError("Target room must be a Room instance.")
         self.exits_to[direction] = target_room
 
-    def link_rooms(self, direction_from_self: str, other_room: 'Room', direction_from_other: str):
+    def link_rooms(
+        self, direction_from_self: str, other_room: "Room", direction_from_other: str
+    ):
         """
         Links two rooms bidirectionally.
 
@@ -75,7 +77,9 @@ class Room:
         if not isinstance(room_object, RoomObject):
             raise TypeError("Only RoomObject instances can be added to a room.")
         if room_object.name in self.objects:
-            raise ValueError(f"Object '{room_object.name}' is already added to this room.")
+            raise ValueError(
+                f"Object '{room_object.name}' is already added to this room."
+            )
 
         self.objects[room_object.name] = room_object
 
@@ -110,12 +114,14 @@ class Room:
 
         # Notify effects of item removal
         for effect in self.effects:
-            if hasattr(effect, 'on_item_removed'): # Check if the effect has this method
-                effect.on_item_removed(item_name) # Call the method
+            if hasattr(
+                effect, "on_item_removed"
+            ):  # Check if the effect has this method
+                effect.on_item_removed(item_name)  # Call the method
 
         return removed_item
 
-    def use_item_in_room(self, item, user: 'RpgHero'):
+    def use_item_in_room(self, item, user: "RpgHero"):
         """
         Tries to use an item from hero's inventory within the room context.
         These could be items that affect the room (like a torch or key).
@@ -141,14 +147,21 @@ class Room:
                 # Item successfully used by a room effect
                 handled_by_effect = True
                 # Remove the item if it was used (consumable)
-                if user.inventory.has_component(item_name) and user.inventory[item_name].is_consumable:
+                if (
+                    user.inventory.has_component(item_name)
+                    and user.inventory[item_name].is_consumable
+                ):
                     user.inventory.remove_item(item_name, 1)
                 break
 
         if not handled_by_effect:
             # If no specific effect handled it
-            print(f"[{self.name}] {user.name} tries to use the {item_name}, but nothing special happens in this room.")
-            raise ValueError(f"Item '{item_name}' cannot be used in this particular room.")
+            print(
+                f"[{self.name}] {user.name} tries to use the {item_name}, but nothing special happens in this room."
+            )
+            raise ValueError(
+                f"Item '{item_name}' cannot be used in this particular room."
+            )
         return False
 
     def get_description(self) -> str:
@@ -164,8 +177,10 @@ class Room:
         items_in_room = self.inventory.items.values()
         item_list_str = ""
         if items_in_room:
-            item_list_str = "\n\nYou see here: " + ", ".join(str(item) for item in items_in_room)
-        
+            item_list_str = "\n\nYou see here: " + ", ".join(
+                str(item) for item in items_in_room
+            )
+
         # Add information about objects in the room
         objects_in_room = self.objects.values()
         object_list_str = ""
@@ -173,8 +188,10 @@ class Room:
             object_descriptions = []
             for obj in objects_in_room:
                 object_descriptions.append(f"{obj.name}: {obj.description}")
-            object_list_str = "\n\nObjects in the room:\n" + "\n".join(object_descriptions)
-        
+            object_list_str = "\n\nObjects in the room:\n" + "\n".join(
+                object_descriptions
+            )
+
         return f"{current_description}{item_list_str}{object_list_str}"
 
     def __str__(self) -> str:
