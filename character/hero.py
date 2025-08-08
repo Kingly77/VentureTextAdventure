@@ -1,6 +1,6 @@
 from typing import Optional
 from character.basecharacter import BaseCharacter
-from components.core_components import Mana, Effect
+from components.core_components import Mana, Effect, Exp
 from components.inventory import Inventory, ItemNotFoundError
 from components.quest_log import QuestLog
 from game.magic import Spell, NoTargetError
@@ -37,7 +37,7 @@ class QuestAwareInventory:
 class RpgHero(BaseCharacter):
     """Hero character class with spells, mana, and inventory."""
 
-    BASE_XP_TO_NEXT_LEVEL = 100
+
     BASE_MANA = 100
     BASE_HEALTH = 100
     MANA_PER_LEVEL = 2
@@ -53,8 +53,7 @@ class RpgHero(BaseCharacter):
         self._inventory_wrapper = QuestAwareInventory(self.components["inventory"], self)
 
         # Hero-specific initialization
-        self.xp = 0
-        self.xp_to_next_level = self._calculate_xp_to_next_level()
+        # self.xp = 0
 
         self.last_room: Optional["Room"] = None
 
@@ -71,6 +70,7 @@ class RpgHero(BaseCharacter):
             Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)),
         )
         self.components.add_component("quests", QuestLog())
+        self.components.add_component("xp", Exp(0,100))
         self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
         self.inventory.add_item(self._equipped)
         print(
@@ -78,12 +78,13 @@ class RpgHero(BaseCharacter):
             f"{self.mana} mana, and {self.inventory['fists']} in their inventory."
         )
 
+        self.xp_to_next_level = self._calculate_xp_to_next_level()
+
+
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
 
-    def _calculate_xp_to_next_level(self) -> int:
-        """Calculates the XP required for the next level."""
-        return self.BASE_XP_TO_NEXT_LEVEL + (self.level * 50)
+
 
     def add_xp(self, xp: int):
         """Adds experience points to the hero and levels up if a threshold reached."""
@@ -93,6 +94,13 @@ class RpgHero(BaseCharacter):
         Events.trigger_event("xp_gained", self, xp)
         while self.xp >= self.xp_to_next_level:
             self.level_up()
+
+
+    BASE_XP_TO_NEXT_LEVEL = 100
+
+    def _calculate_xp_to_next_level(self) -> int:
+        """Calculates the XP required for the next level."""
+        return self.BASE_XP_TO_NEXT_LEVEL + (self.level * 50)
 
     def level_up(self):
         """Increases hero's level and updates stats."""
@@ -199,6 +207,31 @@ class RpgHero(BaseCharacter):
         except Exception as e:
             print(f"Error occurred while casting {spell_name}: {e}")
             raise
+
+
+    @property
+    def xp_component(self) -> Exp:
+        """Get the hero's experience component."""
+        return self.components["xp"]
+
+
+    @property
+    def xp_to_next_level(self):
+        return self.xp_component.next_lvl
+
+    @xp_to_next_level.setter
+    def xp_to_next_level(self, value):
+        self.xp_component.next_lvl = value
+
+    @property
+    def xp(self) -> int:
+        """Get the hero's experience points."""
+        return self.components["xp"].exp
+
+    @xp.setter
+    def xp(self, value: int):
+        """Set the hero's experience points."""
+        self.components["xp"].exp = value
 
     @property
     def max_mana(self) -> int:

@@ -87,10 +87,46 @@ class Health:
 
 
 class Exp:
-    def __init__(self, exp: int):
+    def __init__(self, exp: int,exp_next = 100):
         self._exp = exp
-        self._max_exp = exp
+        self._next_level = exp_next
         self._level = 1
+
+    @property
+    def exp(self) -> int:
+        return self._exp
+
+    @exp.setter
+    def exp(self, exp: int):
+        if exp < 0:
+            self._exp = 0
+        elif exp > self._next_level:
+            self._exp = self._next_level
+        else:
+            self._exp = exp
+
+    @property
+    def next_lvl(self) -> int:
+        return self._next_level
+
+    @next_lvl.setter
+    def next_lvl(self, value: int):
+        if value <= 0:
+            raise ValueError("Maximum exp must be positive.")
+        self._next_level = value
+        if self._exp > value:
+            self._exp = value
+
+    @property
+    def level(self) -> int:
+        return self._level
+
+    @level.setter
+    def level(self, value: int):
+        if value < 1:
+            raise ValueError("Level cannot be less than 1.")
+        self._level = value
+
 
 class HoldComponent:
     def __init__(self):
