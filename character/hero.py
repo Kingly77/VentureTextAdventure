@@ -4,6 +4,7 @@ from components.core_components import Mana, Effect, Exp
 from components.inventory import Inventory, ItemNotFoundError
 from components.quest_log import QuestLog
 from game.magic import Spell, NoTargetError
+from game.underlings.wallet import Wallet
 from game.underlings.events import Events
 from interfaces.interface import Combatant
 from game.items import Item, UseItemError
@@ -72,6 +73,7 @@ class RpgHero(BaseCharacter):
         )
         self.components.add_component("quests", QuestLog())
         self.components.add_component("xp", Exp(0, 100))
+        self.components.add_component("wallet", Wallet(0))
         self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
         self.inventory.add_item(self._equipped)
         print(
@@ -180,6 +182,47 @@ class RpgHero(BaseCharacter):
             print(f"Error occurred while casting {spell_name}: {e}")
             raise
 
+    def use_item(self, item_name: str, target=None):
+        """Use an item from the hero's inventory.
+
+        Args:
+            item_name: The name of the item to use
+            target: Optional target for the item (defaults to self)
+
+        Raises:
+            ItemNotFoundError: If the item is not in the inventory,
+            UseItemError: If the item cannot be used
+        """
+        if not isinstance(item_name, str):
+            raise TypeError("Item name must be string")
+
+        if not self.inventory.has_component(item_name.lower()):
+            raise ItemNotFoundError(item_name)
+
+        item = self.inventory[item_name.lower()]
+        if not item.is_usable:
+            print(f"{item_name} cannot be used.")
+            raise UseItemError()
+
+        # The default target is self if none provided
+        if target is None:
+            target = self
+
+        # Use the item on the target
+        try:
+            item.cast(target)
+            print(
+                f"{self.name} used {item_name} on {target.name if hasattr(target, 'name') else 'self'}."
+            )
+
+            # Remove one use of the item
+            if item.is_consumable:
+                self.inventory.remove_item(item_name.lower(), 1)
+            return True
+        except Exception as e:
+            print(f"Error using {item_name}: {e}")
+            raise
+
     @property
     def xp_component(self) -> Exp:
         """Get the hero's experience component."""
@@ -224,71 +267,19 @@ class RpgHero(BaseCharacter):
         return self._inventory_wrapper
 
     @property
+    def wallet(self) -> Wallet:
+        """Get the hero's wallet."""
+        if not self.components.has_component("wallet"):
+            raise ValueError("Hero has no wallet. WHY?")
+        return self.components["wallet"]
+
+    @property
     def gold(self) -> int:
         """Get the hero's gold."""
-        if not self.inventory.has_component("gold"):
-            return 0
-        return self.inventory["gold"].quantity
-
-    @gold.setter
-    def gold(self, value: int):
-        """Set the hero's gold."""
-        if value < 0:
-            raise ValueError("Gold cannot be negative.")
-        if not self.inventory.has_component("gold"):
-            self.inventory.add_item(Item("gold", cost=1, quantity=value))
-        else:
-            self.inventory["gold"].quantity = value
+        return self.wallet.balance
 
     def add_gold(self, amount: int):
-        if amount < 0:
-            raise ValueError("Cannot add negative gold.")
-        self.gold += amount
+        self.wallet.add(amount)
 
     def spend_gold(self, amount: int):
-        if amount < 0:
-            raise ValueError("Cannot spend negative gold.")
-        if self.gold < amount:
-            raise ValueError("Not enough gold.")
-        self.gold -= amount
-
-    def use_item(self, item_name: str, target=None):
-        """Use an item from the hero's inventory.
-
-        Args:
-            item_name: The name of the item to use
-            target: Optional target for the item (defaults to self)
-
-        Raises:
-            ItemNotFoundError: If the item is not in the inventory,
-            UseItemError: If the item cannot be used
-        """
-        if not isinstance(item_name, str):
-            raise TypeError("Item name must be string")
-
-        if not self.inventory.has_component(item_name.lower()):
-            raise ItemNotFoundError(item_name)
-
-        item = self.inventory[item_name.lower()]
-        if not item.is_usable:
-            print(f"{item_name} cannot be used.")
-            raise UseItemError()
-
-        # The default target is self if none provided
-        if target is None:
-            target = self
-
-        # Use the item on the target
-        try:
-            item.cast(target)
-            print(
-                f"{self.name} used {item_name} on {target.name if hasattr(target, 'name') else 'self'}."
-            )
-
-            # Remove one use of the item
-            if item.is_consumable:
-                self.inventory.remove_item(item_name.lower(), 1)
-            return True
-        except Exception as e:
-            print(f"Error using {item_name}: {e}")
-            raise
+        self.wallet.spend(amount)

@@ -157,7 +157,8 @@ class _Event:
             logging.debug(f"Triggered event '{name}' with {len(results)} results")
             return results if results else None
         else:
-            raise EventNotFoundError(f"Event '{name}' does not exist")
+            logging.debug(f"try_trigger: Event '{name}' not found; skipping.")
+            return None
 
     def list_events(self):
         """Return a dictionary of all registered events and their handler counts."""

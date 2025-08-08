@@ -280,6 +280,9 @@ class Game:
         elif arg == "xp":
             self.hero.add_xp(100)
             print("Gained 100 XP.")
+        elif arg == "gold":
+            self.hero.add_gold(100)
+            print("Gained 100 gold.")
 
         elif arg == "add":
             item_name = input("Enter item name: ")
