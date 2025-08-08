@@ -4,7 +4,7 @@ from components.core_components import Mana, Effect, Exp
 from components.inventory import Inventory, ItemNotFoundError
 from components.quest_log import QuestLog
 from game.magic import Spell, NoTargetError
-from game.underlings.wallet import Wallet
+from components.wallet import Wallet
 from game.underlings.events import Events
 from interfaces.interface import Combatant
 from game.items import Item, UseItemError

@@ -2,6 +2,10 @@ from game.underlings.events import Events
 
 
 class Wallet:
+    # Python
+    class InsufficientFundsError(ValueError):
+        pass
+
     def __init__(self, initial=0):
         self._balance = max(0, int(initial))
 
@@ -10,7 +14,7 @@ class Wallet:
         return self._balance
 
     def can_afford(self, amount: int) -> bool:
-        return amount >= 0 and self._balance >= amount
+        return 0 <= amount <= self._balance
 
     def add(self, amount: int) -> None:
         if amount < 0:
