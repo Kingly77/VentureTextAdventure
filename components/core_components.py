@@ -86,6 +86,12 @@ class Health:
             self._health = value
 
 
+class Exp:
+    def __init__(self, exp: int):
+        self._exp = exp
+        self._max_exp = exp
+        self._level = 1
+
 class HoldComponent:
     def __init__(self):
         self._components = {}

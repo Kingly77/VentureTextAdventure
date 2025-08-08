@@ -1,4 +1,4 @@
-import types
+from typing import Optional
 from character.basecharacter import BaseCharacter
 from components.core_components import Mana, Effect
 from components.inventory import Inventory, ItemNotFoundError
@@ -25,7 +25,7 @@ class QuestAwareInventory:
         """Delegate everything else to the real inventory."""
         return getattr(self._inventory, name)
 
-    def __getitem__(self, item_name: str) -> Item | None:
+    def __getitem__(self, item_name: str) -> Item:
         """Handle dictionary-style access like inventory['fists']."""
         return self._inventory[item_name]
 
@@ -49,11 +49,14 @@ class RpgHero(BaseCharacter):
         health = self.BASE_HEALTH + (level - 1) * self.HEALTH_PER_LEVEL
         super().__init__(name, level, base_health=health)
 
+        # Cache a quest-aware inventory wrapper to avoid recreating it on each access
+        self._inventory_wrapper = QuestAwareInventory(self.components["inventory"], self)
+
         # Hero-specific initialization
         self.xp = 0
         self.xp_to_next_level = self._calculate_xp_to_next_level()
 
-        self.last_room: "Room" = None
+        self.last_room: Optional["Room"] = None
 
         # Add hero-specific components
         self.components.add_component(
@@ -72,18 +75,8 @@ class RpgHero(BaseCharacter):
         self.inventory.add_item(self._equipped)
         print(
             f"{self.name} is a level {self.level} hero with {self.xp} XP, "
-            f"{self.mana} mana, and {self.inventory["fists"]} in their inventory."
+            f"{self.mana} mana, and {self.inventory['fists']} in their inventory."
         )
-
-        # Don't ask :)
-        # self.current = self.inventory.add_item
-        # hero = self
-        #
-        # def add_item(self, item: Item):
-        #     hero.check_quest_item(item)
-        #     hero.current(item)
-        #
-        # self.inventory.add_item = types.MethodType(add_item,self.inventory)
 
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
@@ -97,6 +90,7 @@ class RpgHero(BaseCharacter):
         if xp < 0:
             raise ValueError("XP cannot be negative.")
         self.xp += xp
+        Events.trigger_event("xp_gained", self, xp)
         while self.xp >= self.xp_to_next_level:
             self.level_up()
 
@@ -200,12 +194,9 @@ class RpgHero(BaseCharacter):
             spell.cast(target)
             return True
         except NoTargetError as e:
-            # Re-raise the exception after consuming mana
-            # In a real game, you might want to refund the mana here
             print(f"Failed to cast {spell_name}: {e}")
             raise
         except Exception as e:
-            # Handle any other exceptions from the spell cast
             print(f"Error occurred while casting {spell_name}: {e}")
             raise
 
@@ -227,13 +218,7 @@ class RpgHero(BaseCharacter):
     @property
     def inventory(self) -> QuestAwareInventory:
         """Get quest-aware inventory."""
-
-        return QuestAwareInventory(self.components["inventory"], self)
-
-    # @property
-    # def inventory(self) -> Inventory:
-    #     """Get the hero's inventory."""
-    #     return self.components["inventory"]
+        return self._inventory_wrapper
 
     @property
     def gold(self) -> int:

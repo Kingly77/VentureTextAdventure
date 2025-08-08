@@ -11,6 +11,7 @@ from game.room import Room, RoomObject
 from game.room_effects import DarkCaveLightingEffect
 from game.shop_effect import ShopEffect
 from game.underlings.events import Events as Event, EventNotFoundError
+from game.underlings.leveling_system import LevelingSystem
 from game.util import handle_inventory_operation
 
 # Game configuration constants
@@ -228,6 +229,9 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     """Initialize the complete game world with hero, rooms, and all game objects."""
     # Create a hero
     hero = _create_hero()
+
+    ls = LevelingSystem()
+    ls.setup_events()
 
     # Create rooms
     forest_clearing, manor, foyer, dark_cave_entrance, goblins_lair, shack_shop = (
