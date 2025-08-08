@@ -12,6 +12,12 @@ class QuestLog:
     def add_quest(self, title: str, quest: "Quest"):
         self.active_quests[title] = quest
 
+    def check_quests(self, item):
+        for quest in self.active_quests.values():
+            if quest.check_item(item):
+                return quest.id
+        return None
+
     def complete_quest(self, quest, who: "RpgHero"):
         if quest in self.active_quests.keys():
             q = self.active_quests[quest]

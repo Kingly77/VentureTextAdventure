@@ -18,9 +18,14 @@ class QuestAwareInventory:
         self._hero = hero
 
     def add_item(self, item: Item):
-        """Add item with quest checking."""
-        self._hero.check_quest_item(item)
+        """Add an item and trigger quest-related events.
+
+        Returns the list of event handler results (if any), allowing callers/UI to decide how to display them.
+        """
+        # Add to the underlying inventory first
         self._inventory.add_item(item)
+        # Then trigger item_collected so quests can react. Do not print here.
+        Events.trigger_event("item_collected", self._hero, item)
 
     def __getattr__(self, name):
         """Delegate everything else to the real inventory."""
@@ -93,19 +98,11 @@ class RpgHero(BaseCharacter):
         """Get the mana component of the hero."""
         return self.components["mana"]
 
-    def check_quest_item(self, item: Item):
-        try:
-            for quest in self.quest_log.active_quests.values():
-                if item.name in quest.objective.target:
-                    results = Events.trigger_event("item_collected", self, item)
-                    if results:
-                        # Handle list of results from multiple handlers
-                        for result in results:
-                            if result:
-                                print(result)
-                        break
-        except Exception as e:
-            print(f"No quests to need {item.name} for progress: {e}")
+    def _normalize_name(self, name: str) -> str:
+        """Normalize entity names for consistent lookups."""
+        if not isinstance(name, str):
+            raise TypeError("Name must be a string")
+        return name.strip().lower()
 
     def get_spell(self, spell_name: str) -> Spell | None:
         """Retrieves a spell by name if it exists and is a Spell.
@@ -116,8 +113,9 @@ class RpgHero(BaseCharacter):
         Returns:
             The spell object or None if not found
         """
-        if self.components.has_component(spell_name):
-            component = self.components[spell_name]
+        key = self._normalize_name(spell_name)
+        if self.components.has_component(key):
+            component = self.components[key]
             if isinstance(component, Spell):
                 return component
         return None
@@ -135,7 +133,7 @@ class RpgHero(BaseCharacter):
             super().__init__(f"Spell '{spell_name}' doesn't exist.")
 
     class InsufficientManaError(SpellCastError):
-        """Exception raised when there is not enough manna to cast a spell."""
+        """Exception raised when there is not enough mana to cast a spell."""
 
         def __init__(self, spell_name: str, cost: int, available: int):
             self.spell_name = spell_name
@@ -146,7 +144,7 @@ class RpgHero(BaseCharacter):
             )
 
     def cast_spell(self, spell_name: str, target: Combatant) -> bool:
-        """Cast a spell on a target if the hero has enough manna.
+        """Cast a spell on a target if the hero has enough mana.
 
         Args:
             spell_name: The name of the spell to cast
@@ -166,14 +164,16 @@ class RpgHero(BaseCharacter):
             print(f"Spell '{spell_name}' doesn't exist.")
             raise self.SpellNotFoundError(spell_name)
 
-        current_mana = self.get_mana_component().mana
+        mana_component = self.get_mana_component()
+        current_mana = mana_component.mana
         if current_mana < spell.cost:
             print(f"Not enough mana for '{spell_name}'.")
             raise self.InsufficientManaError(spell_name, spell.cost, current_mana)
 
         try:
-            self.get_mana_component().consume(spell.cost)
+            # Cast first, then consume mana only if casting succeeds
             spell.cast(target)
+            mana_component.consume(spell.cost)
             return True
         except NoTargetError as e:
             print(f"Failed to cast {spell_name}: {e}")
@@ -190,34 +190,34 @@ class RpgHero(BaseCharacter):
             target: Optional target for the item (defaults to self)
 
         Raises:
-            ItemNotFoundError: If the item is not in the inventory,
+            ItemNotFoundError: If the item is not in the inventory
             UseItemError: If the item cannot be used
+            TypeError: If item_name is not a string
         """
         if not isinstance(item_name, str):
             raise TypeError("Item name must be string")
 
-        if not self.inventory.has_component(item_name.lower()):
-            raise ItemNotFoundError(item_name)
+        key = self._normalize_name(item_name)
 
-        item = self.inventory[item_name.lower()]
+        # Retrieve or raise ItemNotFoundError from inventory directly
+        try:
+            item = self.inventory[key]
+        except ItemNotFoundError:
+            raise
+
         if not item.is_usable:
             print(f"{item_name} cannot be used.")
             raise UseItemError()
 
-        # The default target is self if none provided
         if target is None:
             target = self
 
-        # Use the item on the target
         try:
             item.cast(target)
-            print(
-                f"{self.name} used {item_name} on {target.name if hasattr(target, 'name') else 'self'}."
-            )
+            print(f"{self.name} used {item_name} on {getattr(target, 'name', 'self')}.")
 
-            # Remove one use of the item
             if item.is_consumable:
-                self.inventory.remove_item(item_name.lower(), 1)
+                self.inventory.remove_item(key, 1)
             return True
         except Exception as e:
             print(f"Error using {item_name}: {e}")
@@ -277,6 +277,11 @@ class RpgHero(BaseCharacter):
     def gold(self) -> int:
         """Get the hero's gold."""
         return self.wallet.balance
+
+    @gold.setter
+    def gold(self, value: int):
+        """Set the hero's gold."""
+        self.wallet._balance = value
 
     def add_gold(self, amount: int):
         self.wallet.add(amount)

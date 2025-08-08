@@ -12,6 +12,7 @@ from game.room_effects import DarkCaveLightingEffect
 from game.shop_effect import ShopEffect
 from game.underlings.events import Events as Event, EventNotFoundError
 from game.underlings.leveling_system import LevelingSystem
+from game.underlings.questing_system import QuestingSystem
 from game.util import handle_inventory_operation
 
 # Game configuration constants
@@ -37,7 +38,16 @@ def _create_hero() -> RpgHero:
         100,
         objective=Objective("collect", "goblin ear", 1),
     )
+
+    # foo_quest = Quest(
+    #     "foo",
+    #     "Collect the foo to defeat the foo foe.",
+    #     reward=1,
+    #     objective=Objective("collect", "foo", 1),
+    # )
+
     hero.quest_log.add_quest(goblin_ear_quest.id, goblin_ear_quest)
+    # hero.quest_log.add_quest(foo_quest.id, foo_quest)
 
     # Add starting inventory
     hero.inventory.add_item(Item("gold", 1, False, quantity=STARTING_GOLD))
@@ -220,10 +230,10 @@ def _setup_goblin_enemy(goblins_lair: Room) -> None:
     goblins_lair.combatants = goblin_foe
 
 
-def _setup_events(foyer: Room, ls :LevelingSystem) -> None:
+def _setup_events(foyer: Room, **kwargs) -> None:
     """Set up game events."""
     Event.add_event("unlock_foyer", foyer.unlock, True)
-    ls.setup_events()
+    kwargs["ls"].setup_events()
 
 
 def _initialize_game_world() -> tuple[RpgHero, Room]:
@@ -231,8 +241,7 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     # Create a hero
     hero = _create_hero()
     ls = LevelingSystem()
-
-
+    QuestingSystem()
     # Create rooms
     forest_clearing, manor, foyer, dark_cave_entrance, goblins_lair, shack_shop = (
         _create_rooms()
@@ -244,7 +253,7 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     )
 
     # Set up events
-    _setup_events(foyer, ls)
+    _setup_events(foyer, ls=ls)
 
     # Set up room objects and interactions
     _setup_forest_table(forest_clearing)

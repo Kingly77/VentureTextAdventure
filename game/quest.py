@@ -29,23 +29,17 @@ class Quest:
         if objective.value <= 0:
             raise ValueError("Objective value must be positive.")
 
-        def progress_handler(val_hero, *_):
-            self.progress += 1
-            if self.progress >= self.objective.value:
-                results = Events.trigger_event(self.event_name, val_hero)
-                # Return the first result if available, or a default completion message
-                if results and len(results) > 0:
-                    return results[0]
-                return f"{val_hero.name} completed the quest: {self.name}"
-            return f"{val_hero.name} made progress in {self.name}"
-
         def event_handler(val_hero, *_):
             self.tentative_complete = True
-            Events.remove_event("item_collected", progress_handler)
             return f"{val_hero.name} completed the quest: {self.name}"
 
-        Events.add_event("item_collected", progress_handler)
         Events.add_event(self.event_name, event_handler, True)
+
+    def check_item(self, item):
+        return self.objective.type == "collect" and item.name == self.objective.target
+
+    def check_progress(self):
+        return self.progress >= self.objective.value
 
     def __str__(self):
         return f"({self.id}) {self.name}: {self.description}"
