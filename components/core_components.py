@@ -92,6 +92,21 @@ class Exp:
         self._next_level = exp_next
         self._level = 1
 
+    def add_xp(self, owner, amount: int):
+        """Add experience points and trigger the xp_gained event.
+
+        Args:
+            owner: The entity (e.g., RpgHero) that owns this Exp component.
+            amount (int): The amount of XP to add.
+        """
+        from game.underlings.events import Events  # local import to avoid circulars
+        if amount < 0:
+            raise ValueError("XP cannot be negative.")
+        # Use the property to leverage clamping to next level
+        self.exp = self.exp + amount
+        # Let the LevelingSystem's event handler decide if leveling should occur
+        Events.trigger_event("xp_gained", owner, amount)
+
     @property
     def exp(self) -> int:
         return self._exp

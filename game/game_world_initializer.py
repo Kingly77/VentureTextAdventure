@@ -220,18 +220,18 @@ def _setup_goblin_enemy(goblins_lair: Room) -> None:
     goblins_lair.combatants = goblin_foe
 
 
-def _setup_events(foyer: Room) -> None:
+def _setup_events(foyer: Room, ls :LevelingSystem) -> None:
     """Set up game events."""
     Event.add_event("unlock_foyer", foyer.unlock, True)
+    ls.setup_events()
 
 
 def _initialize_game_world() -> tuple[RpgHero, Room]:
     """Initialize the complete game world with hero, rooms, and all game objects."""
     # Create a hero
     hero = _create_hero()
-
     ls = LevelingSystem()
-    ls.setup_events()
+
 
     # Create rooms
     forest_clearing, manor, foyer, dark_cave_entrance, goblins_lair, shack_shop = (
@@ -244,7 +244,7 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     )
 
     # Set up events
-    _setup_events(foyer)
+    _setup_events(foyer, ls)
 
     # Set up room objects and interactions
     _setup_forest_table(forest_clearing)
