@@ -18,6 +18,14 @@ class RoomDiscEffect(ABC):
         """
         pass
 
+    def handle_take(self, hero, item_name: str):
+        """Called when an item is removed from the room, to update state."""
+        return False
+
+    def handle_drop(self, hero, item_name: str):
+        """Called when an item is dropped from the room, to update state."""
+        return False
+
     def handle_item_use(self, item_name: str, user: "Combatant") -> bool:
         """
         Handles the effect of using an item within the room.

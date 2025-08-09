@@ -1,6 +1,6 @@
 from typing import Optional
 from character.basecharacter import BaseCharacter
-from character.tomes.manamix import ManaMix
+from character.tomes.manamix import ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix
 from components.core_components import Effect, Exp
 from components.inventory import ItemNotFoundError
 from components.inventory_evil_cousin import QuestAwareInventory
@@ -11,7 +11,7 @@ from game.magic import Spell, NoTargetError
 from interfaces.interface import Combatant
 
 
-class RpgHero(ManaMix, BaseCharacter):
+class RpgHero(ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix, BaseCharacter):
     """Hero character class with spells, mana, and inventory."""
 
     BASE_MANA = 100
@@ -177,68 +177,3 @@ class RpgHero(ManaMix, BaseCharacter):
             print(f"Error using {item_name}: {e}")
             raise
 
-    @property
-    def xp_component(self) -> Exp:
-        """Get the hero's experience component."""
-        return self.components["xp"]
-
-    @property
-    def xp_to_next_level(self):
-        return self.xp_component.next_lvl
-
-    @xp_to_next_level.setter
-    def xp_to_next_level(self, value):
-        self.xp_component.next_lvl = value
-
-    @property
-    def xp(self) -> int:
-        """Get the hero's experience points."""
-        return self.components["xp"].exp
-
-    @xp.setter
-    def xp(self, value: int):
-        """Set the hero's experience points."""
-        self.components["xp"].exp = value
-
-    @property
-    def max_mana(self) -> int:
-        """Get the maximum mana value."""
-        return self.get_mana_component().max_mana
-
-    @property
-    def quest_log(self) -> QuestLog:
-        """Get the hero's quest log."""
-        return self.components["quests"]
-
-    @property
-    def mana(self) -> int:
-        """Get the current mana value."""
-        return self.get_mana_component().mana
-
-    @property
-    def inventory(self) -> QuestAwareInventory:
-        """Get quest-aware inventory."""
-        return self._inventory_wrapper
-
-    @property
-    def wallet(self) -> Wallet:
-        """Get the hero's wallet."""
-        if not self.components.has_component("wallet"):
-            raise ValueError("Hero has no wallet. WHY?")
-        return self.components["wallet"]
-
-    @property
-    def gold(self) -> int:
-        """Get the hero's gold."""
-        return self.wallet.balance
-
-    @gold.setter
-    def gold(self, value: int):
-        """Set the hero's gold."""
-        self.wallet._balance = value
-
-    def add_gold(self, amount: int):
-        self.wallet.add(amount)
-
-    def spend_gold(self, amount: int):
-        self.wallet.spend(amount)
