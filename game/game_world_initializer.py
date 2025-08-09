@@ -134,6 +134,8 @@ def _populate_room_items(
     forest_clearing.add_item(
         Item("health potion", 10, True, Effect.HEAL, 20, is_consumable=True)
     )
+    forest_clearing.add_item(Item("stick", 1, False, is_consumable=False))
+
     dark_cave_entrance.add_item(
         Item("torch", 5, True, is_consumable=False, tags=["fire"])
     )  # Essential for the cave!

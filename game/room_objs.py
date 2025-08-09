@@ -1,4 +1,4 @@
-from typing import Dict, Callable, runtime_checkable, Protocol, TYPE_CHECKING
+from typing import Dict, Callable, runtime_checkable, Protocol, TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from game.room import Room
@@ -64,7 +64,7 @@ class RoomObject:
 
     def try_interact(
         self, verb: str, user: RpgHero, item: Item = None, room: "Room" = None
-    ):
+    ) -> Optional[str]:
         """
         Tries to interact with this object.
         Returns a message about the outcome.
@@ -74,7 +74,7 @@ class RoomObject:
         else:
             return f"You cannot {verb} the {self.name}."
 
-    def add_interaction(self, verb: str, event_function: InteractionEvent):
+    def add_interaction(self, verb: str, event_function: InteractionEvent) -> None:
         """
         Adds an event that triggers when a specific item is used on this object.
         The event_function should take the RpgHero as an argument and return a message.
