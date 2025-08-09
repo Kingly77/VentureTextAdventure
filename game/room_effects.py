@@ -1,5 +1,6 @@
+import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING  # For type hinting without circular imports
+from typing import TYPE_CHECKING, Optional  # For type hinting without circular imports
 
 
 class RoomDiscEffect(ABC):
@@ -32,6 +33,17 @@ class RoomDiscEffect(ABC):
         Returns True if the item use was handled by this effect, False otherwise.
         """
         return False  # By default, effects don't handle item use
+
+    def handle_interaction(
+        self,
+        verb: str,
+        target_name: Optional[str],
+        val_hero: "RpgHero",
+        item: Optional["Item"],
+        room: "Room",
+    ) -> Optional[str]:
+
+        return None
 
 
 class DarkCaveLightingEffect(RoomDiscEffect):
@@ -66,11 +78,20 @@ class DarkCaveLightingEffect(RoomDiscEffect):
             return True  # This effect handled the item use
         return False
 
-    def handle_take(self, hero, item_name: str):
+    def on_item_removed(self, item_name: str):
         """Called when an item is removed from the room, to update state."""
+        logging.debug(f"Item {item_name} removed from room {self.room.name}.")
         if item_name == "torch":
             self._is_lit = False
             print(
                 f"[{self.room.name}] The light source is gone, the area grows darker."
             )
-        return False
+
+    # def handle_take(self, hero, item_name: str):
+    #     """Called when an item is removed from the room, to update state."""
+    #     if item_name == "torch":
+    #         self._is_lit = False
+    #         print(
+    #             f"[{self.room.name}] The light source is gone, the area grows darker."
+    #         )
+    #     return False

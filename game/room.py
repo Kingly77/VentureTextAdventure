@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 from components.core_components import HoldComponent
 from components.inventory import Inventory, ItemNotFoundError
 from game.items import Item
@@ -120,6 +120,37 @@ class Room:
                 effect.on_item_removed(item_name)  # Call the method
 
         return removed_item
+
+    def interact(
+        self,
+        verb: str,
+        target_name: Optional[str],
+        user: "RpgHero",
+        item: Optional[Item] = None,
+        room: "Room" = None,
+    ) -> Optional[str]:
+        """
+        Tries to interact with this room.
+        Returns a message about the outcome.
+        """
+        vb = (verb or "").lower().strip()
+        tgt = (target_name or "").lower().strip()
+        for effect in self.effects:
+            handler = getattr(effect, f"handle_interaction", None)
+            if callable(handler):
+                result = handler(vb, tgt, user, item, room)
+                if result is not None:
+                    return result
+
+        if tgt in self.objects:
+            return self.objects[tgt].try_interact(vb, user, item, room)
+
+        if tgt:
+            print(f"You try to {vb} the {tgt}, but nothing special happens.")
+            return None
+
+        print(f"You try to {vb}, but nothing special happens.")
+        return None
 
     def use_item_in_room(self, item, user: "RpgHero"):
         """

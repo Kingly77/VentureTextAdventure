@@ -214,10 +214,9 @@ def _use_item_on_object(
     obj = current_room.objects[target_str]
 
     try:
-        # Try to use the object's interaction system first
-        if hasattr(obj, "try_interact"):
-            result = obj.try_interact("use", hero, item, current_room)
-            print(result)
+        msg = current_room.interact("use", target_str, hero, item, current_room)
+        if msg is not None:
+            print(msg)
         else:
             # Fall back to the general item use handler
             handle_item_use(hero, item, target=obj, room=current_room)
