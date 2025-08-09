@@ -1,6 +1,6 @@
 from typing import Optional
 from character.basecharacter import BaseCharacter
-from character.tomes.manamix import ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix
+from character.tomes import ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix
 from components.core_components import Effect, Exp
 from components.inventory import ItemNotFoundError
 from components.inventory_evil_cousin import QuestAwareInventory
@@ -176,4 +176,3 @@ class RpgHero(ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix, BaseCharact
         except Exception as e:
             print(f"Error using {item_name}: {e}")
             raise
-
