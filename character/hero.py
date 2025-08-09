@@ -1,46 +1,17 @@
 from typing import Optional
 from character.basecharacter import BaseCharacter
-from components.core_components import Mana, Effect, Exp
-from components.inventory import Inventory, ItemNotFoundError
+from character.tomes.manamix import ManaMix
+from components.core_components import Effect, Exp
+from components.inventory import ItemNotFoundError
+from components.inventory_evil_cousin import QuestAwareInventory
 from components.quest_log import QuestLog
-from game.magic import Spell, NoTargetError
 from components.wallet import Wallet
-from game.underlings.events import Events
-from interfaces.interface import Combatant
 from game.items import Item, UseItemError
+from game.magic import Spell, NoTargetError
+from interfaces.interface import Combatant
 
 
-class QuestAwareInventory:
-    """Inventory wrapper that handles quest checking."""
-
-    def __init__(self, inventory: Inventory, hero: "RpgHero"):
-        self._inventory = inventory
-        self._hero = hero
-
-    def add_item(self, item: Item):
-        """Add an item and trigger quest-related events.
-
-        Returns the list of event handler results (if any), allowing callers/UI to decide how to display them.
-        """
-        # Add to the underlying inventory first
-        self._inventory.add_item(item)
-        # Then trigger item_collected so quests can react. Do not print here.
-        Events.trigger_event("item_collected", self._hero, item)
-
-    def __getattr__(self, name):
-        """Delegate everything else to the real inventory."""
-        return getattr(self._inventory, name)
-
-    def __getitem__(self, item_name: str) -> Item:
-        """Handle dictionary-style access like inventory['fists']."""
-        return self._inventory[item_name]
-
-    def __repr__(self):
-        """Delegate string representation."""
-        return repr(self._inventory)
-
-
-class RpgHero(BaseCharacter):
+class RpgHero(ManaMix, BaseCharacter):
     """Hero character class with spells, mana, and inventory."""
 
     BASE_MANA = 100
@@ -52,30 +23,17 @@ class RpgHero(BaseCharacter):
         """Initialize a hero with default attributes and abilities."""
         # Calculate health based on level
         health = self.BASE_HEALTH + (level - 1) * self.HEALTH_PER_LEVEL
-        super().__init__(name, level, base_health=health)
 
+        super().__init__(name, level, base_health=health)
         # Cache a quest-aware inventory wrapper to avoid recreating it on each access
         self._inventory_wrapper = QuestAwareInventory(
             self.components["inventory"], self
         )
 
         # Hero-specific initialization
-        # self.xp = 0
 
         self.last_room: Optional["Room"] = None
 
-        # Add hero-specific components
-        self.components.add_component(
-            "mana", Mana(self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL)
-        )
-        self.components.add_component(
-            "fireball",
-            Spell("Fireball", 25, self, lambda target: target.take_damage(25)),
-        )
-        self.components.add_component(
-            "magic_missile",
-            Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)),
-        )
         self.components.add_component("quests", QuestLog())
         self.components.add_component("xp", Exp(0, 100))
         self.components.add_component("wallet", Wallet(0))
@@ -93,10 +51,6 @@ class RpgHero(BaseCharacter):
     def add_xp(self, xp: int):
         """Adds experience points by delegating to the Exp component."""
         self.xp_component.add_xp(self, xp)
-
-    def get_mana_component(self) -> Mana:
-        """Get the mana component of the hero."""
-        return self.components["mana"]
 
     def _normalize_name(self, name: str) -> str:
         """Normalize entity names for consistent lookups."""

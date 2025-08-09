@@ -89,7 +89,7 @@ class _Event:
             Both the function and its arguments must match exactly what was registered.
 
         Raises:
-            EventNotFoundError: If the event doesn't exist
+            EventNotFoundError: If the event doesn't exist,
             HandlerNotFoundError: If the handler is not found in the event
         """
         if name not in self.events:
@@ -157,7 +157,7 @@ class _Event:
             logging.debug(f"Triggered event '{name}' with {len(results)} results")
             return results if results else None
         else:
-            logging.debug(f"try_trigger: Event '{name}' not found; skipping.")
+            logging.debug(f"trigger: Event '{name}' not found; skipping.")
             return None
 
     def list_events(self):

@@ -1,4 +1,5 @@
 from character.hero import RpgHero
+from components.wallet import Wallet
 from game.items import Item
 from game.room_effects import RoomDiscEffect
 from game.util import handle_inventory_operation
@@ -7,6 +8,7 @@ from game.util import handle_inventory_operation
 class ShopEffect(RoomDiscEffect):
     def __init__(self, room: "Room", shopkeeper_name="The Merchant", prices=None):
         super().__init__(room)
+        room._components.add_component("wallet", Wallet(1000))
         self.shopkeeper_name = shopkeeper_name
         self.prices = prices or {}  # item.name -> price override
 
