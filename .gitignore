@@ -35,6 +35,7 @@ coverage.xml
 *.iml
 .vscode/
 *.sublime*
+.junie
 
 # OS files
 .DS_Store
@@ -57,3 +58,4 @@ desktop.ini
 # Miscellaneous
 *.bak
 *.tmp
+
