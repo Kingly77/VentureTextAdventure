@@ -58,10 +58,11 @@ class DarkCaveLightingEffect(RoomDiscEffect):
             return True  # This effect handled the item use
         return False
 
-    def on_item_removed(self, item_name: str):
+    def handle_take(self, hero, item_name: str):
         """Called when an item is removed from the room, to update state."""
-        if item_name == "torch" and not self.room.inventory.has_component("torch"):
+        if item_name == "torch":
             self._is_lit = False
             print(
                 f"[{self.room.name}] The light source is gone, the area grows darker."
             )
+        return False

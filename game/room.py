@@ -1,11 +1,11 @@
+import logging
+from typing import List, Dict
 from components.core_components import HoldComponent
-from components.inventory import Inventory, InsufficientQuantityError, ItemNotFoundError
+from components.inventory import Inventory, ItemNotFoundError
 from game.items import Item
-from typing import List, Callable, Dict, Protocol, runtime_checkable
-
+from game.room_effects import RoomDiscEffect  # Import the new RoomEffect base class
 from game.room_objs import RoomObject
 from interfaces.interface import Combatant  # Import Combatant
-from game.room_effects import RoomDiscEffect  # Import the new RoomEffect base class
 
 
 class Room:
@@ -110,7 +110,7 @@ class Room:
             raise ItemNotFoundError(item_name)
 
         removed_item = self.inventory.remove_item(item_name, quantity)
-        print(f"[{self.name}] Removed {quantity} of {item_name}.")
+        logging.debug(f"[{self.name}] Removed {quantity} of {item_name}.")
 
         # Notify effects of item removal
         for effect in self.effects:

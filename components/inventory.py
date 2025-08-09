@@ -1,3 +1,5 @@
+import logging
+
 from game.items import Item
 
 
@@ -90,7 +92,7 @@ class Inventory:
         removed_item.quantity = quantity
 
         if current_item.quantity <= 0:
-            print(f"Item '{item_name}' removed entirely from inventory.")
+            logging.debug(f"Item '{item_name}' removed entirely from inventory.")
             del self.items[item_name]
         else:
             print(
