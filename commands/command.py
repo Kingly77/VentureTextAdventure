@@ -123,7 +123,7 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
         if item_location == "hero":
             _handle_hero_item_usage(item_name, target_str, hero, current_room)
         elif item_location == "room":
-            _handle_room_item_usage(item_name, hero, current_room)
+            _handle_room_item_usage(item_name, hero, current_room, target_str)
         else:
             print(f"You don't see or have a '{item_name}'.")
 
@@ -225,10 +225,26 @@ def _use_item_on_object(
         print(f"Cannot use {item.name} on {obj.name}: {e}")
 
 
-def _handle_room_item_usage(item_name: str, hero: "RpgHero", current_room: "Room"):
-    """Handle usage of items found in the room."""
+def _handle_room_item_usage(
+    item_name: str, hero: "RpgHero", current_room: "Room", target_str: str | None
+):
+    """Handle usage of items found in the room.
+
+    If a target object is specified (e.g., "door"), attempt to use the room item on that object.
+    Otherwise, use the item in the room context.
+    """
     try:
-        current_room.use_item_in_room(item_name, hero)
-        print(f"{hero.name} used the {item_name} in the {current_room.name}.")
+        # Fetch the actual Item object from the room inventory
+        item = current_room.inventory[item_name]
+
+        # Determine target for usage
+        if target_str is None or target_str in ["room", "the room", "this room"]:
+            _use_item_on_room(item, hero, current_room)
+        elif target_str in current_room.objects:
+            _use_item_on_object(item, target_str, hero, current_room)
+        elif target_str in ["self", "me", "myself", hero.name.lower()]:
+            print(f"You must take the {item_name} first before using it on yourself.")
+        else:
+            print(f"You don't see '{target_str}' to use the {item_name} on.")
     except Exception as e:
         print(f"Failed to use {item_name}: {e}")

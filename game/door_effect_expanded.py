@@ -1,8 +1,6 @@
 import functools
-import logging
 from typing import Optional
 
-from character.hero import RpgHero
 from game.room_effects import RoomDiscEffect
 from game.room_objs import RoomObject
 from game.underlings.events import EventNotFoundError, Events
@@ -38,6 +36,10 @@ class DoorEffectExpanded(RoomDiscEffect):
             return None
 
         self.door.add_interaction("use", knock_door)
+
+    def handle_item_use(self, item_name: str, user: "Combatant") -> bool:
+        print("not holding the item")
+        return False
 
     def handle_interaction(
         self,

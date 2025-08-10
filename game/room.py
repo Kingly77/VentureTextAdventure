@@ -154,22 +154,24 @@ class Room:
 
     def use_item_in_room(self, item, user: "RpgHero"):
         """
-        Tries to use an item from hero's inventory within the room context.
+        Tries to use an item within the room context.
         These could be items that affect the room (like a torch or key).
 
         Args:
-            item_name: The name of the item to use
+            item: The item object to use (can be from hero inventory or the room)
             user: The hero using the item
 
         Raises:
-            ItemNotFoundError: If the item is not in the inventory
             ValueError: If the item cannot be used in this room
         """
-        # Check if the item is in the hero's inventory
         item_name = item.name.lower()
 
-        if not user.inventory.has_component(item_name):
-            raise ItemNotFoundError(item_name)
+        # Determine where the item currently is (hero or room) for potential consumption
+        inv_to_consume_from = None
+        if user.inventory.has_component(item_name):
+            inv_to_consume_from = user.inventory
+        elif self.inventory.has_component(item_name):
+            inv_to_consume_from = self.inventory
 
         # Try to let room effects handle the item usage
         handled_by_effect = False
@@ -179,10 +181,11 @@ class Room:
                 handled_by_effect = True
                 # Remove the item if it was used (consumable)
                 if (
-                    user.inventory.has_component(item_name)
-                    and user.inventory[item_name].is_consumable
+                    inv_to_consume_from is not None
+                    and inv_to_consume_from.has_component(item_name)
+                    and inv_to_consume_from[item_name].is_consumable
                 ):
-                    user.inventory.remove_item(item_name, 1)
+                    inv_to_consume_from.remove_item(item_name, 1)
                 break
 
         if not handled_by_effect:
