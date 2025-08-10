@@ -97,13 +97,11 @@ def handle_inventory_command(
 
 def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None):
     """
-    Enhanced use command that handles item usage with better structure and error handling.
-
-    Supports:
-    - use [item] - Use item on self
-    - use [item] on [target] - Use item on specific target
-    - use [item] on room - Use item in room context
-    - use [item] in room - Alternative syntax for room usage
+    Use an item either from the hero's inventory or from the room.
+    Examples:
+    - use [item]
+    - use [item] on [target]
+    - use [item] on room / in room
     """
     if not arg:
         print("What do you want to use?")
@@ -113,26 +111,16 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
         print("Invalid game state.")
         return
 
-    # Parse the command arguments
     item_name, target_str = _parse_use_arguments(arg)
 
-    try:
-        # Check if item exists in hero's inventory or room
-        item_location = _find_item_location(item_name, hero, current_room)
-
-        if item_location == "hero":
-            _handle_hero_item_usage(item_name, target_str, hero, current_room)
-        elif item_location == "room":
-            _handle_room_item_usage(item_name, hero, current_room, target_str)
-        else:
-            print(f"You don't see or have a '{item_name}'.")
-
-    except ItemNotFoundError as e:
-        print(f"Item not found: {e}")
-    except UseItemError as e:
-        print(f"Cannot use this item: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+    # Decide where the item is and delegate accordingly
+    item_location = _find_item_location(item_name, hero, current_room)
+    if item_location == "hero":
+        _handle_hero_item_usage(item_name, target_str, hero, current_room)
+    elif item_location == "room":
+        _handle_room_item_usage(item_name, hero, current_room, target_str)
+    else:
+        print(f"You don't see or have a '{item_name}'.")
 
 
 def _parse_use_arguments(arg: str) -> tuple[str, str]:
