@@ -112,19 +112,15 @@ def test_dispatch_command_methods():
     # Use patch to mock the methods
     with patch("game.rpg_adventure_game.Game._handle_look") as mock_look:
         with patch("game.rpg_adventure_game.Game._handle_inventory") as mock_inventory:
-            with patch("game.rpg_adventure_game.Game._handle_go") as mock_go:
-                # Create a game instance with the patched methods
-                game = Game(MagicMock(), MagicMock())
+            # Create a game instance with the patched methods
+            game = Game(MagicMock(), MagicMock())
 
-                # Test dispatching to method handlers
-                game._dispatch_command("look", "")
-                mock_look.assert_called_once_with("")
+            # Test dispatching to method handlers
+            game._dispatch_command("look", "")
+            mock_look.assert_called_once_with("")
 
-                game._dispatch_command("inventory", "")
-                mock_inventory.assert_called_once_with("")
-
-                game._dispatch_command("go", "north")
-                mock_go.assert_called_once_with("north")
+            game._dispatch_command("inventory", "")
+            mock_inventory.assert_called_once_with("")
 
 
 def test_dispatch_command_functions():

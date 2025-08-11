@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 
 from game.game_world_initializer import setup_game
-from commands.command import use_command
+from commands.command import use_command, go_command
 
 
 @pytest.fixture
@@ -28,7 +28,8 @@ def test_use_room_item_on_object_unlocks_foyer(world):
 
         # Verify the success message was printed (coming from DoorEffectExpanded)
         assert any(
-            "bash the door open" in str(args).lower() for args, _ in mock_print.call_args_list
+            "bash the door open" in str(args).lower()
+            for args, _ in mock_print.call_args_list
         ), "Expected door bashing message to be printed"
 
     # The foyer should now be unlocked due to the triggered event
@@ -49,5 +50,6 @@ def test_use_room_item_in_room_context_lights_torch(world):
 
         # DarkCaveLightingEffect should print a message about lighting the torch
         assert any(
-            "lights the torch" in str(args).lower() for args, _ in mock_print.call_args_list
+            "lights the torch" in str(args).lower()
+            for args, _ in mock_print.call_args_list
         ), "Expected torch lighting message to be printed"

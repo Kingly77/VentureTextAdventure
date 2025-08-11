@@ -9,7 +9,7 @@ from game.door_effect_expanded import DoorEffectExpanded
 from game.items import Item
 from game.quest import Quest, Objective
 from game.room import Room, RoomObject
-from game.room_effects import DarkCaveLightingEffect
+from game.room_effects import DarkCaveLightingEffect, NPCDialogEffect
 from game.shop_effect import ShopEffect
 from game.torch_effect import TorchEffect
 from game.underlings.events import Events as Event, EventNotFoundError
@@ -58,7 +58,7 @@ def _create_hero() -> RpgHero:
     return hero
 
 
-def _create_rooms() -> tuple[Room, Room, Room, Room, Room, Room]:
+def _create_rooms() -> tuple[Room, Room, Room, Room, Room, Room, Room]:
     """Create all game rooms and set up their basic properties."""
     forest_clearing = Room(
         "Forest Clearing",
@@ -84,11 +84,23 @@ def _create_rooms() -> tuple[Room, Room, Room, Room, Room, Room]:
         "Shack Shop",
         "A small, cozy shack with a large table and chair. There is a large glass door to the east.",
     )
+    village_square = Room(
+        "Village Square",
+        "A quaint village square with a stone well and a few benches. Villagers pass by, chatting quietly.",
+    )
 
     # Set room properties
     foyer.is_locked = True
 
-    return forest_clearing, manor, foyer, dark_cave_entrance, goblins_lair, shack_shop
+    return (
+        forest_clearing,
+        manor,
+        foyer,
+        dark_cave_entrance,
+        goblins_lair,
+        shack_shop,
+        village_square,
+    )
 
 
 def _link_rooms(
@@ -98,11 +110,13 @@ def _link_rooms(
     dark_cave_entrance: Room,
     goblins_lair: Room,
     shack_shop: Room,
+    village_square: Room,
 ) -> None:
     """Connect all rooms with their directional links."""
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
     forest_clearing.link_rooms("east", manor, "west")
     forest_clearing.link_rooms("south", shack_shop, "north")
+    forest_clearing.link_rooms("west", village_square, "east")
     dark_cave_entrance.link_rooms("east", goblins_lair, "west")
     manor.link_rooms("north", foyer, "south")
 
@@ -122,6 +136,27 @@ def _setup_shop(shack_shop: Room) -> None:
     shack_shop.add_effect(ShopEffect(shack_shop, SHOP_KEEPER_NAME))
     handle_inventory_operation(shack_shop.add_item, Item("marble ball", 1, False))
     handle_inventory_operation(shack_shop.add_item, Item("10 foot pole", 3, False))
+
+
+def _setup_village_npc(village_square: Room) -> None:
+    """Place an NPC with a dialog tree in the Village Square and add a visible NPC reference."""
+    # Prepare a quest to pass into the NPC dialog effect, making it generic
+    def goblin_ear_quest_factory():
+        return Quest(
+            "goblin ear",
+            "Collect the goblin ear to defeat the goblin foe.",
+            100,
+            objective=Objective("collect", "goblin ear", 1),
+        )
+
+    # Add interactive dialog effect
+    village_square.add_effect(
+        NPCDialogEffect(village_square, "Old Villager", quest_factory=goblin_ear_quest_factory)
+    )
+
+    # Also add a simple NPC reference so the description shows someone to talk to
+    from game.npc import NPC
+    village_square.add_npc(NPC("Old Villager", "leans on a walking stick, ready to chat."))
 
 
 def _populate_room_items(
@@ -172,13 +207,25 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     ls = LevelingSystem()
     QuestingSystem()
     # Create rooms
-    forest_clearing, manor, foyer, dark_cave_entrance, goblins_lair, shack_shop = (
-        _create_rooms()
-    )
+    (
+        forest_clearing,
+        manor,
+        foyer,
+        dark_cave_entrance,
+        goblins_lair,
+        shack_shop,
+        village_square,
+    ) = _create_rooms()
 
     # Link rooms together
     _link_rooms(
-        forest_clearing, manor, foyer, dark_cave_entrance, goblins_lair, shack_shop
+        forest_clearing,
+        manor,
+        foyer,
+        dark_cave_entrance,
+        goblins_lair,
+        shack_shop,
+        village_square,
     )
 
     # Set up events
@@ -193,6 +240,9 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
 
     # Set up room effects
     _setup_cave_lighting(dark_cave_entrance)
+
+    # Set up the village NPC
+    _setup_village_npc(village_square)
 
     # Populate rooms with items
     _populate_room_items(forest_clearing, manor, dark_cave_entrance, goblins_lair)

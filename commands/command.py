@@ -1,8 +1,7 @@
 from __future__ import annotations
-from components.inventory import ItemNotFoundError
-from game.items import UseItemError, Item
-from game.util import handle_item_use, handle_inventory_operation
 
+from game.items import Item
+from game.util import handle_item_use, handle_inventory_operation
 
 HELP_TEXT = """
 Available commands:
@@ -15,7 +14,7 @@ Available commands:
   use [item] on room - Use an item in the current room
   use [item] on [target] - Use an item on a specific target
   status - Check your status
-  turn-in [quest id] - Complete a quest
+  talk [target] - Speak with someone in the room
   examine [item] - Examine an item in detail
   quit - Exit the game
 """
@@ -73,7 +72,7 @@ def handle_inventory_command(
             elif room_inv.has_component(arg):
                 item = room_inv[arg]
             else:
-                print(f"There is no {item.name} here to examine.")
+                print(f"There is no {arg} here to examine.")
                 return
 
             print(f"You examine the {item.name}:")
@@ -123,7 +122,7 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
         print(f"You don't see or have a '{item_name}'.")
 
 
-def _parse_use_arguments(arg: str) -> tuple[str, str]:
+def _parse_use_arguments(arg: str) -> tuple[str, str | None]:
     """Parse use command arguments into item name and target."""
     # Split argument into item name and target (if provided)
     # Support both "use X on Y" and "use X in Y" patterns
@@ -236,3 +235,42 @@ def _handle_room_item_usage(
             print(f"You don't see '{target_str}' to use the {item_name} on.")
     except Exception as e:
         print(f"Failed to use {item_name}: {e}")
+
+
+def go_command(
+    _, direction: str, hero: "RpgHero" = None, current_room: "Room" = None, game=None
+):
+    """Handles the 'go' command to move the player to another room.
+
+    Note: Requires the `game` instance to update current_room/last_room.
+    The function keeps the original behavior from Game._handle_go.
+    """
+    if game is None or hero is None or current_room is None:
+        print("Invalid game state.")
+        return
+
+    next_room = current_room.exits_to.get(direction)
+    if not next_room:
+        print("You can't go that way.")
+        return
+
+    if next_room and not next_room.is_locked:
+        hero.last_room = game.current_room
+        game.current_room = next_room
+        print(f"You go {direction}.")
+        if hasattr(game.current_room, "on_enter"):
+            game.current_room.on_enter(hero)
+
+    elif direction == "back":
+        if hero.last_room is None:
+            print("You can't go back any further.")
+            return
+        temp = game.current_room
+        game.current_room = hero.last_room
+        hero.last_room = temp
+        print("You go back.")
+
+    elif next_room.is_locked:
+        print("The door is locked.")
+    else:
+        print("You can't go that way.")

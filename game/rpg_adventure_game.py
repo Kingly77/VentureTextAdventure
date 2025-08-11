@@ -1,7 +1,12 @@
 import logging
 
 from character.enemy import Goblin
-from commands.command import help_command, use_command, handle_inventory_command
+from commands.command import (
+    help_command,
+    use_command,
+    handle_inventory_command,
+    go_command,
+)
 from components.core_components import Effect
 from game.items import Item
 from game.util import handle_spell_cast, handle_inventory_operation
@@ -16,14 +21,13 @@ class Game:
 
         # Handlers for commands that are methods of this class
         self._method_handlers = {
-            "go": self._handle_go,
             "look": self._handle_look,
             "status": self._handle_status,
-            "turn-in": self._handle_turn_in,
             "inventory": self._handle_inventory,
             "quit": self._handle_quit,
             "exit": self._handle_quit,
             "debug": self._handle_debug,
+            "talk": self._handle_talk,
         }
 
         # Handlers for commands that are external functions
@@ -35,6 +39,7 @@ class Game:
             "drop": handle_inventory_command,
             "examine": handle_inventory_command,
             "help": help_command,
+            "go": go_command,
         }
 
     def run(self):
@@ -100,7 +105,11 @@ class Game:
         if action in self._method_handlers:
             self._method_handlers[action](arg)
         elif action in self._function_handlers:
-            self._function_handlers[action](action, arg, self.hero, self.current_room)
+            handler = self._function_handlers[action]
+            if action == "go":
+                handler(action, arg, self.hero, self.current_room, self)
+            else:
+                handler(action, arg, self.hero, self.current_room)
         else:
             print("Unknown command. Try 'help' for a list of commands.")
 
@@ -130,34 +139,6 @@ class Game:
             return
         action, arg = self._parse_command(command_input)
         self._dispatch_command(action, arg)
-
-    def _handle_go(self, direction: str):
-        """Handles the 'go' command to move the player to another room."""
-        next_room = self.current_room.exits_to.get(direction)
-        if not next_room:
-            print("You can't go that way.")
-            return
-
-        if next_room and not next_room.is_locked:
-            self.hero.last_room = self.current_room
-            self.current_room = next_room
-            print(f"You go {direction}.")
-            if hasattr(self.current_room, "on_enter"):
-                self.current_room.on_enter(self.hero)
-
-        elif direction == "back":
-            if self.hero.last_room is None:
-                print("You can't go back any further.")
-                return
-            temp = self.current_room
-            self.current_room = self.hero.last_room
-            self.hero.last_room = temp
-
-            print("You go back.")
-        elif next_room.is_locked:
-            print("The door is locked.")
-        else:
-            print("You can't go that way.")
 
     def _handle_look(self, _):
         """Handles the 'look' command to re-display the room description."""
@@ -201,9 +182,23 @@ class Game:
 
         print("=" * 40)
 
-    def _handle_turn_in(self, arg: str):
-        """Handles the 'turn-in' command for completing quests."""
-        self.hero.quest_log.complete_quest(arg, self.hero)
+    def _handle_talk(self, arg: str):
+        """Talk to someone in the current room. Delegates to room effects if available."""
+        # First, try to let the current room handle the conversation via its effects
+        try:
+            msg = self.current_room.interact(
+                "talk", arg if arg else None, self.hero, None, self.current_room
+            )
+            if msg is not None:
+                if isinstance(msg, str) and msg:
+                    print(msg)
+                return
+        except Exception as _e:
+            # If any effect throws, fall back to built-in dialog
+            pass
+
+        print("There is no one here to talk to.")
+        return
 
     def _handle_inventory(self, _):
         """Handles the 'inventory' command."""

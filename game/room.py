@@ -6,12 +6,13 @@ from game.items import Item
 from game.room_effects import RoomDiscEffect  # Import the new RoomEffect base class
 from game.room_objs import RoomObject
 from interfaces.interface import Combatant  # Import Combatant
+from game.npc import NPC
 
 
 class Room:
     """
     Represents a single location or area in the game world.
-    A room has a description and can contain items and effects.
+    A room has a description and can contain items, effects, objects, and NPCs.
     """
 
     def __init__(self, name: str, description: str, exits=None):
@@ -29,6 +30,8 @@ class Room:
         self.exits_to = exits if exits else {}
         self.is_locked = False
         self._combatants = []
+        # NPCs present in the room, mapped by lowercased name
+        self.npcs: Dict[str, "NPC"] = {}
 
     def change_description(self, new_description: str):
         """Changes the description of the room."""
@@ -100,6 +103,12 @@ class Room:
     def add_effect(self, effect: RoomDiscEffect):
         """Adds a RoomEffect to this room."""
         self.effects.append(effect)
+
+    def add_npc(self, npc: NPC):
+        """Adds an NPC reference to this room."""
+        if not isinstance(npc, NPC):
+            raise TypeError("Only NPC instances can be added to a room.")
+        self.npcs[npc.key()] = npc
 
     def add_item(self, item: Item):
         self.inventory.add_item(item)
@@ -226,7 +235,15 @@ class Room:
                 object_descriptions
             )
 
-        return f"{current_description}{item_list_str}{object_list_str}"
+        # Add information about NPCs present
+        npc_list_str = ""
+        if self.npcs:
+            npc_descriptions = [
+                f"{npc.name}: {npc.short_description}" for npc in self.npcs.values()
+            ]
+            npc_list_str = "\n\nPeople here:\n" + "\n".join(npc_descriptions)
+
+        return f"{current_description}{item_list_str}{object_list_str}{npc_list_str}"
 
     def __str__(self) -> str:
         return f"Room: {self.name}"
