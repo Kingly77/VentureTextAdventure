@@ -3,26 +3,6 @@ from __future__ import annotations
 from game.items import Item
 from game.util import handle_item_use, handle_inventory_operation
 
-HELP_TEXT = """
-Available commands:
-  go [direction] - Move in a direction (north, south, east, west)
-  look - Look around the room
-  inventory - Check your inventory
-  take/get [item] - Pick up an item
-  drop [item] - Drop an item
-  use [item] - Use an item on yourself
-  use [item] on room - Use an item in the current room
-  use [item] on [target] - Use an item on a specific target
-  status - Check your status
-  talk [target] - Speak with someone in the room
-  examine [item] - Examine an item in detail
-  quit - Exit the game
-"""
-
-
-def help_command(*_, **__):
-    print(HELP_TEXT)
-
 
 def handle_inventory_command(
     action: str, arg: str, hero: "RpgHero", current_room: "Room"
@@ -85,7 +65,6 @@ def handle_inventory_command(
                 elif item.effect_type.name == "DAMAGE":
                     effect_desc = f"Deals {item.effect_value} damage"
                 print(f"  Effect: {effect_desc}")
-            # Then check room inventory
 
         elif not hero_has_item:
             print(f"You don't have a {arg} to {action}.")

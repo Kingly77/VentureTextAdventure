@@ -27,7 +27,7 @@ class QuestingSystem:
                         print(f"{val_hero.name} completed the quest: {quest.name}")
                 else:
                     print(f"{val_hero.name} made progress in {quest.name}")
-        # Always return None to indicate side-effect (printing) only
+        # Always return None to indicate side effect (printing) only
         return None
 
     # Existing flow now delegates to the shared handler

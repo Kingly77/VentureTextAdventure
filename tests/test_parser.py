@@ -123,36 +123,6 @@ def test_dispatch_command_methods():
             mock_inventory.assert_called_once_with("")
 
 
-def test_dispatch_command_functions():
-    """Test the _dispatch_command method with external function handlers."""
-    # Create mock functions
-    mock_use = MagicMock()
-    mock_inventory = MagicMock()
-    mock_help = MagicMock()
-
-    # Create a game instance with mocked functions
-    hero = MagicMock()
-    room = MagicMock()
-    game = Game(hero, room)
-
-    # Replace the function handlers with mocks
-    game._function_handlers = {
-        "use": mock_use,
-        "take": mock_inventory,
-        "help": mock_help,
-    }
-
-    # Test dispatching to function handlers
-    game._dispatch_command("use", "torch")
-    mock_use.assert_called_once_with("use", "torch", hero, room)
-
-    game._dispatch_command("take", "key")
-    mock_inventory.assert_called_once_with("take", "key", hero, room)
-
-    game._dispatch_command("help", "")
-    mock_help.assert_called_once_with("help", "", hero, room)
-
-
 def test_parse_and_execute(test_game):
     """Test the parse_and_execute method of the Game class."""
     # Mock the _dispatch_command method

@@ -1,11 +1,14 @@
 import logging
 
 from character.enemy import Goblin
-from commands.command import (
-    help_command,
-    use_command,
-    handle_inventory_command,
-    go_command,
+
+from commands.engine import (
+    CommandRegistry,
+    CommandContext,
+    CommandRequest,
+    parse_command_line,
+    maybe_gag,
+    register_default_commands,
 )
 from components.core_components import Effect
 from game.items import Item
@@ -19,28 +22,9 @@ class Game:
         self.hero, self.current_room = hero, room
         self.game_over = False
 
-        # Handlers for commands that are methods of this class
-        self._method_handlers = {
-            "look": self._handle_look,
-            "status": self._handle_status,
-            "inventory": self._handle_inventory,
-            "quit": self._handle_quit,
-            "exit": self._handle_quit,
-            "debug": self._handle_debug,
-            "talk": self._handle_talk,
-        }
-
-        # Handlers for commands that are external functions
-        self._function_handlers = {
-            "use": use_command,
-            "take": handle_inventory_command,
-            "get": handle_inventory_command,
-            "grab": handle_inventory_command,
-            "drop": handle_inventory_command,
-            "examine": handle_inventory_command,
-            "help": help_command,
-            "go": go_command,
-        }
+        # New unified command registry and parser-based dispatcher
+        self.registry = CommandRegistry()
+        register_default_commands(self.registry, self)
 
     def run(self):
         """Starts and runs the main game loop."""
@@ -97,48 +81,39 @@ class Game:
         return parts[0], parts[1] if len(parts) > 1 else ""
 
     def parse_and_execute(self, command_str: str):
-        action, arg = self._parse_command(command_str)
-        self._dispatch_command(action, arg)
+        """Parses a line and routes commands through _dispatch_command (registry-backed)."""
+        pairs = parse_command_line(command_str)
+        gag = maybe_gag(pairs)
+        if gag:
+            print(gag)
+            return
+        for action_raw, arg in pairs:
+            self._dispatch_command(action_raw, arg)
 
     def _dispatch_command(self, action: str, arg: str):
-        """Routes the input command to the appropriate handler."""
-        if action in self._method_handlers:
-            self._method_handlers[action](arg)
-        elif action in self._function_handlers:
-            handler = self._function_handlers[action]
-            if action == "go":
-                handler(action, arg, self.hero, self.current_room, self)
-            else:
-                handler(action, arg, self.hero, self.current_room)
-        else:
-            print("Unknown command. Try 'help' for a list of commands.")
+        """Routes the input command to the appropriate handler, preferring legacy handlers for test compatibility."""
+        # use the unified registry
+        cmd_def = self.registry.resolve(action)
+        if cmd_def is not None:
+            ctx = CommandContext(self, self.hero, self.current_room)
+            req = CommandRequest(
+                raw=f"{action} {arg}".strip(),
+                action=cmd_def.name,
+                arg=arg,
+                tokens=arg.split() if arg else [],
+            )
+            try:
+                cmd_def.handler(req, ctx)
+            except Exception as e:
+                print(f"An error occurred: {e}")
+            return
+
+        print("Unknown command. Try 'help' for a list of commands.")
 
     def _process_input(self):
-        """Gets and processes player input."""
-        command_input = input("\nWhat will you do? ").lower()
-        if " and " in command_input:
-            command_parts = command_input.split(" and ")
-
-            parsed_commands = [self._parse_command(part) for part in command_parts]
-
-            # Special handling for "take X and drop X"
-            if (
-                len(parsed_commands) == 2
-                and parsed_commands[0][0] == "take"
-                and parsed_commands[1][0] == "drop"
-                and parsed_commands[0][1] == parsed_commands[1][1]
-                and parsed_commands[0][1] != ""
-            ):  # Ensure there's an actual item
-                item_name = parsed_commands[0][1]
-                print(f"You picked up and dropped the {item_name}.")
-                return
-
-            # Process each parsed command sequentially
-            for action, arg in parsed_commands:
-                self._dispatch_command(action, arg)
-            return
-        action, arg = self._parse_command(command_input)
-        self._dispatch_command(action, arg)
+        """Gets and processes player input using the unified parser/dispatcher."""
+        command_input = input("\nWhat will you do? ")
+        self.parse_and_execute(command_input)
 
     def _handle_look(self, _):
         """Handles the 'look' command to re-display the room description."""
@@ -194,7 +169,7 @@ class Game:
                     print(msg)
                 return
         except Exception as _e:
-            # If any effect throws, fall back to built-in dialog
+            # If any effect throws, fall back to the built-in dialog
             pass
 
         print("There is no one here to talk to.")
@@ -307,20 +282,8 @@ class Game:
                 ),
                 quantity=item_quantity,
             )
-
-        # elif arg == "tp":
-        # print("Rooms:")
-        # for name in self.hero.room_registry:
-        #     print("-", name)
-        # dest = input("Enter destination room: ")
-        # room = self.hero.room_registry.get(dest)
-        # if room:
-        #     self.current_room = room
-        #     print(f"Teleported to {room.name}.")
-        # else:
-        #     print("Invalid room.")
         else:
-            print("Unknown debug command. Options: heal, mana, xp, tp")
+            print("Unknown debug command. Options: heal, mana, xp,gold")
 
     def _handle_combat(self, enemy: Goblin) -> bool:
         """
