@@ -35,6 +35,36 @@ class Quest:
 
         Events.add_event(self.event_name, event_handler, True)
 
+    def handle_event(self, event_name: str, **kwargs) -> None:
+        """
+        Update quest progress based on emitted events.
+        This is additive and does not change existing item handling behavior.
+        Supported:
+          - item_collected(hero, item)
+          - enemy_killed(hero, enemy_type, count=1)
+          - location_entered(hero, location_name)
+        """
+        # Collect objective (matches existing flow)
+        if self.objective.type == "collect" and event_name == "item_collected":
+            item = kwargs.get("item")
+            if item and getattr(item, "name", None) == self.objective.target:
+                qty = getattr(item, "quantity", 1) or 1
+                self.progress += int(qty)
+                return
+
+        # Kill objective
+        if self.objective.type == "kill" and event_name == "enemy_killed":
+            if kwargs.get("enemy_type") == self.objective.target:
+                self.progress += max(1, int(kwargs.get("count", 1)))
+                return
+
+        # Visit objective
+        if self.objective.type == "visit" and event_name == "location_entered":
+            if kwargs.get("location_name") == self.objective.target:
+                # Mark as complete by reaching required value
+                self.progress = max(self.progress, self.objective.value)
+                return
+
     def check_item(self, item):
         return self.objective.type == "collect" and item.name == self.objective.target
 
