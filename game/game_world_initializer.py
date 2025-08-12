@@ -51,14 +51,14 @@ def _create_hero() -> RpgHero:
     # hero.quest_log.add_quest(foo_quest.id, foo_quest)
 
     # Add starting inventory
-    hero.inventory.add_item(Item("gold", 1, False, quantity=STARTING_GOLD))
+    hero.wallet.add(STARTING_GOLD)
 
     print(f"Welcome, {hero.name}, to the world of KingBase!")
     return hero
 
 
-def _create_rooms() -> tuple[Room, Room, Room, Room, Room, Room, Room]:
-    """Create all game rooms and set up their basic properties."""
+def _create_rooms() -> dict[str, Room]:
+    """Create all game rooms and set up their basic properties, returning a dict of rooms."""
     forest_clearing = Room(
         "Forest Clearing",
         "A peaceful clearing in a dense forest. Sunlight filters through the leaves, and a stone table stands before you.",
@@ -91,27 +91,29 @@ def _create_rooms() -> tuple[Room, Room, Room, Room, Room, Room, Room]:
     # Set room properties
     foyer.is_locked = True
 
-    return (
-        forest_clearing,
-        manor,
-        foyer,
-        dark_cave_entrance,
-        goblins_lair,
-        shack_shop,
-        village_square,
-    )
+    # Build and return a dictionary of rooms for easier access by name
+    return {
+        "forest_clearing": forest_clearing,
+        "manor": manor,
+        "foyer": foyer,
+        "dark_cave_entrance": dark_cave_entrance,
+        "goblins_lair": goblins_lair,
+        "shack_shop": shack_shop,
+        "village_square": village_square,
+    }
 
 
-def _link_rooms(
-    forest_clearing: Room,
-    manor: Room,
-    foyer: Room,
-    dark_cave_entrance: Room,
-    goblins_lair: Room,
-    shack_shop: Room,
-    village_square: Room,
-) -> None:
-    """Connect all rooms with their directional links."""
+def _link_rooms(rooms: dict[str, Room]) -> None:
+    """Connect all rooms with their directional links using the provided rooms dict."""
+    forest_clearing = rooms["forest_clearing"]
+    manor = rooms["manor"]
+    foyer = rooms["foyer"]
+    dark_cave_entrance = rooms["dark_cave_entrance"]
+    goblins_lair = rooms["goblins_lair"]
+    shack_shop = rooms["shack_shop"]
+    village_square = rooms["village_square"]
+
+    # Preserve the exact same connections as before
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
     forest_clearing.link_rooms("east", manor, "west")
     forest_clearing.link_rooms("south", shack_shop, "north")
@@ -209,27 +211,20 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     hero = _create_hero()
     ls = LevelingSystem()
     QuestingSystem()
-    # Create rooms
-    (
-        forest_clearing,
-        manor,
-        foyer,
-        dark_cave_entrance,
-        goblins_lair,
-        shack_shop,
-        village_square,
-    ) = _create_rooms()
+    # Create rooms as a dict
+    rooms = _create_rooms()
+    
+    # Extract frequently used rooms for clarity
+    forest_clearing = rooms["forest_clearing"]
+    manor = rooms["manor"]
+    foyer = rooms["foyer"]
+    dark_cave_entrance = rooms["dark_cave_entrance"]
+    goblins_lair = rooms["goblins_lair"]
+    shack_shop = rooms["shack_shop"]
+    village_square = rooms["village_square"]
 
     # Link rooms together
-    _link_rooms(
-        forest_clearing,
-        manor,
-        foyer,
-        dark_cave_entrance,
-        goblins_lair,
-        shack_shop,
-        village_square,
-    )
+    _link_rooms(rooms)
 
     # Set up events
     _setup_events(foyer, ls=ls)
