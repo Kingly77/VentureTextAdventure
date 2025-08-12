@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional  # For type hinting without circular imports
+from game.npc import NPC
 
 
 class RoomDiscEffect(ABC):
@@ -111,6 +112,7 @@ class NPCDialogEffect(RoomDiscEffect):
         self,
         room: "Room",
         npc_name: str = "Quest Giver",
+        npc_description: str = "leans on a walking stick, ready to chat.",
         quest: Optional["Quest"] = None,
         quest_factory: Optional[callable] = None,
     ):
@@ -129,6 +131,7 @@ class NPCDialogEffect(RoomDiscEffect):
         self.npc_name = npc_name
         self._quest: Optional["Quest"] = quest
         self._quest_factory = quest_factory
+        room.add_npc(NPC(npc_name, npc_description))
 
     def _ensure_quest(self) -> "Quest":
         # Lazy import to avoid circular dependencies
@@ -149,9 +152,7 @@ class NPCDialogEffect(RoomDiscEffect):
         return self._quest
 
     def get_modified_description(self, base_description: str) -> str:
-        return (
-            base_description + f"\n\n{self.npc_name} is standing here, ready to talk."
-        )
+        return base_description
 
     def handle_interaction(
         self,

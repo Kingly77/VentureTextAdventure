@@ -134,24 +134,6 @@ def _find_item_location(item_name: str, hero: "RpgHero", current_room: "Room") -
         return "none"
 
 
-def _handle_hero_item_usage(
-    item_name: str,
-    target_str: str,
-    hero: "RpgHero",
-    current_room: "Room",
-    what: engine.UseTarget,
-):
-    """Combined handler (hero source): delegates to _handle_item_usage."""
-    _handle_item_usage(item_name, target_str, hero, current_room, what, source="hero")
-
-
-def _handle_room_item_usage(
-    item_name: str, hero: "RpgHero", current_room: "Room", target_str: str | None, what
-):
-    """Combined handler (room source): delegates to _handle_item_usage."""
-    _handle_item_usage(item_name, target_str, hero, current_room, what, source="room")
-
-
 def _use_item_on_self(item: "Item", item_name: str, hero: "RpgHero"):
     """Use an item on the hero themselves."""
     if not item.is_usable:

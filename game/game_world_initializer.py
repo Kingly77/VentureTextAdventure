@@ -1,21 +1,20 @@
-import functools
 import importlib
-import logging
 
 from character.enemy import Goblin
 from character.hero import RpgHero
 from components.core_components import Effect
-from game.door_effect_expanded import DoorEffectExpanded
+from game.effects.door_effect_expanded import DoorEffectExpanded
 from game.items import Item
 from game.quest import Quest, Objective
-from game.room import Room, RoomObject
-from game.room_effects import DarkCaveLightingEffect, NPCDialogEffect
-from game.shop_effect import ShopEffect
-from game.torch_effect import TorchEffect
-from game.underlings.events import Events as Event, EventNotFoundError
+from game.room import Room
+from game.effects.room_effects import DarkCaveLightingEffect, NPCDialogEffect
+from game.effects.shop_effect import ShopEffect
+from game.effects.torch_effect import TorchEffect
+from game.underlings.events import Events as Event
 from game.underlings.leveling_system import LevelingSystem
 from game.underlings.questing_system import QuestingSystem
 from game.util import handle_inventory_operation
+
 
 # Game configuration constants
 HERO_NAME = "Aidan"
@@ -140,6 +139,7 @@ def _setup_shop(shack_shop: Room) -> None:
 
 def _setup_village_npc(village_square: Room) -> None:
     """Place an NPC with a dialog tree in the Village Square and add a visible NPC reference."""
+
     # Prepare a quest to pass into the NPC dialog effect, making it generic
     def goblin_ear_quest_factory():
         return Quest(
@@ -151,12 +151,15 @@ def _setup_village_npc(village_square: Room) -> None:
 
     # Add interactive dialog effect
     village_square.add_effect(
-        NPCDialogEffect(village_square, "Old Villager", quest_factory=goblin_ear_quest_factory)
+        NPCDialogEffect(
+            village_square,
+            "Old Villager",
+            "leans on a walking stick, ready to chat.",
+            quest_factory=goblin_ear_quest_factory,
+        )
     )
 
     # Also add a simple NPC reference so the description shows someone to talk to
-    from game.npc import NPC
-    village_square.add_npc(NPC("Old Villager", "leans on a walking stick, ready to chat."))
 
 
 def _populate_room_items(

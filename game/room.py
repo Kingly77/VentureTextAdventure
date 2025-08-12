@@ -3,7 +3,10 @@ from typing import List, Dict, Optional
 from components.core_components import HoldComponent
 from components.inventory import Inventory, ItemNotFoundError
 from game.items import Item
-from game.room_effects import RoomDiscEffect  # Import the new RoomEffect base class
+from game.effects.room_effects import (
+    RoomDiscEffect,
+    NPCDialogEffect,
+)  # Import the new RoomEffect base class
 from game.room_objs import RoomObject
 from interfaces.interface import Combatant  # Import Combatant
 from game.npc import NPC
@@ -102,6 +105,12 @@ class Room:
 
     def add_effect(self, effect: RoomDiscEffect):
         """Adds a RoomEffect to this room."""
+        if isinstance(effect, NPCDialogEffect):
+            if effect.npc_name in self.npcs:
+                raise ValueError(
+                    f"The NPC '{effect.npc_name}' is already present in this room."
+                )
+
         self.effects.append(effect)
 
     def add_npc(self, npc: NPC):

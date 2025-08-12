@@ -1,7 +1,7 @@
 import functools
 from typing import Optional
 
-from game.room_effects import RoomDiscEffect
+from game.effects.room_effects import RoomDiscEffect
 from game.room_objs import RoomObject
 from game.underlings.events import EventNotFoundError, Events
 

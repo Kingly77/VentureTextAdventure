@@ -1,7 +1,7 @@
 from character.hero import RpgHero
 from components.wallet import Wallet
 from game.items import Item
-from game.room_effects import RoomDiscEffect
+from game.effects.room_effects import RoomDiscEffect
 from game.util import handle_inventory_operation
 
 
