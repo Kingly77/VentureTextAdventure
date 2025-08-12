@@ -79,6 +79,27 @@ def _create_rooms() -> dict[str, Room]:
         "Goblin's Lair",
         "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.",
     )
+    # New 5-room goblin dungeon
+    dungeon_cell_1 = Room(
+        "Goblin Dungeon - Cell 1",
+        "A cramped stone cell with rusted bars. Scratches mark the walls.",
+    )
+    dungeon_cell_2 = Room(
+        "Goblin Dungeon - Cell 2",
+        "The damp air smells of mold. You hear faint chittering ahead.",
+    )
+    dungeon_cell_3 = Room(
+        "Goblin Dungeon - Cell 3",
+        "Bones crunch underfoot. Shapes flit just out of sight.",
+    )
+    dungeon_cell_4 = Room(
+        "Goblin Dungeon - Cell 4",
+        "Water drips from the ceiling into a shallow, murky puddle.",
+    )
+    dungeon_cell_5 = Room(
+        "Goblin Dungeon - Cell 5",
+        "A wider chamber lit by a guttering torch. Something watches you.",
+    )
     shack_shop = Room(
         "Shack Shop",
         "A small, cozy shack with a large table and chair. There is a large glass door to the east.",
@@ -98,6 +119,11 @@ def _create_rooms() -> dict[str, Room]:
         "foyer": foyer,
         "dark_cave_entrance": dark_cave_entrance,
         "goblins_lair": goblins_lair,
+        "dungeon_cell_1": dungeon_cell_1,
+        "dungeon_cell_2": dungeon_cell_2,
+        "dungeon_cell_3": dungeon_cell_3,
+        "dungeon_cell_4": dungeon_cell_4,
+        "dungeon_cell_5": dungeon_cell_5,
         "shack_shop": shack_shop,
         "village_square": village_square,
     }
@@ -112,6 +138,12 @@ def _link_rooms(rooms: dict[str, Room]) -> None:
     goblins_lair = rooms["goblins_lair"]
     shack_shop = rooms["shack_shop"]
     village_square = rooms["village_square"]
+    # New dungeon rooms
+    dungeon_cell_1 = rooms["dungeon_cell_1"]
+    dungeon_cell_2 = rooms["dungeon_cell_2"]
+    dungeon_cell_3 = rooms["dungeon_cell_3"]
+    dungeon_cell_4 = rooms["dungeon_cell_4"]
+    dungeon_cell_5 = rooms["dungeon_cell_5"]
 
     # Preserve the exact same connections as before
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
@@ -120,6 +152,13 @@ def _link_rooms(rooms: dict[str, Room]) -> None:
     forest_clearing.link_rooms("west", village_square, "east")
     dark_cave_entrance.link_rooms("east", goblins_lair, "west")
     manor.link_rooms("north", foyer, "south")
+
+    # Link the new dungeon chain deeper from the goblin's lair
+    goblins_lair.link_rooms("east", dungeon_cell_1, "west")
+    dungeon_cell_1.link_rooms("east", dungeon_cell_2, "west")
+    dungeon_cell_2.link_rooms("east", dungeon_cell_3, "west")
+    dungeon_cell_3.link_rooms("east", dungeon_cell_4, "west")
+    dungeon_cell_4.link_rooms("east", dungeon_cell_5, "west")
 
 
 def _setup_forest_table(forest_clearing: Room) -> None:
@@ -164,6 +203,27 @@ def _setup_village_npc(village_square: Room) -> None:
     # Also add a simple NPC reference so the description shows someone to talk to
 
 
+def _setup_dungeon_end_npc(final_dungeon_room: Room) -> None:
+    """Place an NPC at the end of the dungeon who offers a 'magic stick' quest."""
+
+    def magic_stick_quest_factory():
+        return Quest(
+            "magic stick",
+            "Retrieve the enchanted magic stick hidden deep in the goblin dungeon.",
+            200,
+            objective=Objective("collect", "magic stick", 1),
+        )
+
+    final_dungeon_room.add_effect(
+        NPCDialogEffect(
+            final_dungeon_room,
+            "Dungeon Hermit",
+            "whispers about an enchanted stick and offers you a quest.",
+            quest_factory=magic_stick_quest_factory,
+        )
+    )
+
+
 def _populate_room_items(
     forest_clearing: Room, manor: Room, dark_cave_entrance: Room, goblins_lair: Room
 ) -> None:
@@ -199,6 +259,17 @@ def _setup_goblin_enemy(goblins_lair: Room) -> None:
     goblins_lair.combatants = goblin_foe
 
 
+def _setup_dungeon_goblins(*rooms: Room) -> None:
+    """Populate given rooms with goblins guarding the dungeon."""
+    i = 1
+    for room in rooms:
+        gob = Goblin(f"Goblin Guard {i}", 1)
+        gob.reward = Item("goblin ear", 1, False)
+        gob.reward.quantity = 1
+        room.combatants = gob
+        i += 1
+
+
 def _setup_events(foyer: Room, **kwargs) -> None:
     """Set up game events."""
     Event.add_event("unlock_foyer", foyer.unlock, True)
@@ -222,6 +293,12 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     goblins_lair = rooms["goblins_lair"]
     shack_shop = rooms["shack_shop"]
     village_square = rooms["village_square"]
+    # Dungeon cells
+    dungeon_cell_1 = rooms["dungeon_cell_1"]
+    dungeon_cell_2 = rooms["dungeon_cell_2"]
+    dungeon_cell_3 = rooms["dungeon_cell_3"]
+    dungeon_cell_4 = rooms["dungeon_cell_4"]
+    dungeon_cell_5 = rooms["dungeon_cell_5"]
 
     # Link rooms together
     _link_rooms(rooms)
@@ -247,6 +324,17 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
 
     # Set up enemies
     _setup_goblin_enemy(goblins_lair)
+    _setup_dungeon_goblins(
+        dungeon_cell_1,
+        dungeon_cell_2,
+        dungeon_cell_3,
+        dungeon_cell_4,
+        dungeon_cell_5,
+    )
+
+    # Place the quest item in the final dungeon room and set up the quest-giver NPC
+    dungeon_cell_5.add_item(Item("magic stick", 1, False, is_consumable=False))
+    _setup_dungeon_end_npc(dark_cave_entrance)
 
     return hero, forest_clearing
 
