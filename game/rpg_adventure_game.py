@@ -169,7 +169,7 @@ class Game:
                     print(msg)
                 return
         except Exception as _e:
-            # If any effect throws, fall back to the built-in dialog
+            logging.debug(f"Error in Talking: {_e}")
             pass
 
         print("There is no one here to talk to.")
@@ -253,6 +253,9 @@ class Game:
         elif arg == "gold":
             self.hero.add_gold(100)
             print("Gained 100 gold.")
+        elif arg == "hurt":
+            self.hero.take_damage(10)
+            print(f"{self.hero.name} was hurt for 10 HP.")
 
         elif arg == "add":
             item_name = input("Enter item name: ")

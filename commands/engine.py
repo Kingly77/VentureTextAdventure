@@ -28,9 +28,9 @@ class UseTarget:
 @dataclass
 class CommandRequest:
     raw: str
-    action: str           # canonical, e.g., "take"
-    arg: str              # remainder after action
-    tokens: List[str]     # tokenized arg (lowercased)
+    action: str  # canonical, e.g., "take"
+    arg: str  # the remainder after action
+    tokens: List[str]  # tokenized arg (lowercased)
     use_target: Optional[UseTarget] = None
 
 
@@ -54,7 +54,13 @@ class CommandRegistry:
         self._commands: Dict[str, CommandDef] = {}
         self._alias_to_name: Dict[str, str] = {}
 
-    def register(self, name: str, handler: Callable[[CommandRequest, CommandContext], None], help: str, aliases: Optional[List[str]] = None):
+    def register(
+        self,
+        name: str,
+        handler: Callable[[CommandRequest, CommandContext], None],
+        help: str,
+        aliases: Optional[List[str]] = None,
+    ):
         aliases = aliases or []
         cmd = CommandDef(name=name, handler=handler, aliases=aliases, help=help)
         self._commands[name] = cmd
@@ -98,6 +104,7 @@ def maybe_gag(pairs: List[Tuple[str, str]]) -> Optional[str]:
 
 
 # Adapters: bridge unified handler signature to existing game methods/functions
+
 
 def _handle_help(req: CommandRequest, ctx: CommandContext):
     print(ctx.game.registry.help_text())
@@ -154,16 +161,24 @@ def _handle_go(req: CommandRequest, ctx: CommandContext):
 def register_default_commands(registry: CommandRegistry, game: "Game") -> None:
     # Register commands and aliases with short help texts
     registry.register("look", _handle_look, "Look around the room")
-    registry.register("status", _handle_status, "Check your status", aliases=["stats"]) 
-    registry.register("inventory", _handle_inventory, "Check your inventory", aliases=["inv", "i"]) 
-    registry.register("take", _handle_take, "Pick up an item", aliases=["get", "grab"]) 
+    registry.register("status", _handle_status, "Check your status", aliases=["stats"])
+    registry.register(
+        "inventory", _handle_inventory, "Check your inventory", aliases=["inv", "i"]
+    )
+    registry.register("debug", _handle_debug, "Debug mode")
+    registry.register("take", _handle_take, "Pick up an item", aliases=["get", "grab"])
     registry.register("drop", _handle_drop, "Drop an item")
     registry.register("examine", _handle_examine, "Examine an item")
     registry.register("use", _handle_use, "Use an item (on self/room/object)")
-    registry.register("go", _handle_go, "Move in a direction (north/south/east/west)", aliases=["move"]) 
-    registry.register("talk", _handle_talk, "Talk to someone") 
-    registry.register("help", _handle_help, "Show this help", aliases=["?"]) 
-    registry.register("quit", _handle_quit, "Exit the game", aliases=["exit"]) 
+    registry.register(
+        "go",
+        _handle_go,
+        "Move in a direction (north/south/east/west)",
+        aliases=["move"],
+    )
+    registry.register("talk", _handle_talk, "Talk to someone")
+    registry.register("help", _handle_help, "Show this help", aliases=["?"])
+    registry.register("quit", _handle_quit, "Exit the game", aliases=["exit"])
 
 
 # Optional: future improvement to parse use arguments; not wired yet because we delegate to existing use_command

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from commands import engine
 from game.items import Item
 from game.util import handle_item_use, handle_inventory_operation
 
@@ -90,15 +91,20 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
         return
 
     item_name, target_str = _parse_use_arguments(arg)
+    what: engine.UseTarget = engine.parse_use_arg(arg, hero.name, current_room)
 
     # Decide where the item is and delegate accordingly
     item_location = _find_item_location(item_name, hero, current_room)
-    if item_location == "hero":
-        _handle_hero_item_usage(item_name, target_str, hero, current_room)
-    elif item_location == "room":
-        _handle_room_item_usage(item_name, hero, current_room, target_str)
-    else:
-        print(f"You don't see or have a '{item_name}'.")
+    _handle_item_usage(
+        item_name, target_str, hero, current_room, what, source=item_location
+    )
+
+    # if item_location == "hero":
+    #     _handle_hero_item_usage(item_name, target_str, hero, current_room, what)
+    # elif item_location == "room":
+    #     _handle_room_item_usage(item_name, hero, current_room, target_str, what)
+    # else:
+    #     print(f"You don't see or have a '{item_name}'.")
 
 
 def _parse_use_arguments(arg: str) -> tuple[str, str | None]:
@@ -129,20 +135,21 @@ def _find_item_location(item_name: str, hero: "RpgHero", current_room: "Room") -
 
 
 def _handle_hero_item_usage(
-    item_name: str, target_str: str, hero: "RpgHero", current_room: "Room"
+    item_name: str,
+    target_str: str,
+    hero: "RpgHero",
+    current_room: "Room",
+    what: engine.UseTarget,
 ):
-    """Handle usage of items from hero's inventory."""
-    item = hero.inventory[item_name]
+    """Combined handler (hero source): delegates to _handle_item_usage."""
+    _handle_item_usage(item_name, target_str, hero, current_room, what, source="hero")
 
-    # Determine the target for item usage
-    if target_str is None or target_str in ["self", "me", "myself", hero.name.lower()]:
-        _use_item_on_self(item, item_name, hero)
-    elif target_str in ["room", "the room", "this room"]:
-        _use_item_on_room(item, hero, current_room)
-    elif target_str in current_room.objects:
-        _use_item_on_object(item, target_str, hero, current_room)
-    else:
-        print(f"You don't see '{target_str}' to use the {item_name} on.")
+
+def _handle_room_item_usage(
+    item_name: str, hero: "RpgHero", current_room: "Room", target_str: str | None, what
+):
+    """Combined handler (room source): delegates to _handle_item_usage."""
+    _handle_item_usage(item_name, target_str, hero, current_room, what, source="room")
 
 
 def _use_item_on_self(item: "Item", item_name: str, hero: "RpgHero"):
@@ -191,31 +198,6 @@ def _use_item_on_object(
         print(f"Cannot use {item.name} on {obj.name}: {e}")
 
 
-def _handle_room_item_usage(
-    item_name: str, hero: "RpgHero", current_room: "Room", target_str: str | None
-):
-    """Handle usage of items found in the room.
-
-    If a target object is specified (e.g., "door"), attempt to use the room item on that object.
-    Otherwise, use the item in the room context.
-    """
-    try:
-        # Fetch the actual Item object from the room inventory
-        item = current_room.inventory[item_name]
-
-        # Determine target for usage
-        if target_str is None or target_str in ["room", "the room", "this room"]:
-            _use_item_on_room(item, hero, current_room)
-        elif target_str in current_room.objects:
-            _use_item_on_object(item, target_str, hero, current_room)
-        elif target_str in ["self", "me", "myself", hero.name.lower()]:
-            print(f"You must take the {item_name} first before using it on yourself.")
-        else:
-            print(f"You don't see '{target_str}' to use the {item_name} on.")
-    except Exception as e:
-        print(f"Failed to use {item_name}: {e}")
-
-
 def go_command(
     _, direction: str, hero: "RpgHero" = None, current_room: "Room" = None, game=None
 ):
@@ -253,3 +235,52 @@ def go_command(
         print("The door is locked.")
     else:
         print("You can't go that way.")
+
+
+def _handle_item_usage(
+    item_name: str,
+    target_str: str | None,
+    hero: "RpgHero",
+    current_room: "Room",
+    what: engine.UseTarget,
+    source: str,
+):
+    """Unified item usage handler for both hero and room sources.
+
+    - source: "hero" or "room"
+    - Respects TargetKind from engine.parse_use_arg
+    - Preserves behavior that room-sourced items cannot be used on self without taking them first.
+    """
+    from .engine import TargetKind
+
+    # Acquire the item from the appropriate inventory
+    try:
+        if source == "hero":
+            item = hero.inventory[item_name]
+        else:
+            item = current_room.inventory[item_name]
+    except Exception as e:
+        print(f"Failed to use {item_name}: {e}")
+        return
+
+    if what is None:
+        # Fallback: if parsing failed for some reason, behave like room handler used to
+        # This path is unlikely with current parser usage.
+        if source == "room" and (
+            target_str is None or target_str in ["room", "the room", "this room"]
+        ):
+            _use_item_on_room(item, hero, current_room)
+            return
+
+    if what.kind == TargetKind.SELF:
+        if source == "hero":
+            _use_item_on_self(item, item_name, hero)
+        else:
+            print(f"You must take the {item_name} first before using it on yourself.")
+    elif what.kind == TargetKind.ROOM:
+        _use_item_on_room(item, hero, current_room)
+    elif what.kind == TargetKind.OBJECT:
+        # target_str is the normalized object key per parse_use_arg
+        _use_item_on_object(item, target_str, hero, current_room)
+    else:
+        print(f"You don't see '{target_str}' to use the {item_name} on.")
