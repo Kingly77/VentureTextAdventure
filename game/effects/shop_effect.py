@@ -2,11 +2,12 @@ from character.hero import RpgHero
 from components.wallet import Wallet
 from game.items import Item
 from game.effects.room_effects import RoomDiscEffect
+from game.room import Room
 from game.util import handle_inventory_operation
 
 
 class ShopEffect(RoomDiscEffect):
-    def __init__(self, room: "Room", shopkeeper_name="The Merchant", prices=None):
+    def __init__(self, room: Room, shopkeeper_name="The Merchant", prices=None):
         super().__init__(room)
         room._components.add_component("wallet", Wallet(1000))
         self.shopkeeper_name = shopkeeper_name
@@ -40,6 +41,10 @@ class ShopEffect(RoomDiscEffect):
             return False
 
         item = inv[item_name]
+
+        if item is None:
+            return False
+
         price = self.get_price(item)
 
         if hero.gold < price:
@@ -55,7 +60,7 @@ class ShopEffect(RoomDiscEffect):
         print(f"{self.shopkeeper_name} sells you the {item.name} for {price} gold.")
         return True
 
-    def handle_drop(self, hero: "RpgHero", item_name: str) -> bool:
+    def handle_drop(self, hero: RpgHero, item_name: str) -> bool:
         if not hero.inventory.has_component(item_name):
             return False
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from character.hero import RpgHero
 from commands import engine
 from game.items import Item
+from game.room import Room
 from game.util import handle_item_use, handle_inventory_operation
 
 
@@ -124,7 +126,7 @@ def _parse_use_arguments(arg: str) -> tuple[str, str | None]:
     return item_name, target_str
 
 
-def _find_item_location(item_name: str, hero: "RpgHero", current_room: "Room") -> str:
+def _find_item_location(item_name: str, hero: RpgHero, current_room: Room) -> str:
     """Determine where the item is located (hero inventory, room, or nowhere)."""
     if hero.inventory.has_component(item_name):
         return "hero"
@@ -134,7 +136,7 @@ def _find_item_location(item_name: str, hero: "RpgHero", current_room: "Room") -
         return "none"
 
 
-def _use_item_on_self(item: "Item", item_name: str, hero: "RpgHero"):
+def _use_item_on_self(item: Item, item_name: str, hero: RpgHero):
     """Use an item on the hero themselves."""
     if not item.is_usable:
         print(
@@ -153,7 +155,7 @@ def _use_item_on_self(item: "Item", item_name: str, hero: "RpgHero"):
         print(f"Ouch! That hurt. Health decreased to {hero.health}.")
 
 
-def _use_item_on_room(item: "Item", hero: "RpgHero", current_room: "Room"):
+def _use_item_on_room(item: Item, hero: RpgHero, current_room: Room):
     """Use an item in the room context."""
     try:
         handle_item_use(hero, item, target=None, room=current_room)
@@ -162,9 +164,7 @@ def _use_item_on_room(item: "Item", hero: "RpgHero", current_room: "Room"):
         print(f"{e}")
 
 
-def _use_item_on_object(
-    item: "Item", target_str: str, hero: "RpgHero", current_room: "Room"
-):
+def _use_item_on_object(item: Item, target_str: str, hero: RpgHero, current_room: Room):
     """Use an item on a specific object in the room."""
     obj = current_room.objects[target_str]
 
@@ -181,7 +181,7 @@ def _use_item_on_object(
 
 
 def go_command(
-    _, direction: str, hero: "RpgHero" = None, current_room: "Room" = None, game=None
+    _, direction: str, hero: RpgHero = None, current_room: Room = None, game=None
 ):
     """Handles the 'go' command to move the player to another room.
 

@@ -1,3 +1,4 @@
+import typing
 from typing import Optional
 
 from character.hero import RpgHero
@@ -61,7 +62,7 @@ def handle_spell_cast(hero, spell_name, target):
 
 
 def handle_item_use(
-    hero: RpgHero, item: Item, target: Optional[any], room: Optional["Room"]
+    hero: RpgHero, item: Item, target: Optional[typing.Any], room: Optional["Room"]
 ):
     try:
         if room is not None:

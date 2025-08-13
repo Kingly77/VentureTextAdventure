@@ -2,6 +2,10 @@ import logging
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional  # For type hinting without circular imports
 from game.npc import NPC
+from game.quest import Quest
+
+if TYPE_CHECKING:
+    from game.items import Item
 
 
 class RoomDiscEffect(ABC):
@@ -39,7 +43,7 @@ class RoomDiscEffect(ABC):
         self,
         verb: str,
         target_name: Optional[str],
-        val_hero: "RpgHero",
+        val_hero: "Combatant",
         item: Optional["Item"],
         room: "Room",
     ) -> Optional[str]:
@@ -129,11 +133,11 @@ class NPCDialogEffect(RoomDiscEffect):
         """
         super().__init__(room)
         self.npc_name = npc_name
-        self._quest: Optional["Quest"] = quest
+        self._quest: Optional[Quest] = quest
         self._quest_factory = quest_factory
         room.add_npc(NPC(npc_name, npc_description))
 
-    def _ensure_quest(self) -> "Quest":
+    def _ensure_quest(self) -> Quest:
         # Lazy import to avoid circular dependencies
         if self._quest is not None:
             return self._quest

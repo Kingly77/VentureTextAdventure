@@ -1,4 +1,5 @@
 from character.basecharacter import BaseCharacter
+from character.tomes.enemy_reward import Reward
 from components.core_components import Effect
 from game.items import Item
 from game.magic import Spell

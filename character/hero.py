@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from character.basecharacter import BaseCharacter
 from character.tomes import ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix
 from components.core_components import Effect, Exp
@@ -9,6 +9,9 @@ from components.wallet import Wallet
 from game.items import Item, UseItemError
 from game.magic import Spell, NoTargetError
 from interfaces.interface import Combatant
+
+if TYPE_CHECKING:
+    from game.room import Room
 
 
 class RpgHero(ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix, BaseCharacter):
@@ -32,7 +35,7 @@ class RpgHero(ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix, BaseCharact
 
         # Hero-specific initialization
 
-        self.last_room: Optional["Room"] = None
+        self.last_room: Optional[Room] = None
 
         self.components.add_component("quests", QuestLog())
         self.components.add_component("xp", Exp(0, 100))

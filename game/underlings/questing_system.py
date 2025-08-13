@@ -1,3 +1,9 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from character.hero import RpgHero
+
 from game.underlings.events import Events
 
 
@@ -8,7 +14,7 @@ class QuestingSystem:
         Events.add_event("enemy_killed", self.on_enemy_killed)
         Events.add_event("location_entered", self.on_location_entered)
 
-    def _advance_quests(self, val_hero: "RpgHero", event_name: str, **payload):
+    def _advance_quests(self, val_hero: RpgHero, event_name: str, **payload):
         """
         Shared progress/completion handler for any quest-affecting event.
         Preserves existing print/trigger behavior.

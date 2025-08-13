@@ -1,7 +1,13 @@
 import functools
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from interfaces.interface import Combatant
+    from character.hero import RpgHero
+    from game.items import Item
 
 from game.effects.room_effects import RoomDiscEffect
+from game.room import Room
 from game.room_objs import RoomObject
 from game.underlings.events import EventNotFoundError, Events
 
@@ -11,7 +17,7 @@ class DoorEffectExpanded(RoomDiscEffect):
     def get_modified_description(self, base_description: str) -> str:
         return base_description
 
-    def __init__(self, room, foyer: "Room"):
+    def __init__(self, room, foyer: Room):
         super().__init__(room)
         self.foyer = foyer
 

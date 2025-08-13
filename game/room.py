@@ -1,5 +1,6 @@
+from __future__ import annotations
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, TYPE_CHECKING
 from components.core_components import HoldComponent
 from components.inventory import Inventory, ItemNotFoundError
 from game.items import Item
@@ -10,6 +11,9 @@ from game.effects.room_effects import (
 from game.room_objs import RoomObject
 from interfaces.interface import Combatant  # Import Combatant
 from game.npc import NPC
+
+if TYPE_CHECKING:
+    from character.hero import RpgHero
 
 
 class Room:
@@ -34,13 +38,13 @@ class Room:
         self.is_locked = False
         self._combatants = []
         # NPCs present in the room, mapped by lowercased name
-        self.npcs: Dict[str, "NPC"] = {}
+        self.npcs: Dict[str, NPC] = {}
 
     def change_description(self, new_description: str):
         """Changes the description of the room."""
         self.base_description = new_description
 
-    def add_exit(self, direction: str, target_room: "Room"):
+    def add_exit(self, direction: str, target_room: Room):
         """Adds a ONE-WAY exit from THIS room to a TARGET room."""
         if not isinstance(direction, str) or not direction.strip():
             raise ValueError("Exit direction must be a non-empty string.")
@@ -49,7 +53,7 @@ class Room:
         self.exits_to[direction] = target_room
 
     def link_rooms(
-        self, direction_from_self: str, other_room: "Room", direction_from_other: str
+        self, direction_from_self: str, other_room: Room, direction_from_other: str
     ):
         """
         Links two rooms bidirectionally.
@@ -143,9 +147,9 @@ class Room:
         self,
         verb: str,
         target_name: Optional[str],
-        user: "RpgHero",
+        user: RpgHero,
         item: Optional[Item] = None,
-        room: "Room" = None,
+        room: Room = None,
     ) -> Optional[str]:
         """
         Tries to interact with this room.

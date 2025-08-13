@@ -32,24 +32,6 @@ def _create_hero() -> RpgHero:
     """Create and initialize the hero character with starting inventory and quests."""
     hero = RpgHero(HERO_NAME, HERO_LEVEL)
 
-    # Add a starting quest
-    goblin_ear_quest = Quest(
-        "goblin ear",
-        "Collect the goblin ear to defeat the goblin foe.",
-        100,
-        objective=Objective("collect", "goblin ear", 1),
-    )
-
-    # foo_quest = Quest(
-    #     "foo",
-    #     "Collect the foo to defeat the foo foe.",
-    #     reward=1,
-    #     objective=Objective("collect", "foo", 1),
-    # )
-
-    hero.quest_log.add_quest(goblin_ear_quest.id, goblin_ear_quest)
-    # hero.quest_log.add_quest(foo_quest.id, foo_quest)
-
     # Add starting inventory
     hero.wallet.add(STARTING_GOLD)
 
@@ -284,7 +266,7 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     QuestingSystem()
     # Create rooms as a dict
     rooms = _create_rooms()
-    
+
     # Extract frequently used rooms for clarity
     forest_clearing = rooms["forest_clearing"]
     manor = rooms["manor"]
