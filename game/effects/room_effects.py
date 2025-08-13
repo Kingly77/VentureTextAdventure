@@ -1,11 +1,14 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional  # For type hinting without circular imports
+from typing import TYPE_CHECKING, Optional, Callable  # For type hinting without circular imports
 from game.npc import NPC
 from game.quest import Quest
 
 if TYPE_CHECKING:
     from game.items import Item
+    from game.room import Room
+    from interfaces.interface import Combatant
+    from character.hero import RpgHero
 
 
 class RoomDiscEffect(ABC):
@@ -118,7 +121,7 @@ class NPCDialogEffect(RoomDiscEffect):
         npc_name: str = "Quest Giver",
         npc_description: str = "leans on a walking stick, ready to chat.",
         quest: Optional["Quest"] = None,
-        quest_factory: Optional[callable] = None,
+        quest_factory: Optional[Callable[[], Quest]] = None,
     ):
         """
         Create an NPC dialog.

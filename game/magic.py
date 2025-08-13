@@ -1,4 +1,8 @@
+from typing import Callable, TYPE_CHECKING
 from interfaces.interface import Combatant, CanCast
+
+if TYPE_CHECKING:
+    from character.basecharacter import BaseCharacter
 
 
 class SpellError(Exception):
@@ -18,7 +22,7 @@ class NoTargetError(SpellError):
 class Spell(CanCast):
     """Represents a magical spell that can be cast on a target."""
 
-    def __init__(self, name: str, cost: int, caster: "BaseCharacter", effect: callable):
+    def __init__(self, name: str, cost: int, caster: "BaseCharacter", effect: Callable[[Combatant], None]):
         """Initialize a spell with a name, mana cost, caster, and effect.
 
         Args:

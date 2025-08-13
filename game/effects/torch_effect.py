@@ -35,7 +35,7 @@ class TorchEffect(RoomDiscEffect):
         if verb != "use" or target_name != "table":
             return None
 
-        if not item.has_tag("fire") and not self.forest_table.has_tag("lit"):
+        if item is None or (not item.has_tag("fire") and not self.forest_table.has_tag("lit")):
             print("You need a torch to properly light the table's fire pit.")
             return None
 

@@ -14,9 +14,7 @@ class RoomObject:
         self.name = name.lower()
         self.description = description
         self.tags: set = set(tags or [])
-        self.interaction_events: Dict[
-            str, Callable[["RpgHero", "Item", "Room", ...], str]
-        ] = {}
+        self.interaction_events: Dict[str, RoomObject.InteractionEvent] = {}
         self.is_locked: bool = False  # Example property for a door can be customized
 
     def with_tagset(self, tagset: set):

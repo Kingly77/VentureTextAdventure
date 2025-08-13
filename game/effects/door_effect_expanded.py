@@ -36,10 +36,10 @@ class DoorEffectExpanded(RoomDiscEffect):
             True,
         )
 
-        def knock_door(user: "RpgHero", item: "Item", r: "Room", *args):
+        def knock_door(user: "RpgHero", item: "Item", r: "Room", *args) -> str:
             if item.name == "stick":
                 return "Knock"
-            return None
+            return ""
 
         self.door.add_interaction("use", knock_door)
 
