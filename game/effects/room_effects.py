@@ -1,6 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Callable  # For type hinting without circular imports
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+    Callable,
+)
 from game.npc import NPC
 from game.quest import Quest
 
@@ -27,11 +31,11 @@ class RoomDiscEffect(ABC):
         """
         pass
 
-    def handle_take(self, hero, item_name: str):
+    def handle_take(self, hero: "RpgHero", item_name: str):
         """Called when an item is removed from the room, to update state."""
         return False
 
-    def handle_drop(self, hero, item_name: str):
+    def handle_drop(self, hero: "RpgHero", item_name: str):
         """Called when an item is dropped from the room, to update state."""
         return False
 

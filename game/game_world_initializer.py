@@ -33,7 +33,7 @@ def _create_hero() -> RpgHero:
     hero = RpgHero(HERO_NAME, HERO_LEVEL)
 
     # Add starting inventory
-    hero.wallet.add(STARTING_GOLD)
+    hero.gold = STARTING_GOLD
 
     print(f"Welcome, {hero.name}, to the world of KingBase!")
     return hero

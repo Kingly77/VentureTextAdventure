@@ -87,7 +87,7 @@ class Health:
 
 
 class Exp:
-    def __init__(self, exp: int,exp_next = 100):
+    def __init__(self, exp: int, exp_next=100):
         self._exp = exp
         self._next_level = exp_next
         self._level = 1
@@ -100,6 +100,7 @@ class Exp:
             amount (int): The amount of XP to add.
         """
         from game.underlings.events import Events  # local import to avoid circulars
+
         if amount < 0:
             raise ValueError("XP cannot be negative.")
         # Use the property to leverage clamping to next level
