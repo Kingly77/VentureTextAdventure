@@ -25,9 +25,7 @@ def handle_transfer(
     target: "Inventory | QuestAwareInventory",
     quantity: int = 1,
 ) -> Optional["Item"]:
-    return handle_inventory_operation(
-        transfer, source, item_name, target, quantity
-    )
+    return handle_inventory_operation(transfer, source, item_name, target, quantity)
 
 
 def transfer(
@@ -49,9 +47,9 @@ def transfer(
         or None if the transfer could not be completed.
     """
     try:
-        moved: "Item" = source.remove_item(item_name, quantity)
+        moved: "Item" = remove_item(source, item_name, quantity)
         # Add the removed item instance (represents the moved quantity)
-        target.add_item(moved)
+        add_item(target, moved)
         return moved
     except (ItemNotFoundError, InsufficientQuantityError, ValueError, TypeError):
         # Silently indicate failure via None; callers may print messages separately

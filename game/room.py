@@ -22,7 +22,20 @@ class Room:
     A room has a description and can contain items, effects, objects, and NPCs.
     """
 
-    def __init__(self, name: str, description: str, exits=None):
+    def __init__(self, name: str, description: str, exits=None, link_to=None):
+        """
+        Initialize a Room.
+
+        Args:
+            name: Room name.
+            description: Base description for the room.
+            exits: Optional pre-populated one-way exits dict, mapping direction -> Room.
+            link_to: Optional convenience for declaring bidirectional links at construction time.
+                Accepts either:
+                  - list/tuple of 3-tuples: [(dir_from_self, other_room, dir_from_other), ...]
+                  - dict mapping dir_from_self -> (other_room, dir_from_other)
+                This will call link_rooms for each entry.
+        """
         if not isinstance(name, str) or not name.strip():
             raise ValueError("Room name must be a non-empty string.")
         if not isinstance(description, str) or not description.strip():
@@ -39,6 +52,22 @@ class Room:
         self._combatants = []
         # NPCs present in the room, mapped by lowercased name
         self.npcs: Dict[str, NPC] = {}
+
+        # Optionally set up bidirectional links declared at construction time
+        if link_to:
+            # Support both dict and iterable of triples
+            if isinstance(link_to, dict):
+                items = [(d, v[0], v[1]) for d, v in link_to.items()]
+            else:
+                items = list(link_to)
+            for entry in items:
+                if not isinstance(entry, (list, tuple)) or len(entry) != 3:
+                    raise ValueError(
+                        "Each link_to entry must be a 3-tuple: (dir_from_self, other_room, dir_from_other)"
+                    )
+                dir_from_self, other_room, dir_from_other = entry
+                # Reuse existing API for validation and linking
+                self.link_rooms(str(dir_from_self), other_room, str(dir_from_other))
 
     def change_description(self, new_description: str):
         """Changes the description of the room."""

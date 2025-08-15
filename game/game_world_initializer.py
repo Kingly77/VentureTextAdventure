@@ -61,26 +61,31 @@ def _create_rooms() -> dict[str, Room]:
         "Goblin's Lair",
         "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.",
     )
-    # New 5-room goblin dungeon
+    # New 5-room goblin dungeon (use inline link_to for clarity)
     dungeon_cell_1 = Room(
         "Goblin Dungeon - Cell 1",
         "A cramped stone cell with rusted bars. Scratches mark the walls.",
+        link_to=[("west", goblins_lair, "east")],
     )
     dungeon_cell_2 = Room(
         "Goblin Dungeon - Cell 2",
         "The damp air smells of mold. You hear faint chittering ahead.",
+        link_to=[("west", dungeon_cell_1, "east")],
     )
     dungeon_cell_3 = Room(
         "Goblin Dungeon - Cell 3",
         "Bones crunch underfoot. Shapes flit just out of sight.",
+        link_to=[("west", dungeon_cell_2, "east")],
     )
     dungeon_cell_4 = Room(
         "Goblin Dungeon - Cell 4",
         "Water drips from the ceiling into a shallow, murky puddle.",
+        link_to=[("west", dungeon_cell_3, "east")],
     )
     dungeon_cell_5 = Room(
         "Goblin Dungeon - Cell 5",
         "A wider chamber lit by a guttering torch. Something watches you.",
+        link_to=[("west", dungeon_cell_4, "east")],
     )
     shack_shop = Room(
         "Shack Shop",
@@ -120,12 +125,6 @@ def _link_rooms(rooms: dict[str, Room]) -> None:
     goblins_lair = rooms["goblins_lair"]
     shack_shop = rooms["shack_shop"]
     village_square = rooms["village_square"]
-    # New dungeon rooms
-    dungeon_cell_1 = rooms["dungeon_cell_1"]
-    dungeon_cell_2 = rooms["dungeon_cell_2"]
-    dungeon_cell_3 = rooms["dungeon_cell_3"]
-    dungeon_cell_4 = rooms["dungeon_cell_4"]
-    dungeon_cell_5 = rooms["dungeon_cell_5"]
 
     # Preserve the exact same connections as before
     forest_clearing.link_rooms("north", dark_cave_entrance, "south")
@@ -135,12 +134,7 @@ def _link_rooms(rooms: dict[str, Room]) -> None:
     dark_cave_entrance.link_rooms("east", goblins_lair, "west")
     manor.link_rooms("north", foyer, "south")
 
-    # Link the new dungeon chain deeper from the goblin's lair
-    goblins_lair.link_rooms("east", dungeon_cell_1, "west")
-    dungeon_cell_1.link_rooms("east", dungeon_cell_2, "west")
-    dungeon_cell_2.link_rooms("east", dungeon_cell_3, "west")
-    dungeon_cell_3.link_rooms("east", dungeon_cell_4, "west")
-    dungeon_cell_4.link_rooms("east", dungeon_cell_5, "west")
+    # The dungeon chain is linked inline during room construction via link_to for clarity.
 
 
 def _setup_forest_table(forest_clearing: Room) -> None:

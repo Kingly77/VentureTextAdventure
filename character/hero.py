@@ -63,7 +63,6 @@ class RpgHero(
             f"{self.name} is a level {self.level} hero with {self.xp} XP, "
             f"{self.mana} mana, and {self.inventory['fists']} in their inventory."
         )
-        # Note: initial xp_to_next_level is provided by the Exp component default (100) for level 1
 
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"

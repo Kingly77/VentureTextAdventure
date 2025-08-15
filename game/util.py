@@ -1,3 +1,4 @@
+import logging
 import typing
 from typing import Optional
 
@@ -5,6 +6,7 @@ from character.hero import RpgHero
 from components.inventory import ItemNotFoundError, InsufficientQuantityError
 from game.items import UseItemError, Item
 from game.magic import NoTargetError
+from character.tomes.spell_casting_mix import SpellCastError
 
 
 def handle_inventory_operation(operation_func, *args, **kwargs):
@@ -23,19 +25,19 @@ def handle_inventory_operation(operation_func, *args, **kwargs):
     try:
         return operation_func(*args, **kwargs)
     except ItemNotFoundError as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         return None
     except InsufficientQuantityError as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         return None
     except ValueError as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
         return None
     except TypeError as e:
-        print(f"Error adding item: {e}")
+        logging.error(f"Error adding item: {e}")
         return None
     except Exception as e:
-        print(f"Unexpected inventory error: {e}")
+        logging.error(f"Unexpected inventory error: {e}")
         return None
 
 
@@ -52,12 +54,12 @@ def handle_spell_cast(hero, spell_name, target):
     """
     try:
         return hero.cast_spell(spell_name, target)
-    except RpgHero.SpellCastError as e:
-        print(f"Spell casting failed: {e}")
+    except SpellCastError as e:
+        logging.error(f"Spell casting failed: {e}")
     except NoTargetError as e:
-        print(f"Spell casting failed: {e}")
+        logging.error(f"Spell casting failed: {e}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error: {e}")
     return False
 
 
