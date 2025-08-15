@@ -4,7 +4,8 @@ from character.hero import RpgHero
 from commands import engine
 from game.items import Item
 from game.room import Room
-from game.util import handle_item_use, handle_inventory_operation
+from game.util import handle_item_use
+from game.underlings.inventory_maybe import handle_transfer
 
 
 def handle_inventory_command(
@@ -26,9 +27,11 @@ def handle_inventory_command(
                         return
 
             if room_inv.has_component(arg):
-                item = handle_inventory_operation(current_room.remove_item, arg)
-                handle_inventory_operation(hero_inv.add_item, item)
-                print(f"You took the {arg}.")
+                moved = handle_transfer(current_room, arg, hero_inv)
+                if moved:
+                    print(f"You took the {arg}.")
+                else:
+                    print(f"You couldn't take the {arg}.")
             else:
                 print(f"There is no {arg} here to take.")
 
@@ -39,14 +42,13 @@ def handle_inventory_command(
                     return
 
             quantity = 1  # Default to dropping 1
-            # Remove from hero's inventory
-            dropped_item = handle_inventory_operation(
-                hero_inv.remove_item, arg, quantity
-            )
-            handle_inventory_operation(current_room.add_item, dropped_item)
-            print(
-                f"You dropped the {dropped_item.name} with quantity {dropped_item.quantity} in the {current_room.name}."
-            )
+            moved = handle_transfer(hero_inv, arg, current_room, quantity)
+            if moved:
+                print(
+                    f"You dropped the {moved.name} with quantity {moved.quantity} in the {current_room.name}."
+                )
+            else:
+                print(f"You couldn't drop the {arg}.")
 
         elif action == "examine":
             item: Item = None

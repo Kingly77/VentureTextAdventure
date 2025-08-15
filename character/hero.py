@@ -1,6 +1,14 @@
 from typing import Optional, TYPE_CHECKING
 from character.basecharacter import BaseCharacter
-from character.tomes import ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix
+from character.tomes import (
+    ManaMix,
+    XpMix,
+    QuestMix,
+    InventoryViewMix,
+    WalletMix,
+    SpellCastingMix,
+    ItemUsageMix,
+)
 from components.core_components import Effect, Exp
 from components.inventory import ItemNotFoundError
 from components.inventory_evil_cousin import QuestAwareInventory
@@ -14,7 +22,16 @@ if TYPE_CHECKING:
     from game.room import Room
 
 
-class RpgHero(ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix, BaseCharacter):
+class RpgHero(
+    SpellCastingMix,
+    ItemUsageMix,
+    ManaMix,
+    XpMix,
+    QuestMix,
+    InventoryViewMix,
+    WalletMix,
+    BaseCharacter,
+):
     """Hero character class with spells, mana, and inventory."""
 
     BASE_MANA = 100
@@ -60,122 +77,3 @@ class RpgHero(ManaMix, XpMix, QuestMix, InventoryViewMix, WalletMix, BaseCharact
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
         return name.strip().lower()
-
-    def get_spell(self, spell_name: str) -> Spell | None:
-        """Retrieves a spell by name if it exists and is a Spell.
-
-        Args:
-            spell_name: The name of the spell to retrieve
-
-        Returns:
-            The spell object or None if not found
-        """
-        key = self._normalize_name(spell_name)
-        if self.components.has_component(key):
-            component = self.components[key]
-            if isinstance(component, Spell):
-                return component
-        return None
-
-    class SpellCastError(Exception):
-        """Exception raised when a spell cannot be cast."""
-
-        pass
-
-    class SpellNotFoundError(SpellCastError):
-        """Exception raised when a spell is not found."""
-
-        def __init__(self, spell_name: str):
-            self.spell_name = spell_name
-            super().__init__(f"Spell '{spell_name}' doesn't exist.")
-
-    class InsufficientManaError(SpellCastError):
-        """Exception raised when there is not enough mana to cast a spell."""
-
-        def __init__(self, spell_name: str, cost: int, available: int):
-            self.spell_name = spell_name
-            self.cost = cost
-            self.available = available
-            super().__init__(
-                f"Not enough mana for '{spell_name}'. Required: {cost}, Available: {available}"
-            )
-
-    def cast_spell(self, spell_name: str, target: Combatant) -> bool:
-        """Cast a spell on a target if the hero has enough mana.
-
-        Args:
-            spell_name: The name of the spell to cast
-            target: The target to cast the spell on
-
-        Returns:
-            True if the spell was cast successfully, False otherwise
-
-        Raises:
-            SpellNotFoundError: If the spell doesn't exist
-            InsufficientManaError: If there's not enough mana
-            NoTargetError: If no target is provided
-            Exception: Any exception that might be raised by the spell's effect
-        """
-        spell = self.get_spell(spell_name)
-        if not spell:
-            print(f"Spell '{spell_name}' doesn't exist.")
-            raise self.SpellNotFoundError(spell_name)
-
-        mana_component = self.get_mana_component()
-        current_mana = mana_component.mana
-        if current_mana < spell.cost:
-            print(f"Not enough mana for '{spell_name}'.")
-            raise self.InsufficientManaError(spell_name, spell.cost, current_mana)
-
-        try:
-            # Cast first, then consume mana only if casting succeeds
-            spell.cast(target)
-            mana_component.consume(spell.cost)
-            return True
-        except NoTargetError as e:
-            print(f"Failed to cast {spell_name}: {e}")
-            raise
-        except Exception as e:
-            print(f"Error occurred while casting {spell_name}: {e}")
-            raise
-
-    def use_item(self, item_name: str, target=None):
-        """Use an item from the hero's inventory.
-
-        Args:
-            item_name: The name of the item to use
-            target: Optional target for the item (defaults to self)
-
-        Raises:
-            ItemNotFoundError: If the item is not in the inventory
-            UseItemError: If the item cannot be used
-            TypeError: If item_name is not a string
-        """
-        if not isinstance(item_name, str):
-            raise TypeError("Item name must be string")
-
-        key = self._normalize_name(item_name)
-
-        # Retrieve or raise ItemNotFoundError from inventory directly
-        try:
-            item = self.inventory[key]
-        except ItemNotFoundError:
-            raise
-
-        if not item.is_usable:
-            print(f"{item_name} cannot be used.")
-            raise UseItemError()
-
-        if target is None:
-            target = self
-
-        try:
-            item.cast(target)
-            print(f"{self.name} used {item_name} on {getattr(target, 'name', 'self')}.")
-
-            if item.is_consumable:
-                self.inventory.remove_item(key, 1)
-            return True
-        except Exception as e:
-            print(f"Error using {item_name}: {e}")
-            raise

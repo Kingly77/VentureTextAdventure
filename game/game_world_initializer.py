@@ -13,7 +13,7 @@ from game.effects.torch_effect import TorchEffect
 from game.underlings.events import Events as Event
 from game.underlings.leveling_system import LevelingSystem
 from game.underlings.questing_system import QuestingSystem
-from game.util import handle_inventory_operation
+from game.underlings.inventory_maybe import add_item as inv_add_item
 
 
 # Game configuration constants
@@ -156,8 +156,8 @@ def _setup_manor_door(manor: Room, foyer: Room) -> None:
 def _setup_shop(shack_shop: Room) -> None:
     """Configure the shop with its effect and inventory."""
     shack_shop.add_effect(ShopEffect(shack_shop, SHOP_KEEPER_NAME))
-    handle_inventory_operation(shack_shop.add_item, Item("marble ball", 1, False))
-    handle_inventory_operation(shack_shop.add_item, Item("10 foot pole", 3, False))
+    inv_add_item(shack_shop, Item("marble ball", 1, False))
+    inv_add_item(shack_shop, Item("10 foot pole", 3, False))
 
 
 def _setup_village_npc(village_square: Room) -> None:
