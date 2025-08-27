@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from game.items import Item
     from game.room import Room
     from character.hero import RpgHero
-from game.effects.room_effects import RoomDiscEffect
+from game.effects.room_effect_base import RoomDiscEffect
 from game.room_objs import RoomObject
 from game.underlings.events import Events
 

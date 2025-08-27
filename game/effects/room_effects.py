@@ -1,61 +1,19 @@
+from __future__ import annotations
 import logging
-from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
     Optional,
     Callable,
 )
 from game.npc import NPC
-from game.quest import Quest
+from game.effects.room_effect_base import RoomDiscEffect
 
 if TYPE_CHECKING:
     from game.items import Item
     from game.room import Room
     from interfaces.interface import Combatant
     from character.hero import RpgHero
-
-
-class RoomDiscEffect(ABC):
-    """
-    Abstract base class for effects that can modify a Room's description
-    or behavior.
-    """
-
-    def __init__(self, room: "Room"):
-        self.room = room
-
-    @abstractmethod
-    def get_modified_description(self, base_description: str) -> str:
-        """
-        Returns a description modified by this effect.
-        """
-        pass
-
-    def handle_take(self, hero: "RpgHero", item_name: str):
-        """Called when an item is removed from the room, to update state."""
-        return False
-
-    def handle_drop(self, hero: "RpgHero", item_name: str):
-        """Called when an item is dropped from the room, to update state."""
-        return False
-
-    def handle_item_use(self, item_name: str, user: "Combatant") -> bool:
-        """
-        Handles the effect of using an item within the room.
-        Returns True if this effect handled the item use, False otherwise.
-        """
-        return False  # By default, effects don't handle item use
-
-    def handle_interaction(
-        self,
-        verb: str,
-        target_name: Optional[str],
-        val_hero: "Combatant",
-        item: Optional["Item"],
-        room: "Room",
-    ) -> Optional[str]:
-
-        return None
+    from game.quest import Quest
 
 
 class DarkCaveLightingEffect(RoomDiscEffect):
@@ -98,15 +56,6 @@ class DarkCaveLightingEffect(RoomDiscEffect):
             print(
                 f"[{self.room.name}] The light source is gone, the area grows darker."
             )
-
-    # def handle_take(self, hero, item_name: str):
-    #     """Called when an item is removed from the room, to update state."""
-    #     if item_name == "torch":
-    #         self._is_lit = False
-    #         print(
-    #             f"[{self.room.name}] The light source is gone, the area grows darker."
-    #         )
-    #     return False
 
 
 class NPCDialogEffect(RoomDiscEffect):

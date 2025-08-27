@@ -1,0 +1,138 @@
+graph TD
+
+%% =======================
+%% Top layer: Foundations
+%% =======================
+interfaces.interface
+components.core_components
+
+%% =======================
+%% Second layer: Items & Inventory
+%% =======================
+game.items
+components.inventory
+components.inventory_evil_cousin
+
+%% =======================
+%% Third layer: Mechanics & Effects
+%% =======================
+game.magic
+game.util
+game.effects.room_effects
+game.effects.shop_effect
+game.effects.door_effect_expanded
+game.effects.torch_effect
+
+%% =======================
+%% Fourth layer: Characters & Hero
+%% =======================
+character.basecharacter
+character.hero
+components.quest_log
+components.wallet
+character.tomes.spell_casting_mix
+
+%% =======================
+%% Fifth layer: Rooms & Objects
+%% =======================
+game.room
+game.room_objs
+game.npc
+
+%% =======================
+%% Sixth layer: Commands
+%% =======================
+commands.command
+commands.engine
+
+%% =======================
+%% Bottom layer: Underlings
+%% =======================
+game.underlings.inventory_maybe
+game.underlings.events
+
+%% =======================
+%% Connections
+%% =======================
+
+%% Foundations
+interfaces.interface -->|ABC| components.core_components
+components.core_components --> game.underlings.events
+
+%% Items & Inventory
+game.items --> components.core_components
+game.items --> interfaces.interface
+components.inventory --> game.items
+components.inventory_evil_cousin --> components.inventory
+components.inventory_evil_cousin --> game.items
+components.inventory_evil_cousin --> game.underlings.events
+
+%% Mechanics & Effects
+game.magic --> interfaces.interface
+game.magic --> character.basecharacter
+game.util --> character.hero
+game.util --> components.inventory
+game.util --> game.items
+game.util --> game.magic
+game.util --> character.tomes.spell_casting_mix
+
+game.effects.room_effects --> game.npc
+game.effects.room_effects --> game.quest
+game.effects.room_effects --> game.items
+game.effects.room_effects --> game.room
+game.effects.room_effects --> interfaces.interface
+game.effects.room_effects --> character.hero
+
+game.effects.shop_effect --> character.hero
+game.effects.shop_effect --> components.wallet
+game.effects.shop_effect --> game.items
+game.effects.shop_effect --> game.effects.room_effects
+game.effects.shop_effect --> game.room
+game.effects.shop_effect --> game.underlings.inventory_maybe
+
+game.effects.door_effect_expanded --> game.effects.room_effects
+game.effects.door_effect_expanded --> game.room
+game.effects.door_effect_expanded --> game.room_objs
+game.effects.door_effect_expanded --> game.underlings.events
+
+game.effects.torch_effect --> game.effects.room_effects
+game.effects.torch_effect --> game.room_objs
+game.effects.torch_effect --> game.underlings.events
+
+%% Characters & Hero
+character.basecharacter --> components.core_components
+character.basecharacter --> components.inventory
+character.basecharacter --> interfaces.interface
+character.hero --> character.basecharacter
+character.hero --> components.core_components
+character.hero --> components.inventory
+character.hero --> components.inventory_evil_cousin
+character.hero --> components.quest_log
+character.hero --> components.wallet
+character.hero --> game.items
+character.hero --> game.magic
+character.hero --> interfaces.interface
+
+%% Rooms & Objects
+game.room --> components.core_components
+game.room --> components.inventory
+game.room --> game.items
+game.room --> game.effects.room_effects
+game.room --> game.room_objs
+game.room --> interfaces.interface
+game.room --> game.npc
+
+game.room_objs --> game.items
+game.room_objs --> character.hero
+
+%% Commands
+commands.command --> character.hero
+commands.command --> commands.engine
+commands.command --> game.items
+commands.command --> game.room
+commands.command --> game.util
+commands.command --> game.underlings.inventory_maybe
+
+%% Underlings
+game.underlings.inventory_maybe --> components.inventory
+game.underlings.inventory_maybe --> game.util

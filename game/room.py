@@ -4,10 +4,7 @@ from typing import List, Dict, Optional, TYPE_CHECKING
 from components.core_components import HoldComponent
 from components.inventory import Inventory, ItemNotFoundError
 from game.items import Item
-from game.effects.room_effects import (
-    RoomDiscEffect,
-    NPCDialogEffect,
-)  # Import the new RoomEffect base class
+from game.effects.room_effect_base import RoomDiscEffect  # Room effect base (decoupled)
 from game.room_objs import RoomObject
 from interfaces.interface import Combatant  # Import Combatant
 from game.npc import NPC
@@ -138,11 +135,16 @@ class Room:
 
     def add_effect(self, effect: RoomDiscEffect):
         """Adds a RoomEffect to this room."""
-        if isinstance(effect, NPCDialogEffect):
-            if effect.npc_name in self.npcs:
-                raise ValueError(
-                    f"The NPC '{effect.npc_name}' is already present in this room."
-                )
+        npc_name = getattr(effect, "npc_name", None)
+        if isinstance(npc_name, str):
+            key = npc_name.lower()
+            # Prevent duplicate NPC dialog effects with the same npc_name
+            for existing in self.effects:
+                existing_name = getattr(existing, "npc_name", None)
+                if isinstance(existing_name, str) and existing_name.lower() == key:
+                    raise ValueError(
+                        f"The NPC '{npc_name}' is already present in this room."
+                    )
 
         self.effects.append(effect)
 
