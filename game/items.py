@@ -16,6 +16,7 @@ class Item(CanCast):  # Inherit from CanCast
         effect: Effect = Effect.NONE,
         effect_value: int = 0,
         is_consumable: bool = False,
+        is_equipment: bool = False,
         tags=None,
         **kwargs,
     ):
@@ -36,6 +37,7 @@ class Item(CanCast):  # Inherit from CanCast
         self.effect_type: Effect = effect
         self.effect_value = effect_value
         self.is_consumable = is_consumable
+        self.is_equipment = is_equipment
         self.tags = set(tags or [])
 
     def add_tag(self, tag: str):

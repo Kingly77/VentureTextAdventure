@@ -196,10 +196,12 @@ class Game:
             if item.name.lower() == "gold":
                 continue
 
-            if item.is_usable:
-                usable_items.append(item)
-            elif hasattr(item, "is_equipment") and item.is_equipment:
+            # Use hero's weapon logic to classify equipment/weapons
+            if hasattr(self.hero, "is_weapon") and self.hero.is_weapon(item):
                 equipment.append(item)
+            elif item.is_usable:
+                # Usable but not a weapon (e.g., potions, keys, torches)
+                usable_items.append(item)
             else:
                 misc_items.append(item)
 
@@ -212,7 +214,7 @@ class Game:
                     effect_text = f" (Heals {item.effect_value})"
                 elif item.effect_type.name == "DAMAGE":
                     effect_text = f" (Damage {item.effect_value})"
-
+                # No equipped marker here; weapons are shown in Equipment section
                 print(
                     f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each"
                 )
@@ -222,7 +224,8 @@ class Game:
         if equipment:
             print("⚔️ Equipment:")
             for item in equipment:
-                print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
+                marker = " [equipped]" if getattr(getattr(self.hero, "equipped", None), "name", None) == item.name else ""
+                print(f"  • {item.name}{marker} x{item.quantity} - {item.cost} gold each")
             print()
 
         # Print misc items

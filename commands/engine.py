@@ -158,6 +158,31 @@ def _handle_go(req: CommandRequest, ctx: CommandContext):
     _go_command("go", req.arg, ctx.hero, ctx.room, ctx.game)
 
 
+def _handle_equip(req: CommandRequest, ctx: CommandContext):
+    if not req.arg:
+        print("What do you want to equip?")
+        return
+    ctx.hero.equip(req.arg)
+
+
+def _handle_isweapon(req: CommandRequest, ctx: CommandContext):
+    if not req.arg:
+        print("Check which item? (usage: isweapon <item>)")
+        return
+    name = req.arg.strip().lower()
+    item = None
+    if ctx.hero.inventory.has_component(name):
+        item = ctx.hero.inventory[name]
+    elif hasattr(ctx.room, "inventory") and ctx.room.inventory.has_component(name):
+        item = ctx.room.inventory[name]
+    else:
+        print(f"You don't see or have a '{req.arg}'.")
+        return
+    print(
+        f"Yes, {item.name} is a weapon." if ctx.hero.is_weapon(item) else f"No, {item.name} is not a weapon."
+    )
+
+
 def register_default_commands(registry: CommandRegistry, game: "Game") -> None:
     # Register commands and aliases with short help texts
     registry.register("look", _handle_look, "Look around the room")
@@ -170,6 +195,18 @@ def register_default_commands(registry: CommandRegistry, game: "Game") -> None:
     registry.register("drop", _handle_drop, "Drop an item")
     registry.register("examine", _handle_examine, "Examine an item")
     registry.register("use", _handle_use, "Use an item (on self/room/object)")
+    registry.register(
+        "equip",
+        _handle_equip,
+        "Equip a weapon you own (e.g., 'equip sword')",
+        aliases=["wield"],
+    )
+    registry.register(
+        "isweapon",
+        _handle_isweapon,
+        "Check if an item is a weapon (e.g., 'isweapon sword')",
+        aliases=["is-weapon"],
+    )
     registry.register(
         "go",
         _handle_go,

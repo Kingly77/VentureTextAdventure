@@ -57,7 +57,7 @@ class RpgHero(
         self.components.add_component("quests", QuestLog())
         self.components.add_component("xp", Exp(0, 100))
         self.components.add_component("wallet", Wallet(0))
-        self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5)
+        self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5, is_equipment=True, tags=["weapon"])
         self.inventory.add_item(self._equipped)
         print(
             f"{self.name} is a level {self.level} hero with {self.xp} XP, "
@@ -66,6 +66,10 @@ class RpgHero(
 
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
+
+    @property
+    def equipped(self) -> Item:
+        return self._equipped
 
     def add_xp(self, xp: int):
         """Adds experience points by delegating to the Exp component."""
@@ -76,3 +80,44 @@ class RpgHero(
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
         return name.strip().lower()
+
+    def is_weapon(self, item: Item) -> bool:
+        if item is None:
+            return False
+        # Consider as weapon if tagged, marked equipment, or deals DAMAGE
+        return (
+            getattr(item, "is_equipment", False)
+            or item.has_tag("weapon")
+            or getattr(item, "effect_type", None) == Effect.DAMAGE
+        )
+
+    def equip(self, item_name: str) -> bool:
+        name = self._normalize_name(item_name)
+        if not self.inventory.has_component(name):
+            print(f"You don't have a '{item_name}'.")
+            return False
+        item = self.inventory[name]
+        if not self.is_weapon(item):
+            print(f"'{item_name}' is not a weapon.")
+            return False
+        self._equipped = item
+        print(f"Equipped {item.name}.")
+        return True
+
+    def attack(self, target: Combatant, weapon_name: str | None = None):
+        """Attack using the currently equipped weapon. If a weapon name is provided, try to equip it first."""
+        if target is None:
+            raise ValueError(f"{self.name} tried to attack, but no target was provided.")
+
+        # If a specific weapon name is given, attempt to equip it (keeps backwards compatibility)
+        if weapon_name:
+            self.equip(weapon_name)
+
+        weapon = self._equipped
+        if weapon is None:
+            raise ValueError(f"{self.name} has no weapon equipped.")
+
+        try:
+            weapon.cast(target)
+        except UseItemError:
+            raise ValueError(f"{weapon.name} cannot be used to attack.")
