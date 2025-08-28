@@ -111,30 +111,165 @@ def _handle_help(req: CommandRequest, ctx: CommandContext):
 
 
 def _handle_look(req: CommandRequest, ctx: CommandContext):
-    # Call the Game's method directly to preserve formatting/behavior
-    ctx.game._handle_look("")
+    # Standalone: print current room description
+    try:
+        desc = ctx.room.get_description()
+    except Exception:
+        desc = str(getattr(ctx.room, "base_description", ""))
+    if desc:
+        print(desc)
 
 
 def _handle_status(req: CommandRequest, ctx: CommandContext):
-    ctx.game._handle_status("")
+    hero = ctx.hero
+    # Character stats section
+    print("\n📊 Character Status:")
+    print("=" * 40)
+    try:
+        print(
+            f"🧙 {hero.name} | Level {hero.level} | XP: {getattr(hero, 'xp', 0)}/{getattr(hero, 'xp_to_next_level', 0)}"
+        )
+    except Exception:
+        # Fallback if attributes missing
+        print(f"🧙 {getattr(hero, 'name', 'Hero')}")
+    if hasattr(hero, 'health') and hasattr(hero, 'max_health'):
+        print(f"❤️  Health: {hero.health}/{hero.max_health}")
+    if hasattr(hero, 'mana') and hasattr(hero, 'max_mana'):
+        print(f"✨ Mana: {hero.mana}/{hero.max_mana}")
+    if hasattr(hero, 'gold'):
+        print(f"💰 Gold: {hero.gold}")
+
+    # Quest log section
+    ql = getattr(hero, 'quest_log', None)
+    active_quests = list(getattr(ql, 'active_quests', {}).values()) if ql else []
+    completed_quests = getattr(ql, 'completed_quests', []) if ql else []
+
+    if active_quests or completed_quests:
+        print("\n📜 Quest Log:")
+        print("-" * 40)
+        if active_quests:
+            print("🔸 Active Quests:")
+            for quest in active_quests:
+                try:
+                    print(
+                        f"  • {quest.name} - {quest.description} ({quest.progress}/{quest.objective.value}) (ID: {quest.id})"
+                    )
+                except Exception:
+                    print(f"  • {quest}")
+        if completed_quests:
+            print("\n🔹 Completed Quests:")
+            for quest in completed_quests:
+                print(f"  • {quest}")
+    else:
+        print("\n📜 Quest Log: No quests available")
+    print("=" * 40)
 
 
 def _handle_inventory(req: CommandRequest, ctx: CommandContext):
-    ctx.game._handle_inventory("")
+    hero = ctx.hero
+    inventory = hero.inventory
+    items = list(inventory.items.values())
+
+    if not items or (len(items) == 1 and items[0].name == "gold"):
+        print("\n📦 Your inventory is empty.")
+        return
+
+    print("\n📦 Inventory:")
+    print("------------------------")
+
+    usable_items = []
+    equipment = []
+    misc_items = []
+
+    for item in items:
+        if item.name.lower() == "gold":
+            continue
+        if hasattr(hero, "is_weapon") and hero.is_weapon(item):
+            equipment.append(item)
+        elif item.is_usable:
+            usable_items.append(item)
+        else:
+            misc_items.append(item)
+
+    if usable_items:
+        print("🧪 Usable Items:")
+        for item in usable_items:
+            effect_text = ""
+            if getattr(item.effect_type, "name", "") == "HEAL":
+                effect_text = f" (Heals {item.effect_value})"
+            elif getattr(item.effect_type, "name", "") == "DAMAGE":
+                effect_text = f" (Damage {item.effect_value})"
+            print(f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each")
+        print()
+
+    if equipment:
+        print("⚔️ Equipment:")
+        for item in equipment:
+            marker = " [equipped]" if getattr(getattr(hero, "equipped", None), "name", None) == item.name else ""
+            print(f"  • {item.name}{marker} x{item.quantity} - {item.cost} gold each")
+        print()
+
+    if misc_items:
+        print("🔮 Other Items:")
+        for item in misc_items:
+            print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
+
+    print("------------------------")
+    print(f"💰 Gold: {hero.gold}")
 
 
 def _handle_talk(req: CommandRequest, ctx: CommandContext):
-    ctx.game._handle_talk(req.arg)
+    # Try to let the current room/effects handle the conversation
+    try:
+        msg = ctx.room.interact("talk", req.arg if req.arg else None, ctx.hero, None, ctx.room)
+        if msg is not None:
+            if isinstance(msg, str) and msg:
+                print(msg)
+            return
+    except Exception:
+        pass
+    print("There is no one here to talk to.")
+    return
 
 
 def _handle_quit(req: CommandRequest, ctx: CommandContext):
-    ctx.game._handle_quit("")
+    # Standalone: mark the game as over
+    try:
+        ctx.game.game_over = True
+    except Exception:
+        pass
 
 
 def _handle_debug(req: CommandRequest, ctx: CommandContext):
-    # If Game has a debug method, use it. Otherwise, do nothing.
-    if hasattr(ctx.game, "_handle_debug"):
-        ctx.game._handle_debug(req.arg)
+    # Standalone debug commands for development convenience
+    arg = (req.arg or "").strip().lower()
+    hero = ctx.hero
+    if arg == "heal":
+        if hasattr(hero, 'max_health'):
+            hero.health = hero.max_health
+        print(f"{getattr(hero, 'name', 'Hero')} fully healed.")
+    elif arg == "mana":
+        if hasattr(hero, 'max_mana'):
+            hero.mana = hero.max_mana
+        print(f"{getattr(hero, 'name', 'Hero')} restored mana.")
+    elif arg == "xp":
+        if hasattr(hero, 'add_xp'):
+            hero.add_xp(100)
+        print("Gained 100 XP.")
+    elif arg == "gold":
+        if hasattr(hero, 'add_gold'):
+            hero.add_gold(100)
+        elif hasattr(hero, 'gold'):
+            hero.gold += 100
+        print("Gained 100 gold.")
+    elif arg == "hurt":
+        if hasattr(hero, 'take_damage'):
+            hero.take_damage(10)
+        elif hasattr(hero, 'health'):
+            hero.health = max(0, hero.health - 10)
+        print(f"{getattr(hero, 'name', 'Hero')} was hurt for 10 HP.")
+    else:
+        print("Unknown debug command. Options: heal, mana, xp,gold")
 
 
 def _handle_take(req: CommandRequest, ctx: CommandContext):
