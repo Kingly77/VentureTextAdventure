@@ -241,3 +241,24 @@ def parse_use_arg(arg: str, hero_name: str, room: "Room") -> UseTarget:
     if hasattr(room, "objects") and target_part in getattr(room, "objects", {}):
         return UseTarget(kind=TargetKind.OBJECT, name=target_part)
     return UseTarget(kind=TargetKind.NONE)
+
+
+# Test-friendly helper to execute a command line and capture output
+# This allows tests to avoid patching builtins.print while exercising behavior.
+# It is optional and does not change any runtime behavior.
+from typing import List as _List
+import io as _io
+import contextlib as _contextlib
+
+
+def execute_line(game: "Game", line: str) -> _List[str]:
+    """
+    Execute a command line through the game's parser/dispatcher and return
+    the printed output as a list of lines. This is intended to make tests
+    less reliant on patching builtins.print.
+    """
+    buf = _io.StringIO()
+    with _contextlib.redirect_stdout(buf):
+        game.parse_and_execute(line)
+    output = buf.getvalue().splitlines()
+    return output

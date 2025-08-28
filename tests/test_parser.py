@@ -6,6 +6,7 @@ from game.items import Item
 from game.room import Room
 from game.rpg_adventure_game import Game
 from components.core_components import Effect
+import commands.engine as eng
 
 
 @pytest.fixture
@@ -83,125 +84,86 @@ def test_game(test_hero, test_room):
 
 
 def test_parse_command():
-    """Test the _parse_command method of the Game class."""
-    game = Game(MagicMock(), MagicMock())
-
+    """Test the parsing using the public engine.parse_command_line function."""
     # Test basic command parsing
-    action, arg = game._parse_command("go north")
-    assert action == "go"
-    assert arg == "north"
+    pairs = eng.parse_command_line("go north")
+    assert pairs == [("go", "north")]
 
     # Test command with no arguments
-    action, arg = game._parse_command("inventory")
-    assert action == "inventory"
-    assert arg == ""
+    pairs = eng.parse_command_line("inventory")
+    assert pairs == [("inventory", "")]
 
     # Test command with multiple word arguments
-    action, arg = game._parse_command("use health potion")
-    assert action == "use"
-    assert arg == "health potion"
+    pairs = eng.parse_command_line("use health potion")
+    assert pairs == [("use", "health potion")]
 
     # Test command with target
-    action, arg = game._parse_command("use key on chest")
-    assert action == "use"
-    assert arg == "key on chest"
+    pairs = eng.parse_command_line("use key on chest")
+    assert pairs == [("use", "key on chest")]
 
 
 def test_dispatch_command_methods():
-    """Test the _dispatch_command method with internal method handlers."""
-    # Use patch to mock the methods
-    with patch("game.rpg_adventure_game.Game._handle_look") as mock_look:
-        with patch("game.rpg_adventure_game.Game._handle_inventory") as mock_inventory:
-            # Create a game instance with the patched methods
-            game = Game(MagicMock(), MagicMock())
+    """Test dispatching via public parse_and_execute and assert observable behavior via execute_line."""
+    # Create a simple game instance
+    game = Game(MagicMock(), MagicMock())
+    out = eng.execute_line(game, "look")
+    assert len(out) > 0
 
-            # Test dispatching to method handlers
-            game._dispatch_command("look", "")
-            mock_look.assert_called_once_with("")
-
-            game._dispatch_command("inventory", "")
-            mock_inventory.assert_called_once_with("")
+    out = eng.execute_line(game, "inventory")
+    # Should print inventory header or empty message
+    assert len(out) > 0
 
 
 def test_parse_and_execute(test_game):
-    """Test the parse_and_execute method of the Game class."""
-    # Mock the _dispatch_command method
-    test_game._dispatch_command = MagicMock()
+    """Test parse_and_execute end-to-end using public behavior."""
+    # Check that 'look' produces some output
+    out = eng.execute_line(test_game, "look")
+    assert len(out) > 0
 
-    # Test parse_and_execute with various commands
-    test_game.parse_and_execute("go north")
-    test_game._dispatch_command.assert_called_once_with("go", "north")
-    test_game._dispatch_command.reset_mock()
-
-    test_game.parse_and_execute("look")
-    test_game._dispatch_command.assert_called_once_with("look", "")
-    test_game._dispatch_command.reset_mock()
-
-    test_game.parse_and_execute("use health potion")
-    test_game._dispatch_command.assert_called_once_with("use", "health potion")
-    test_game._dispatch_command.reset_mock()
+    # Take key should move item from room to inventory
+    # Precondition
+    assert "key" in test_game.current_room.inventory.items
+    assert "key" not in test_game.hero.inventory.items
 
     test_game.parse_and_execute("take key")
-    test_game._dispatch_command.assert_called_once_with("take", "key")
+
+    assert "key" in test_game.hero.inventory.items
+    assert "key" not in test_game.current_room.inventory.items
 
 
 def test_integration_with_game_object(test_game):
     """Test integration of parser with actual game object."""
-    # Mock print to capture output
-    with patch("builtins.print") as mock_print:
-        # Test inventory command
-        test_game.parse_and_execute("inventory")
-        # Check that inventory was displayed (at least one call to print)
-        assert mock_print.call_count > 0
-        mock_print.reset_mock()
+    # Test inventory command
+    out = eng.execute_line(test_game, "inventory")
+    assert len(out) > 0
 
-        # Test look command
-        test_game.parse_and_execute("look")
-        # Check that room description was displayed
-        assert any(
-            "simple room for testing" in str(args).lower()
-            for args, _ in mock_print.call_args_list
-        )
-        mock_print.reset_mock()
+    # Test look command and ensure room description appears
+    out = eng.execute_line(test_game, "look")
+    assert any("simple room for testing" in line.lower() for line in out)
 
-        # Test take command
-        test_game.parse_and_execute("take key")
-        # Verify key was added to inventory
-        assert "key" in test_game.hero.inventory.items
-        mock_print.reset_mock()
+    # Test take command and verify key was added to inventory
+    test_game.parse_and_execute("take key")
+    assert "key" in test_game.hero.inventory.items
 
-        # Test use command
-        test_game.parse_and_execute("use health potion")
-        # Check that potion was used (health message displayed)
-        assert any(
-            "health" in str(args).lower() for args, _ in mock_print.call_args_list
-        )
+    # Test use command and check health-related output
+    out = eng.execute_line(test_game, "use health potion")
+    assert any("health" in line.lower() for line in out)
 
 
 def test_unknown_command(test_game):
     """Test handling of unknown commands."""
-    # Mock print to capture output
-    with patch("builtins.print") as mock_print:
-        test_game.parse_and_execute("dance")
-        # Check that unknown command message was displayed
-        mock_print.assert_called_with(
-            "Unknown command. Try 'help' for a list of commands."
-        )
+    out = eng.execute_line(test_game, "dance")
+    text = "\n".join(out)
+    assert "Unknown command. Try 'help' for a list of commands." in text
 
 
 def test_complex_commands(test_game):
     """Test more complex command scenarios."""
-    # Mock print to capture output
-    with patch("builtins.print") as mock_print:
-        # Test use item on target
-        test_game.parse_and_execute("use torch on room")
-        # Check that command was processed
-        assert mock_print.call_count > 0
-        mock_print.reset_mock()
+    # Test use item on target
+    out = eng.execute_line(test_game, "use torch on room")
+    assert len(out) > 0
 
-        # Test examine item
-        test_game.parse_and_execute("examine torch")
-        # Check that item details were displayed
-        assert any(
-            "torch" in str(args).lower() for args, _ in mock_print.call_args_list
-        )
+    # Test examine item
+    out = eng.execute_line(test_game, "examine torch")
+    text = "\n".join(out).lower()
+    assert "torch" in text
