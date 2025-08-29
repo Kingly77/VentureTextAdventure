@@ -10,6 +10,7 @@ from commands.command import (
     use_command as _use_command,
     go_command as _go_command,
 )
+from game.util import handle_spell_cast
 
 
 class TargetKind(Enum):
@@ -318,6 +319,61 @@ def _handle_isweapon(req: CommandRequest, ctx: CommandContext):
     )
 
 
+def _handle_attack(req: CommandRequest, ctx: CommandContext):
+    game = ctx.game
+    hero = ctx.hero
+    enemy = game.current_enemy
+    if not game.in_combat or enemy is None:
+        print("There's nothing to attack right now.")
+        return
+    try:
+        hero.attack(enemy, req.arg or None)
+    except ValueError:
+        # List available weapons to help the player
+        weapons = [
+            name
+            for name, item in hero.inventory.items.items()
+            if getattr(item, "is_equipment", False)
+        ]
+        if weapons:
+            print(f"Available weapons: {', '.join(weapons)}")
+        else:
+            print(
+                "No weapons available. Use 'attack' without a weapon to fight bare-handed."
+            )
+        return
+    print(
+        f"{hero.name} attacks {enemy.name}! {enemy.name}'s health is now {enemy.health}."
+    )
+    if enemy.is_alive():
+        enemy.attack(hero)
+        print(f"{enemy.name} retaliates! {hero.name}'s health is now {hero.health}.")
+        if not hero.is_alive():
+            game._end_combat(False)
+            return
+    if not enemy.is_alive():
+        game._end_combat(True)
+
+
+def _handle_cast(req: CommandRequest, ctx: CommandContext):
+    game = ctx.game
+    hero = ctx.hero
+    enemy = game.current_enemy
+    if not game.in_combat or enemy is None:
+        print("There's nothing to cast spells on right now.")
+        return
+    # Delegate to util, which handles exceptions and validations
+    handle_spell_cast(hero, req.arg, enemy)
+    if enemy.is_alive():
+        enemy.attack(hero)
+        print(f"{enemy.name} retaliates! {hero.name}'s health is now {hero.health}.")
+        if not hero.is_alive():
+            game._end_combat(False)
+            return
+    if not enemy.is_alive():
+        game._end_combat(True)
+
+
 def register_default_commands(registry: CommandRegistry, game: "Game") -> None:
     # Register commands and aliases with short help texts
     registry.register("look", _handle_look, "Look around the room")
@@ -347,6 +403,17 @@ def register_default_commands(registry: CommandRegistry, game: "Game") -> None:
         _handle_go,
         "Move in a direction (north/south/east/west)",
         aliases=["move"],
+    )
+    # Combat-related commands
+    registry.register(
+        "attack",
+        _handle_attack,
+        "Attack the current enemy (optionally specify a weapon: 'attack sword')",
+    )
+    registry.register(
+        "cast",
+        _handle_cast,
+        "Cast a spell on the current enemy (usage: 'cast <spell>')",
     )
     registry.register("talk", _handle_talk, "Talk to someone")
     registry.register("help", _handle_help, "Show this help", aliases=["?"])

@@ -8,6 +8,9 @@ from game.items import UseItemError, Item
 from game.magic import NoTargetError
 from character.tomes.spell_casting_mix import SpellCastError
 
+if typing.TYPE_CHECKING:
+    from game.room import Room
+
 
 def handle_inventory_operation(operation_func, *args, **kwargs):
     """Helper function to handle common inventory operation exceptions.
