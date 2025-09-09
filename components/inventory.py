@@ -46,7 +46,17 @@ class Inventory:
             raise TypeError("Can only add Item objects to inventory")
 
         if item.name in self.items:
-            self.items[item.name] += item.quantity
+            existing = self.items[item.name]
+            # Increase quantity and preserve union of tags
+            existing += item.quantity
+            try:
+                existing.tags.update(item.tags)
+            except Exception:
+                # Be resilient if tags aren't sets/lists for some reason
+                try:
+                    existing.tags = set(existing.tags or []) | set(item.tags or [])
+                except Exception:
+                    pass
         else:
             self.items[item.name] = item
 
@@ -80,15 +90,19 @@ class Inventory:
 
         current_item -= quantity
 
+        # Create a new Item instance representing the removed quantity.
+        # Use keyword args to avoid parameter misalignment and ensure tags transfer.
         removed_item = Item(
-            current_item.name,
-            current_item.cost,
-            current_item.is_usable,
-            current_item.effect_type,
-            current_item.effect_value,
-            current_item.is_consumable,
-            current_item.tags,
+            name=current_item.name,
+            cost=current_item.cost,
+            is_usable=current_item.is_usable,
+            effect=current_item.effect_type,
+            effect_value=current_item.effect_value,
+            is_consumable=current_item.is_consumable,
+            is_equipment=current_item.is_equipment if hasattr(current_item, "is_equipment") else False,
+            tags=current_item.tags,
         )
+        logging.debug(f"{current_item.tags} {removed_item.tags} ")
         removed_item.quantity = quantity
 
         if current_item.quantity <= 0:

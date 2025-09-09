@@ -43,8 +43,9 @@ class DoorEffectExpanded(RoomDiscEffect):
 
         self.door.add_interaction("use", knock_door)
 
-    def handle_item_use(self, item_name: str, user: "Combatant") -> bool:
-        print("not holding the item")
+    def handle_item_use(self, verb: str, item_name: str, user: "Combatant") -> bool:
+        # This effect only responds to object-targeted 'use' via handle_interaction
+        # Return False for room-wide item use
         return False
 
     def handle_interaction(

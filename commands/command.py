@@ -103,13 +103,6 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
         item_name, target_str, hero, current_room, what, source=item_location
     )
 
-    # if item_location == "hero":
-    #     _handle_hero_item_usage(item_name, target_str, hero, current_room, what)
-    # elif item_location == "room":
-    #     _handle_room_item_usage(item_name, hero, current_room, target_str, what)
-    # else:
-    #     print(f"You don't see or have a '{item_name}'.")
-
 
 def _parse_use_arguments(arg: str) -> tuple[str, str | None]:
     """Parse use command arguments into item name and target."""
@@ -166,12 +159,14 @@ def _use_item_on_room(item: Item, hero: RpgHero, current_room: Room):
         print(f"{e}")
 
 
-def _use_item_on_object(item: Item, target_str: str, hero: RpgHero, current_room: Room):
+def _use_item_on_object(
+    item: Item, target_str: str, hero: RpgHero, current_room: Room, vb="use"
+):
     """Use an item on a specific object in the room."""
     obj = current_room.objects[target_str]
 
     try:
-        msg = current_room.interact("use", target_str, hero, item, current_room)
+        msg = current_room.interact(vb, target_str, hero, item, current_room)
         if msg is not None:
             print(msg)
         else:
@@ -265,6 +260,6 @@ def _handle_item_usage(
         _use_item_on_room(item, hero, current_room)
     elif what.kind == TargetKind.OBJECT:
         # target_str is the normalized object key per parse_use_arg
-        _use_item_on_object(item, target_str, hero, current_room)
+        _use_item_on_object(item, target_str, hero, current_room, vb="use")
     else:
         print(f"You don't see '{target_str}' to use the {item_name} on.")

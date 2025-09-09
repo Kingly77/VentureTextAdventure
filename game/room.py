@@ -189,11 +189,9 @@ class Room:
         vb = (verb or "").lower().strip()
         tgt = (target_name or "").lower().strip()
         for effect in self.effects:
-            handler = getattr(effect, f"handle_interaction", None)
-            if callable(handler):
-                result = handler(vb, tgt, user, item, room)
-                if result is not None:
-                    return result
+            result = effect.handle_interaction(vb, tgt, user, item, room)
+            if result is not None:
+                return result
 
         if tgt in self.objects:
             return self.objects[tgt].try_interact(vb, user, item, room)
@@ -229,7 +227,7 @@ class Room:
         # Try to let room effects handle the item usage
         handled_by_effect = False
         for effect in self.effects:
-            if effect.handle_item_use(item_name, user):
+            if effect.handle_item_use("use", item_name, user):
                 # Item successfully used by a room effect
                 handled_by_effect = True
                 # Remove the item if it was used (consumable)

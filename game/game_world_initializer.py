@@ -3,7 +3,7 @@ import importlib
 from character.enemy import Goblin
 from character.hero import RpgHero
 from components.core_components import Effect
-from game.effects.door_effect_expanded import DoorEffectExpanded
+from game.effects.locked_door_effect import LockedDoorEffect
 from game.items import Item
 from game.quest import Quest, Objective
 from game.room import Room
@@ -144,7 +144,7 @@ def _setup_forest_table(forest_clearing: Room) -> None:
 
 def _setup_manor_door(manor: Room, foyer: Room) -> None:
     """Create and configure the manor door with its interactions."""
-    manor.add_effect(DoorEffectExpanded(manor, foyer))
+    manor.add_effect(LockedDoorEffect(manor, foyer, door_name="door", unlock_event="unlock_foyer", allow_bash=True))
 
 
 def _setup_shop(shack_shop: Room) -> None:

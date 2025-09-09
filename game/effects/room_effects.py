@@ -36,10 +36,12 @@ class DarkCaveLightingEffect(RoomDiscEffect):
         else:  # Torch is present but not used/lit
             return base_description  # Revert to original if not lit but torch is there
 
-    def handle_item_use(self, item_name: str, user: "Combatant") -> bool:
+    def handle_item_use(self, verb: str, item_name: str, user: "Combatant") -> bool:
         """
         Handles torch usage in the dark cave.
         """
+        if (verb or "").strip().lower() != "use":
+            return False
         if item_name.lower() == "torch":
             self._is_lit = True
             print(

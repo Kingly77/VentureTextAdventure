@@ -32,7 +32,7 @@ class RoomDiscEffect(ABC):
     def handle_drop(self, hero: "RpgHero", item_name: str):
         return False
 
-    def handle_item_use(self, item_name: str, user: "Combatant") -> bool:
+    def handle_item_use(self, verb: str, item_name: str, user: "Combatant") -> bool:
         return False
 
     def handle_interaction(

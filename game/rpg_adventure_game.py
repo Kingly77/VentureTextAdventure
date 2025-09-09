@@ -143,6 +143,17 @@ class Game:
                 print(f"An error occurred: {e}")
             return
 
+        # Unknown verb: give room/effects a chance to handle it
+        try:
+            msg = self.current_room.interact(action, arg or None, self.hero, None, self.current_room)
+            if msg is not None:
+                if isinstance(msg, str) and msg:
+                    print(msg)
+                return
+        except Exception:
+            # If room/effects can't handle or raise, fall back to unknown command message
+            pass
+
         print("Unknown command. Try 'help' for a list of commands.")
 
     def _process_input(self):
