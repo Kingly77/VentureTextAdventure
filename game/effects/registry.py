@@ -4,6 +4,7 @@ from typing import Callable, Dict, Any
 from game.effects.locked_door_effect import LockedDoorEffect
 from game.effects.torch_effect import TorchEffect
 from game.effects.room_effects import NPCDialogEffect, DarkCaveLightingEffect
+from game.effects.shop_effect import ShopEffect
 
 # Registry maps effect key -> factory(room, params, rooms_by_key) -> effect instance
 _REGISTRY: Dict[str, Callable] = {}
@@ -45,11 +46,36 @@ def _torch_factory(room, params: Dict[str, Any], rooms_by_key):
 
 
 def _npc_dialog_factory(room, params: Dict[str, Any], rooms_by_key):
-    # Minimal support: npc_name and npc_description
+    # Support basic NPC dialog plus optional quest parameters
+    npc_name = params.get("npc_name", "Quest Giver")
+    npc_desc = params.get("npc_description", "is here.")
+
+    quest_cfg = params.get("quest") or None
+    quest_factory = None
+    if isinstance(quest_cfg, dict):
+        # Lazy import inside factory creation to avoid circular imports
+        def _factory():
+            from game.quest import Quest, Objective  # local import
+
+            name = quest_cfg.get("name", "goblin ear")
+            description = quest_cfg.get(
+                "description",
+                "Collect the goblin ear to defeat the goblin foe.",
+            )
+            reward = int(quest_cfg.get("reward", 100))
+            obj = quest_cfg.get("objective") or {}
+            obj_type = obj.get("type", "collect")
+            obj_target = obj.get("target", "goblin ear")
+            obj_value = int(obj.get("value", 1))
+            return Quest(name, description, reward, objective=Objective(obj_type, obj_target, obj_value))
+
+        quest_factory = _factory
+
     return NPCDialogEffect(
         room,
-        npc_name=params.get("npc_name", "Quest Giver"),
-        npc_description=params.get("npc_description", "is here."),
+        npc_name=npc_name,
+        npc_description=npc_desc,
+        quest_factory=quest_factory,
     )
 
 
@@ -57,8 +83,15 @@ def _dark_cave_factory(room, params: Dict[str, Any], rooms_by_key):
     return DarkCaveLightingEffect(room)
 
 
+def _shop_factory(room, params: Dict[str, Any], rooms_by_key):
+    name = params.get("shopkeeper_name", "The Merchant")
+    prices = params.get("prices") or {}
+    return ShopEffect(room, shopkeeper_name=name, prices=prices)
+
+
 # Register built-in keys
 register_effect("locked_door", _locked_door_factory)
 register_effect("torch_table", _torch_factory)
 register_effect("npc_dialog", _npc_dialog_factory)
 register_effect("dark_cave", _dark_cave_factory)
+register_effect("shop", _shop_factory)

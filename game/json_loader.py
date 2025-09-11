@@ -87,7 +87,39 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
             else:
                 room.add_exit(direction, target_room)
 
-    # Fourth pass: effects via registry
+    # Fourth pass: enemies
+    # Expected schema per enemy: {"type": "Goblin", "name": "Goblin", "level": 1, "count": 1, "reward": {item}}
+    from character import enemy as enemy_mod
+    for key, rd in rooms_data.items():
+        room = rooms[key]
+        for ed in rd.get("enemies", []) or []:
+            etype = (ed.get("type") or "").strip()
+            if not etype:
+                raise ValueError("Enemy entry requires 'type'")
+            # Map common lowercase names to class names
+            type_key = etype.lower()
+            cls_name = None
+            if type_key in {"goblin", "troll"}:
+                cls_name = type_key.capitalize()
+            else:
+                # Allow direct class name usage
+                cls_name = etype
+            EnemyClass = getattr(enemy_mod, cls_name, None)
+            if EnemyClass is None:
+                raise ValueError(f"Unknown enemy type: {etype}")
+            count = int(ed.get("count", 1))
+            level = int(ed.get("level", 1))
+            base_name = ed.get("name", cls_name)
+            reward_cfg = ed.get("reward") or None
+            for i in range(count):
+                name = base_name if count == 1 else f"{base_name} {i+1}"
+                foe = EnemyClass(name, level)
+                if isinstance(reward_cfg, dict) and reward_cfg:
+                    foe.reward = _make_item(reward_cfg)
+                # Append to room combatants list
+                room.combatants.append(foe)
+
+    # Fifth pass: effects via registry
     from game.effects.registry import get_effect_factory
     for key, rd in rooms_data.items():
         room = rooms[key]
@@ -100,6 +132,18 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
             effect_instance = factory(room, params, rooms)
             # Room.add_effect performs its own validation
             room.add_effect(effect_instance)
+
+    # Sixth pass: simple NPCs
+    # Schema per npc: {"name": str, "description": str}
+    from game.npc import NPC
+    for key, rd in rooms_data.items():
+        room = rooms[key]
+        for nd in rd.get("npcs", []) or []:
+            n = (nd.get("name") or "").strip()
+            dsc = nd.get("description")
+            if not n or not isinstance(dsc, str) or not dsc.strip():
+                raise ValueError("NPC entries must include non-empty 'name' and 'description'")
+            room.add_npc(NPC(n, dsc))
 
     # Top-level events
     from game.underlings.events import Events as Event

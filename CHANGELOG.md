@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.2.0] - 2025-09-11
+
+Suggested semantic version bump: minor
+
+### Added
+- JSON world loader (game/json_loader.py) with support for:
+  - Items, links (bidirectional with back), room locked state
+  - Effect registry integration via JSON room.effects entries
+  - Enemies declared per-room with type/name/level/count and optional item rewards
+  - Simple per-room NPCs declared via room.npcs[] that appear in descriptions
+  - Top-level events: declare handlers that call room methods (e.g., unlock)
+- Effect registry keys usable from JSON: locked_door, torch_table, npc_dialog, dark_cave, shop
+- Default JSON world (game/worlds/default_world.json) updated to demonstrate enemies, a shop, and NPC dialog
+- README: documentation for JSON world loader usage and schema
+
+### Tests
+- Extended/added tests to validate JSON loader behavior for rooms, links, items, NPCs, and registry-driven effects.
+
+---
+
 ## [0.1.0] - 2025-09-09
 
 Suggested semantic version bump: minor

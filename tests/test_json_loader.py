@@ -70,3 +70,28 @@ def test_loader_validates_required_fields(tmp_path):
 
     with pytest.raises((KeyError, ValueError)):
         load_world_from_path(str(p))
+
+
+
+def test_loader_reads_npcs(tmp_path):
+    data = {
+        "hero": {"name": "JsonHero", "level": 1, "gold": 0},
+        "start_room": "plaza",
+        "rooms": {
+            "plaza": {
+                "name": "Plaza",
+                "description": "A bustling plaza.",
+                "npcs": [
+                    {"name": "Guide", "description": "waves cheerfully."}
+                ],
+            }
+        },
+    }
+    p = tmp_path / "world.json"
+    p.write_text(json.dumps(data))
+
+    rooms, start_name, _ = load_world_from_path(str(p))
+    start = rooms[start_name]
+    text = start.get_description()
+    assert "People here:" in text
+    assert "Guide: waves cheerfully." in text

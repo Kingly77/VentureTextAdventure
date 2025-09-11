@@ -72,6 +72,10 @@
       "items": [
         {"name": "shiny coin", "value": 1, "is_usable": false, "is_consumable": true},
         {"name": "rusty dagger", "value": 5, "is_usable": true, "effect": "DAMAGE", "effect_value": 5, "is_consumable": false}
+      ],
+      "enemies": [
+        {"type": "Goblin", "name": "Goblin Grunt", "level": 1, "count": 1,
+         "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },
     "dungeon_cell_1": {
@@ -80,6 +84,10 @@
       "links": [
         {"dir": "west", "to": "goblins_lair", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_2", "back": "west"}
+      ],
+      "enemies": [
+        {"type": "Goblin", "name": "Goblin Guard 1", "level": 1, "count": 1,
+         "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },
     "dungeon_cell_2": {
@@ -88,6 +96,10 @@
       "links": [
         {"dir": "west", "to": "dungeon_cell_1", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_3", "back": "west"}
+      ],
+      "enemies": [
+        {"type": "Goblin", "name": "Goblin Guard 2", "level": 1, "count": 1,
+         "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },
     "dungeon_cell_3": {
@@ -96,6 +108,10 @@
       "links": [
         {"dir": "west", "to": "dungeon_cell_2", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_4", "back": "west"}
+      ],
+      "enemies": [
+        {"type": "Goblin", "name": "Goblin Guard 3", "level": 1, "count": 1,
+         "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },
     "dungeon_cell_4": {
@@ -104,6 +120,10 @@
       "links": [
         {"dir": "west", "to": "dungeon_cell_3", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_5", "back": "west"}
+      ],
+      "enemies": [
+        {"type": "Goblin", "name": "Goblin Guard 4", "level": 1, "count": 1,
+         "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },
     "dungeon_cell_5": {
@@ -114,11 +134,22 @@
       ],
       "items": [
         {"name": "magic stick", "value": 1, "is_usable": false, "is_consumable": false}
+      ],
+      "enemies": [
+        {"type": "Goblin", "name": "Goblin Guard 5", "level": 1, "count": 1,
+         "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },
     "shack_shop": {
       "name": "Shack Shop",
-      "description": "A small, cozy shack with a large table and chair. There is a large glass door to the east."
+      "description": "A small, cozy shack with a large table and chair. There is a large glass door to the east.",
+      "effects": [
+        {"key": "shop", "params": {"shopkeeper_name": "Maribel Tinkertop"}}
+      ],
+      "items": [
+        {"name": "marble ball", "value": 1, "is_usable": false, "is_consumable": false},
+        {"name": "10 foot pole", "value": 3, "is_usable": false, "is_consumable": false}
+      ]
     },
     "village_square": {
       "name": "Village Square",
