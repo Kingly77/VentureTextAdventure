@@ -1,4 +1,5 @@
 import importlib
+import os
 
 from character.enemy import Goblin
 from character.hero import RpgHero
@@ -315,9 +316,31 @@ def _initialize_game_world() -> tuple[RpgHero, Room]:
     return hero, forest_clearing
 
 
-def setup_game() -> tuple[RpgHero, Room]:
-    """Set up and return the complete game world."""
+def setup_game(json_path: str | None = None) -> tuple[RpgHero, Room]:
+    """Set up and return the complete game world.
+
+    If json_path is provided, build the world from that JSON file instead of the default.
+    If not provided, attempt to load the built-in default JSON world; if unavailable, fall back to code setup.
+    """
     # _import_more()
+    # Use default JSON world if no path provided
+    if not json_path:
+        default_path = os.path.join(os.path.dirname(__file__), "worlds", "default_world.json")
+        if os.path.exists(default_path):
+            json_path = default_path
+
+    if json_path:
+        from game.json_loader import load_world_from_path
+
+        rooms, start_key, hero_cfg = load_world_from_path(json_path)
+        # Build the hero using config with sensible defaults
+        name = hero_cfg.get("name", HERO_NAME)
+        level = int(hero_cfg.get("level", HERO_LEVEL))
+        hero = RpgHero(name, level)
+        hero.gold = int(hero_cfg.get("gold", STARTING_GOLD))
+        # Return the designated start room
+        start_room = rooms[start_key]
+        return hero, start_room
 
     hero, forest_clearing = _initialize_game_world()
     return hero, forest_clearing

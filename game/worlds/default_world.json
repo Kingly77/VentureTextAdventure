@@ -1,0 +1,134 @@
+{
+  "hero": {
+    "name": "Aidan",
+    "level": 1,
+    "gold": 10
+  },
+  "start_room": "forest_clearing",
+  "rooms": {
+    "forest_clearing": {
+      "name": "Forest Clearing",
+      "description": "A peaceful clearing in a dense forest. Sunlight filters through the leaves, and a stone table stands before you.",
+      "links": [
+        {"dir": "north", "to": "dark_cave_entrance", "back": "south"},
+        {"dir": "east", "to": "manor", "back": "west"},
+        {"dir": "south", "to": "shack_shop", "back": "north"},
+        {"dir": "west", "to": "village_square", "back": "east"}
+      ],
+      "effects": [
+        {"key": "torch_table"}
+      ],
+      "items": [
+        {"name": "health potion", "value": 10, "is_usable": true, "effect": "HEAL", "effect_value": 20, "is_consumable": true},
+        {"name": "stick", "value": 1, "is_usable": false, "is_consumable": false},
+        {"name": "marble ball", "value": 1, "is_usable": false, "is_consumable": true}
+      ]
+    },
+    "manor": {
+      "name": "Manor",
+      "description": "A small manor with a large garden. The air is warm and the sun shines brightly.",
+      "links": [
+        {"dir": "north", "to": "foyer", "back": "south"}
+      ],
+      "effects": [
+        {
+          "key": "locked_door",
+          "params": {
+            "door_name": "door",
+            "target": "foyer",
+            "unlock_event": "unlock_foyer",
+            "allow_bash": true
+          }
+        }
+      ],
+      "items": [
+        {"name": "sword", "value": 10, "is_usable": true, "effect": "DAMAGE", "effect_value": 10, "is_consumable": false, "tags": ["weapon"]}
+      ]
+    },
+    "foyer": {
+      "name": "Foyer",
+      "description": "A cozy foyer with a large table and chair. There is a large glass door to the east.",
+      "locked": true
+    },
+    "dark_cave_entrance": {
+      "name": "Dark Cave Entrance",
+      "description": "The air grows cold as you stand at the mouth of a dark, damp cave.",
+      "links": [
+        {"dir": "east", "to": "goblins_lair", "back": "west"}
+      ],
+      "effects": [
+        {"key": "dark_cave"}
+      ],
+      "items": [
+        {"name": "torch", "value": 5, "is_usable": true, "is_consumable": false, "tags": ["fire"]}
+      ]
+    },
+    "goblins_lair": {
+      "name": "Goblin's Lair",
+      "description": "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.",
+      "links": [
+        {"dir": "east", "to": "dungeon_cell_1", "back": "west"}
+      ],
+      "items": [
+        {"name": "shiny coin", "value": 1, "is_usable": false, "is_consumable": true},
+        {"name": "rusty dagger", "value": 5, "is_usable": true, "effect": "DAMAGE", "effect_value": 5, "is_consumable": false}
+      ]
+    },
+    "dungeon_cell_1": {
+      "name": "Goblin Dungeon - Cell 1",
+      "description": "A cramped stone cell with rusted bars. Scratches mark the walls.",
+      "links": [
+        {"dir": "west", "to": "goblins_lair", "back": "east"},
+        {"dir": "east", "to": "dungeon_cell_2", "back": "west"}
+      ]
+    },
+    "dungeon_cell_2": {
+      "name": "Goblin Dungeon - Cell 2",
+      "description": "The damp air smells of mold. You hear faint chittering ahead.",
+      "links": [
+        {"dir": "west", "to": "dungeon_cell_1", "back": "east"},
+        {"dir": "east", "to": "dungeon_cell_3", "back": "west"}
+      ]
+    },
+    "dungeon_cell_3": {
+      "name": "Goblin Dungeon - Cell 3",
+      "description": "Bones crunch underfoot. Shapes flit just out of sight.",
+      "links": [
+        {"dir": "west", "to": "dungeon_cell_2", "back": "east"},
+        {"dir": "east", "to": "dungeon_cell_4", "back": "west"}
+      ]
+    },
+    "dungeon_cell_4": {
+      "name": "Goblin Dungeon - Cell 4",
+      "description": "Water drips from the ceiling into a shallow, murky puddle.",
+      "links": [
+        {"dir": "west", "to": "dungeon_cell_3", "back": "east"},
+        {"dir": "east", "to": "dungeon_cell_5", "back": "west"}
+      ]
+    },
+    "dungeon_cell_5": {
+      "name": "Goblin Dungeon - Cell 5",
+      "description": "A wider chamber lit by a guttering torch. Something watches you.",
+      "links": [
+        {"dir": "west", "to": "dungeon_cell_4", "back": "east"}
+      ],
+      "items": [
+        {"name": "magic stick", "value": 1, "is_usable": false, "is_consumable": false}
+      ]
+    },
+    "shack_shop": {
+      "name": "Shack Shop",
+      "description": "A small, cozy shack with a large table and chair. There is a large glass door to the east."
+    },
+    "village_square": {
+      "name": "Village Square",
+      "description": "A quaint village square with a stone well and a few benches. Villagers pass by, chatting quietly.",
+      "effects": [
+        {"key": "npc_dialog", "params": {"npc_name": "Old Villager", "npc_description": "leans on a walking stick, ready to chat."}}
+      ]
+    }
+  },
+  "events": [
+    {"name": "unlock_foyer", "room": "foyer", "action": "unlock", "one_time": true}
+  ]
+}
