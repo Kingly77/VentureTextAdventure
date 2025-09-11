@@ -74,7 +74,7 @@
         {"name": "rusty dagger", "value": 5, "is_usable": true, "effect": "DAMAGE", "effect_value": 5, "is_consumable": false}
       ],
       "enemies": [
-        {"type": "Goblin", "name": "Goblin Grunt", "level": 1, "count": 1,
+        {"type": "Goblin", "name": "Goblin Grunt", "level": 2, "count": 1,
          "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
       ]
     },

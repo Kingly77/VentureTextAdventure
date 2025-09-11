@@ -6,7 +6,7 @@ from interfaces.interface import Combatant
 class BaseCharacter(Combatant):
     """Base class for all characters in the game."""
 
-    def __init__(self, name: str, level: int, base_health: int, xp_value: int = 0):
+    def __init__(self, name: str, level: int, base_health: int, xp_value: int = 100):
         """Initialize a base character with common attributes.
 
         Args:
@@ -17,9 +17,9 @@ class BaseCharacter(Combatant):
         """
         self.name = name
         self.level = level
-        self.xp_value = xp_value
+        self.xp_value = xp_value * level
         self.components = HoldComponent()
-        self.components.add_component("health", Health(base_health))
+        self.components.add_component("health", Health(int(base_health * level * 1.5)))
         self.components.add_component("inventory", Inventory())
 
     def get_health_component(self) -> Health:

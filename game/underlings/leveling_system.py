@@ -1,12 +1,14 @@
 from character.hero import RpgHero
 from game.underlings.events import Events
 
+
 class LevelingSystem:
     BASE_XP_TO_NEXT_LEVEL = 100
 
     def __init__(self):
+        Events.add_event("xp_gained", self.level_up)
         pass
-    
+
     @staticmethod
     def calculate_xp_to_next_level(level: int) -> int:
         return LevelingSystem.BASE_XP_TO_NEXT_LEVEL + (level * 50)
@@ -24,7 +26,9 @@ class LevelingSystem:
             player.xp -= player.xp_to_next_level
             player.level += 1
             # Recalculate XP required for next level using the system
-            player.xp_to_next_level = LevelingSystem.calculate_xp_to_next_level(player.level)
+            player.xp_to_next_level = LevelingSystem.calculate_xp_to_next_level(
+                player.level
+            )
             # Update derived stats based on new level
             player.get_mana_component().max_mana = (
                 player.BASE_MANA + (player.level - 1) * player.MANA_PER_LEVEL
@@ -35,8 +39,3 @@ class LevelingSystem:
             print(f"{player.name} leveled up to level {player.level}!")
             leveled = True
         return leveled
-
-
-    def setup_events(self):
-        # Register to listen for XP gains; when XP changes we evaluate level ups
-        Events.add_event("xp_gained", self.level_up)

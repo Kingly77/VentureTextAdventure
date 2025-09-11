@@ -7,41 +7,42 @@ from components.inventory import ItemNotFoundError, InsufficientQuantityError
 from game.items import UseItemError, Item
 from game.magic import NoTargetError
 from character.tomes.spell_casting_mix import SpellCastError
+from game.display import display
 
 if typing.TYPE_CHECKING:
     from game.room import Room
 
 
-def handle_inventory_operation(operation_func, *args, **kwargs):
-    """Helper function to handle common inventory operation exceptions.
-
-    Args:
-        operation_func: The inventory operation function to execute
-        *args, **kwargs: Arguments to pass to the operation function
-
-    Returns:
-        The result of the operation function if successful, None if an exception occurred
-
-    Raises:
-        Any exceptions not caught by this handler
-    """
-    try:
-        return operation_func(*args, **kwargs)
-    except ItemNotFoundError as e:
-        logging.error(f"Error: {e}")
-        return None
-    except InsufficientQuantityError as e:
-        logging.error(f"Error: {e}")
-        return None
-    except ValueError as e:
-        logging.error(f"Error: {e}")
-        return None
-    except TypeError as e:
-        logging.error(f"Error adding item: {e}")
-        return None
-    except Exception as e:
-        logging.error(f"Unexpected inventory error: {e}")
-        return None
+# def handle_inventory_operation(operation_func, *args, **kwargs):
+#     """Helper function to handle common inventory operation exceptions.
+#
+#     Args:
+#         operation_func: The inventory operation function to execute
+#         *args, **kwargs: Arguments to pass to the operation function
+#
+#     Returns:
+#         The result of the operation function if successful, None if an exception occurred
+#
+#     Raises:
+#         Any exceptions not caught by this handler
+#     """
+#     try:
+#         return operation_func(*args, **kwargs)
+#     except ItemNotFoundError as e:
+#         logging.error(f"Error: {e}")
+#         return None
+#     except InsufficientQuantityError as e:
+#         logging.error(f"Error: {e}")
+#         return None
+#     except ValueError as e:
+#         logging.error(f"Error: {e}")
+#         return None
+#     except TypeError as e:
+#         logging.error(f"Error adding item: {e}")
+#         return None
+#     except Exception as e:
+#         logging.error(f"Unexpected inventory error: {e}")
+#         return None
 
 
 def handle_spell_cast(hero, spell_name, target):
@@ -83,20 +84,20 @@ def handle_item_use(
                 if "use" in obj.interaction_events:
                     result = obj.try_interact("use", hero, item, room)
                     if result:
-                        print(result)
+                        display.write(result)
                         return True
 
             # Then try generic tag matches
             for obj in room.objects.values():
                 if obj.has_tag("flammable") and item.has_tag("light-source"):
                     obj.change_description("A smoldering pile of ash.")
-                    print(
+                    display.write(
                         "You set fire to the object. It burns with surprising intensity!"
                     )
                     return True
 
             # Fallback: nothing happened
-            print(f"Nothing happens when you use the {item.name} in this room.")
+            display.write(f"Nothing happens when you use the {item.name} in this room.")
             return False
 
         else:
@@ -104,7 +105,7 @@ def handle_item_use(
             return hero.use_item(item.name, target)
 
     except (ItemNotFoundError, UseItemError, ValueError) as e:
-        print(f"Error using item: {e}")
+        display.error(f"Error using item: {e}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        display.error(f"Unexpected error: {e}")
     return False

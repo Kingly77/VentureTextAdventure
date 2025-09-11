@@ -11,6 +11,7 @@ from commands.command import (
     go_command as _go_command,
 )
 from game.util import handle_spell_cast
+from game.display import display
 
 
 class TargetKind(Enum):
@@ -108,7 +109,7 @@ def maybe_gag(pairs: List[Tuple[str, str]]) -> Optional[str]:
 
 
 def _handle_help(req: CommandRequest, ctx: CommandContext):
-    print(ctx.game.registry.help_text())
+    display.write(ctx.game.registry.help_text())
 
 
 def _handle_look(req: CommandRequest, ctx: CommandContext):
@@ -118,27 +119,27 @@ def _handle_look(req: CommandRequest, ctx: CommandContext):
     except Exception:
         desc = str(getattr(ctx.room, "base_description", ""))
     if desc:
-        print(desc)
+        display.write(desc)
 
 
 def _handle_status(req: CommandRequest, ctx: CommandContext):
     hero = ctx.hero
     # Character stats section
-    print("\n📊 Character Status:")
-    print("=" * 40)
+    display.write("\n📊 Character Status:")
+    display.write("=" * 40)
     try:
-        print(
+        display.write(
             f"🧙 {hero.name} | Level {hero.level} | XP: {getattr(hero, 'xp', 0)}/{getattr(hero, 'xp_to_next_level', 0)}"
         )
     except Exception:
         # Fallback if attributes missing
-        print(f"🧙 {getattr(hero, 'name', 'Hero')}")
+        display.write(f"🧙 {getattr(hero, 'name', 'Hero')}")
     if hasattr(hero, 'health') and hasattr(hero, 'max_health'):
-        print(f"❤️  Health: {hero.health}/{hero.max_health}")
+        display.write(f"❤️  Health: {hero.health}/{hero.max_health}")
     if hasattr(hero, 'mana') and hasattr(hero, 'max_mana'):
-        print(f"✨ Mana: {hero.mana}/{hero.max_mana}")
+        display.write(f"✨ Mana: {hero.mana}/{hero.max_mana}")
     if hasattr(hero, 'gold'):
-        print(f"💰 Gold: {hero.gold}")
+        display.write(f"💰 Gold: {hero.gold}")
 
     # Quest log section
     ql = getattr(hero, 'quest_log', None)
@@ -146,24 +147,24 @@ def _handle_status(req: CommandRequest, ctx: CommandContext):
     completed_quests = getattr(ql, 'completed_quests', []) if ql else []
 
     if active_quests or completed_quests:
-        print("\n📜 Quest Log:")
-        print("-" * 40)
+        display.write("\n📜 Quest Log:")
+        display.write("-" * 40)
         if active_quests:
-            print("🔸 Active Quests:")
+            display.write("🔸 Active Quests:")
             for quest in active_quests:
                 try:
-                    print(
+                    display.write(
                         f"  • {quest.name} - {quest.description} ({quest.progress}/{quest.objective.value}) (ID: {quest.id})"
                     )
                 except Exception:
-                    print(f"  • {quest}")
+                    display.write(f"  • {quest}")
         if completed_quests:
-            print("\n🔹 Completed Quests:")
+            display.write("\n🔹 Completed Quests:")
             for quest in completed_quests:
-                print(f"  • {quest}")
+                display.write(f"  • {quest}")
     else:
-        print("\n📜 Quest Log: No quests available")
-    print("=" * 40)
+        display.write("\n📜 Quest Log: No quests available")
+    display.write("=" * 40)
 
 
 def _handle_inventory(req: CommandRequest, ctx: CommandContext):
@@ -172,11 +173,11 @@ def _handle_inventory(req: CommandRequest, ctx: CommandContext):
     items = list(inventory.items.values())
 
     if not items or (len(items) == 1 and items[0].name == "gold"):
-        print("\n📦 Your inventory is empty.")
+        display.write("\n📦 Your inventory is empty.")
         return
 
-    print("\n📦 Inventory:")
-    print("------------------------")
+    display.write("\n📦 Inventory:")
+    display.write("------------------------")
 
     usable_items = []
     equipment = []
@@ -193,30 +194,30 @@ def _handle_inventory(req: CommandRequest, ctx: CommandContext):
             misc_items.append(item)
 
     if usable_items:
-        print("🧪 Usable Items:")
+        display.write("🧪 Usable Items:")
         for item in usable_items:
             effect_text = ""
             if getattr(item.effect_type, "name", "") == "HEAL":
                 effect_text = f" (Heals {item.effect_value})"
             elif getattr(item.effect_type, "name", "") == "DAMAGE":
                 effect_text = f" (Damage {item.effect_value})"
-            print(f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each")
-        print()
+            display.write(f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each")
+        display.write()
 
     if equipment:
-        print("⚔️ Equipment:")
+        display.write("⚔️ Equipment:")
         for item in equipment:
             marker = " [equipped]" if getattr(getattr(hero, "equipped", None), "name", None) == item.name else ""
-            print(f"  • {item.name}{marker} x{item.quantity} - {item.cost} gold each")
-        print()
+            display.write(f"  • {item.name}{marker} x{item.quantity} - {item.cost} gold each")
+        display.write()
 
     if misc_items:
-        print("🔮 Other Items:")
+        display.write("🔮 Other Items:")
         for item in misc_items:
-            print(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
+            display.write(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
 
-    print("------------------------")
-    print(f"💰 Gold: {hero.gold}")
+    display.write("------------------------")
+    display.write(f"💰 Gold: {hero.gold}")
 
 
 def _handle_talk(req: CommandRequest, ctx: CommandContext):
@@ -225,11 +226,11 @@ def _handle_talk(req: CommandRequest, ctx: CommandContext):
         msg = ctx.room.interact("talk", req.arg if req.arg else None, ctx.hero, None, ctx.room)
         if msg is not None:
             if isinstance(msg, str) and msg:
-                print(msg)
+                display.write(msg)
             return
     except Exception:
         pass
-    print("There is no one here to talk to.")
+    display.write("There is no one here to talk to.")
     return
 
 
@@ -248,29 +249,29 @@ def _handle_debug(req: CommandRequest, ctx: CommandContext):
     if arg == "heal":
         if hasattr(hero, 'max_health'):
             hero.health = hero.max_health
-        print(f"{getattr(hero, 'name', 'Hero')} fully healed.")
+        display.write(f"{getattr(hero, 'name', 'Hero')} fully healed.")
     elif arg == "mana":
         if hasattr(hero, 'max_mana'):
             hero.mana = hero.max_mana
-        print(f"{getattr(hero, 'name', 'Hero')} restored mana.")
+        display.write(f"{getattr(hero, 'name', 'Hero')} restored mana.")
     elif arg == "xp":
         if hasattr(hero, 'add_xp'):
             hero.add_xp(100)
-        print("Gained 100 XP.")
+        display.write("Gained 100 XP.")
     elif arg == "gold":
         if hasattr(hero, 'add_gold'):
             hero.add_gold(100)
         elif hasattr(hero, 'gold'):
             hero.gold += 100
-        print("Gained 100 gold.")
+        display.write("Gained 100 gold.")
     elif arg == "hurt":
         if hasattr(hero, 'take_damage'):
             hero.take_damage(10)
         elif hasattr(hero, 'health'):
             hero.health = max(0, hero.health - 10)
-        print(f"{getattr(hero, 'name', 'Hero')} was hurt for 10 HP.")
+        display.write(f"{getattr(hero, 'name', 'Hero')} was hurt for 10 HP.")
     else:
-        print("Unknown debug command. Options: heal, mana, xp,gold")
+        display.write("Unknown debug command. Options: heal, mana, xp,gold")
 
 
 def _handle_take(req: CommandRequest, ctx: CommandContext):
@@ -296,14 +297,14 @@ def _handle_go(req: CommandRequest, ctx: CommandContext):
 
 def _handle_equip(req: CommandRequest, ctx: CommandContext):
     if not req.arg:
-        print("What do you want to equip?")
+        display.write("What do you want to equip?")
         return
     ctx.hero.equip(req.arg)
 
 
 def _handle_isweapon(req: CommandRequest, ctx: CommandContext):
     if not req.arg:
-        print("Check which item? (usage: isweapon <item>)")
+        display.write("Check which item? (usage: isweapon <item>)")
         return
     name = req.arg.strip().lower()
     item = None
@@ -312,9 +313,9 @@ def _handle_isweapon(req: CommandRequest, ctx: CommandContext):
     elif hasattr(ctx.room, "inventory") and ctx.room.inventory.has_component(name):
         item = ctx.room.inventory[name]
     else:
-        print(f"You don't see or have a '{req.arg}'.")
+        display.write(f"You don't see or have a '{req.arg}'.")
         return
-    print(
+    display.write(
         f"Yes, {item.name} is a weapon." if ctx.hero.is_weapon(item) else f"No, {item.name} is not a weapon."
     )
 
@@ -324,7 +325,7 @@ def _handle_attack(req: CommandRequest, ctx: CommandContext):
     hero = ctx.hero
     enemy = game.current_enemy
     if not game.in_combat or enemy is None:
-        print("There's nothing to attack right now.")
+        display.write("There's nothing to attack right now.")
         return
     try:
         hero.attack(enemy, req.arg or None)
@@ -336,9 +337,9 @@ def _handle_attack(req: CommandRequest, ctx: CommandContext):
             if getattr(item, "is_equipment", False)
         ]
         if weapons:
-            print(f"Available weapons: {', '.join(weapons)}")
+            display.write(f"Available weapons: {', '.join(weapons)}")
         else:
-            print(
+            display.write(
                 "No weapons available. Use 'attack' without a weapon to fight bare-handed."
             )
         return

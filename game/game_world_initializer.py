@@ -145,7 +145,11 @@ def _setup_forest_table(forest_clearing: Room) -> None:
 
 def _setup_manor_door(manor: Room, foyer: Room) -> None:
     """Create and configure the manor door with its interactions."""
-    manor.add_effect(LockedDoorEffect(manor, foyer, door_name="door", unlock_event="unlock_foyer", allow_bash=True))
+    manor.add_effect(
+        LockedDoorEffect(
+            manor, foyer, door_name="door", unlock_event="unlock_foyer", allow_bash=True
+        )
+    )
 
 
 def _setup_shop(shack_shop: Room) -> None:
@@ -325,7 +329,9 @@ def setup_game(json_path: str | None = None) -> tuple[RpgHero, Room]:
     # _import_more()
     # Use default JSON world if no path provided
     if not json_path:
-        default_path = os.path.join(os.path.dirname(__file__), "worlds", "default_world.json")
+        default_path = os.path.join(
+            os.path.dirname(__file__), "worlds", "default_world.json"
+        )
         if os.path.exists(default_path):
             json_path = default_path
 
@@ -340,6 +346,9 @@ def setup_game(json_path: str | None = None) -> tuple[RpgHero, Room]:
         hero.gold = int(hero_cfg.get("gold", STARTING_GOLD))
         # Return the designated start room
         start_room = rooms[start_key]
+        QuestingSystem()
+        LevelingSystem()
+
         return hero, start_room
 
     hero, forest_clearing = _initialize_game_world()

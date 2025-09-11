@@ -5,14 +5,15 @@ from commands import engine
 from game.items import Item
 from game.room import Room
 from game.util import handle_item_use
-from game.underlings.inventory_maybe import handle_transfer
+from game.underlings.inventory_maybe import transfer
+from game.display import display
 
 
 def handle_inventory_command(
     action: str, arg: str, hero: "RpgHero", current_room: "Room"
 ):
     if not arg:
-        print(f"What do you want to {action}?")
+        display.write(f"What do you want to {action}?")
         return
     room_inv = current_room.inventory
     hero_inv = hero.inventory
@@ -27,13 +28,13 @@ def handle_inventory_command(
                         return
 
             if room_inv.has_component(arg):
-                moved = handle_transfer(current_room, arg, hero_inv)
+                moved = transfer(current_room, arg, hero_inv)
                 if moved:
-                    print(f"You took the {arg}.")
+                    display.write(f"You took the {arg}.")
                 else:
-                    print(f"You couldn't take the {arg}.")
+                    display.write(f"You couldn't take the {arg}.")
             else:
-                print(f"There is no {arg} here to take.")
+                display.write(f"There is no {arg} here to take.")
 
         elif action == "drop" and hero_has_item:
 
@@ -42,13 +43,13 @@ def handle_inventory_command(
                     return
 
             quantity = 1  # Default to dropping 1
-            moved = handle_transfer(hero_inv, arg, current_room, quantity)
+            moved = transfer(hero_inv, arg, current_room, quantity)
             if moved:
-                print(
+                display.write(
                     f"You dropped the {moved.name} with quantity {moved.quantity} in the {current_room.name}."
                 )
             else:
-                print(f"You couldn't drop the {arg}.")
+                display.write(f"You couldn't drop the {arg}.")
 
         elif action == "examine":
             item: Item = None
@@ -57,25 +58,25 @@ def handle_inventory_command(
             elif room_inv.has_component(arg):
                 item = room_inv[arg]
             else:
-                print(f"There is no {arg} here to examine.")
+                display.write(f"There is no {arg} here to examine.")
                 return
 
-            print(f"You examine the {item.name}:")
-            print(f"  Quantity: {item.quantity}")
-            print(f"  Value: {item.cost} gold")
+            display.write(f"You examine the {item.name}:")
+            display.write(f"  Quantity: {item.quantity}")
+            display.write(f"  Value: {item.cost} gold")
             if item.is_usable:
                 effect_desc = "No effect"
                 if item.effect_type.name == "HEAL":
                     effect_desc = f"Heals for {item.effect_value} health"
                 elif item.effect_type.name == "DAMAGE":
                     effect_desc = f"Deals {item.effect_value} damage"
-                print(f"  Effect: {effect_desc}")
+                display.write(f"  Effect: {effect_desc}")
 
         elif not hero_has_item:
-            print(f"You don't have a {arg} to {action}.")
+            display.write(f"You don't have a {arg} to {action}.")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        display.error(f"An error occurred: {e}")
 
 
 def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None):
@@ -87,11 +88,11 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
     - use [item] on room / in room
     """
     if not arg:
-        print("What do you want to use?")
+        display.write("What do you want to use?")
         return
 
     if not hero or not current_room:
-        print("Invalid game state.")
+        display.write("Invalid game state.")
         return
 
     item_name, target_str = _parse_use_arguments(arg)
@@ -134,29 +135,29 @@ def _find_item_location(item_name: str, hero: RpgHero, current_room: Room) -> st
 def _use_item_on_self(item: Item, item_name: str, hero: RpgHero):
     """Use an item on the hero themselves."""
     if not item.is_usable:
-        print(
+        display.write(
             f"The {item_name} cannot be used on yourself. It may be used on a room instead."
         )
         return
 
     old_health = hero.health
     handle_item_use(hero, item, None, None)
-    print(f"{hero.name} used {item_name} on themselves.")
+    display.write(f"{hero.name} used {item_name} on themselves.")
 
     # Display effect based on what happened
     if hero.health > old_health:
-        print(f"You feel refreshed! Health increased to {hero.health}.")
+        display.write(f"You feel refreshed! Health increased to {hero.health}.")
     elif hero.health < old_health:
-        print(f"Ouch! That hurt. Health decreased to {hero.health}.")
+        display.write(f"Ouch! That hurt. Health decreased to {hero.health}.")
 
 
 def _use_item_on_room(item: Item, hero: RpgHero, current_room: Room):
     """Use an item in the room context."""
     try:
         handle_item_use(hero, item, target=None, room=current_room)
-        print(f"You used the {item.name} in the {current_room.name}.")
+        display.write(f"You used the {item.name} in the {current_room.name}.")
     except ValueError as e:
-        print(f"{e}")
+        display.write(f"{e}")
 
 
 def _use_item_on_object(
@@ -168,13 +169,13 @@ def _use_item_on_object(
     try:
         msg = current_room.interact(vb, target_str, hero, item, current_room)
         if msg is not None:
-            print(msg)
+            display.write(msg)
         else:
             # Fall back to the general item use handler
             handle_item_use(hero, item, target=obj, room=current_room)
-            print(f"You used the {item.name} on the {obj.name}.")
+            display.write(f"You used the {item.name} on the {obj.name}.")
     except Exception as e:
-        print(f"Cannot use {item.name} on {obj.name}: {e}")
+        display.error(f"Cannot use {item.name} on {obj.name}: {e}")
 
 
 def go_command(
@@ -186,34 +187,34 @@ def go_command(
     The function keeps the original behavior from Game._handle_go.
     """
     if game is None or hero is None or current_room is None:
-        print("Invalid game state.")
+        display.write("Invalid game state.")
         return
 
     next_room = current_room.exits_to.get(direction)
     if not next_room:
-        print("You can't go that way.")
+        display.write("You can't go that way.")
         return
 
     if next_room and not next_room.is_locked:
         hero.last_room = game.current_room
         game.current_room = next_room
-        print(f"You go {direction}.")
+        display.write(f"You go {direction}.")
         if hasattr(game.current_room, "on_enter"):
             game.current_room.on_enter(hero)
 
     elif direction == "back":
         if hero.last_room is None:
-            print("You can't go back any further.")
+            display.write("You can't go back any further.")
             return
         temp = game.current_room
         game.current_room = hero.last_room
         hero.last_room = temp
-        print("You go back.")
+        display.write("You go back.")
 
     elif next_room.is_locked:
-        print("The door is locked.")
+        display.write("The door is locked.")
     else:
-        print("You can't go that way.")
+        display.write("You can't go that way.")
 
 
 def _handle_item_usage(
@@ -239,7 +240,7 @@ def _handle_item_usage(
         else:
             item = current_room.inventory[item_name]
     except Exception as e:
-        print(f"Failed to use {item_name}: {e}")
+        display.error(f"Failed to use {item_name}: {e}")
         return
 
     if what is None:
@@ -255,11 +256,11 @@ def _handle_item_usage(
         if source == "hero":
             _use_item_on_self(item, item_name, hero)
         else:
-            print(f"You must take the {item_name} first before using it on yourself.")
+            display.write(f"You must take the {item_name} first before using it on yourself.")
     elif what.kind == TargetKind.ROOM:
         _use_item_on_room(item, hero, current_room)
     elif what.kind == TargetKind.OBJECT:
         # target_str is the normalized object key per parse_use_arg
         _use_item_on_object(item, target_str, hero, current_room, vb="use")
     else:
-        print(f"You don't see '{target_str}' to use the {item_name} on.")
+        display.write(f"You don't see '{target_str}' to use the {item_name} on.")
