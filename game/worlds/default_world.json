@@ -148,7 +148,8 @@
       ],
       "items": [
         {"name": "marble ball", "value": 1, "is_usable": false, "is_consumable": false},
-        {"name": "10 foot pole", "value": 3, "is_usable": false, "is_consumable": false}
+        {"name": "10 foot pole", "value": 3, "is_usable": false, "is_consumable": false},
+        {"name": "Bell", "value": 20, "is_usable": false, "is_consumable": false}
       ]
     },
     "village_square": {

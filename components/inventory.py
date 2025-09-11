@@ -58,7 +58,19 @@ class Inventory:
                 except Exception:
                     pass
         else:
-            self.items[item.name] = item
+            # Store a cloned copy to avoid sharing the same Item instance across inventories
+            cloned = Item(
+                name=item.name,
+                cost=item.cost,
+                is_usable=item.is_usable,
+                effect=item.effect_type,
+                effect_value=item.effect_value,
+                is_consumable=item.is_consumable,
+                is_equipment=getattr(item, "is_equipment", False),
+                tags=set(item.tags or []),
+            )
+            cloned.quantity = item.quantity
+            self.items[item.name] = cloned
 
     def remove_item(self, item_name: str, quantity: int = 1) -> Item:
         """Removes a specified quantity of an item from the inventory.
@@ -100,7 +112,7 @@ class Inventory:
             effect_value=current_item.effect_value,
             is_consumable=current_item.is_consumable,
             is_equipment=current_item.is_equipment if hasattr(current_item, "is_equipment") else False,
-            tags=current_item.tags,
+            tags=set(current_item.tags or []),
         )
         logging.debug(f"{current_item.tags} {removed_item.tags} ")
         removed_item.quantity = quantity
