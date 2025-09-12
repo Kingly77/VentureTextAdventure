@@ -4,10 +4,19 @@ A lightweight Python text-based RPG where you explore rooms, interact with objec
 
 This repository contains the game engine, example content, and a small test suite.
 
-## Overview
-- Command-driven gameplay (type look, take coin, use potion on self, go north, etc.)
-- Modular game systems: inventory, items/effects, rooms/objects, quests, and a simple combat loop
-- Built-in help and a small world to get you started
+If you are new to this codebase, start with docs/GettingStarted.md.
+
+## Features
+- Command-driven gameplay: look, take/drop items, use items on self or objects/NPCs, movement (go north/south/etc.), talk, status, help
+- Modular systems: inventory, items with effects, rooms and interactive objects, quests, simple but extensible combat
+- JSON world loader: define rooms, links, items, effects, enemies, and NPCs entirely in JSON
+- Effect registry: plug room/object behaviors by key (e.g., locked doors, dark caves, NPC dialog, shops, torches)
+- Enemies and combat: basic turn-based combat, enemy definitions with optional rewards
+- Leveling and XP: simple progression system for the hero
+- NPCs and dialog: basic NPC visibility and optional quest hooks via effects
+- Shop support: configurable prices and simple buy/sell loop via an effect
+- Tests included: pytest suite covers commands, parser, items, effects registry, leveling, and more
+- Developer utilities: count lines, generate a Mermaid dependency graph of imports
 
 ## Tech stack
 - Language: Python (CLI application)

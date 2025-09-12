@@ -14,6 +14,7 @@ from components.core_components import Effect, Exp
 from components.inventory import ItemNotFoundError
 from components.inventory_evil_cousin import QuestAwareInventory
 from components.quest_log import QuestLog
+from components.tags import Tags
 from components.wallet import Wallet
 from game.items import Item, UseItemError
 from game.magic import Spell, NoTargetError
@@ -62,6 +63,7 @@ class RpgHero(
         self.components.add_component("quests", QuestLog())
         self.components.add_component("xp", Exp(0, 100))
         self.components.add_component("wallet", Wallet(0))
+        self.components.add_component("tags", Tags(tags={"hero"}))
         self._equipped = Item(
             "fists",
             0,
