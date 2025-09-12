@@ -1,6 +1,3 @@
-import enum
-
-
 class Mana:
     def __init__(self, mana: int):
         self._mana = mana
@@ -184,9 +181,3 @@ class HoldComponent:
         """Returns readable class representation for debugging."""
         components = ", ".join(self._components.keys())
         return f"<HoldComponent with: {components}>"
-
-
-class Effect(enum.Enum):
-    HEAL = 1
-    DAMAGE = 2
-    NONE = 3

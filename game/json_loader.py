@@ -5,7 +5,7 @@ from typing import Dict, Tuple, Any
 
 from game.room import Room
 from game.items import Item
-from components.core_components import Effect
+from game.effects.item_effects.item_effects import Effect
 
 
 def _make_item(d: dict) -> Item:
@@ -90,6 +90,7 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
     # Fourth pass: enemies
     # Expected schema per enemy: {"type": "Goblin", "name": "Goblin", "level": 1, "count": 1, "reward": {item}}
     from character import enemy as enemy_mod
+
     for key, rd in rooms_data.items():
         room = rooms[key]
         for ed in rd.get("enemies", []) or []:
@@ -121,6 +122,7 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
 
     # Fifth pass: effects via registry
     from game.effects.registry import get_effect_factory
+
     for key, rd in rooms_data.items():
         room = rooms[key]
         for eff in rd.get("effects", []) or []:
@@ -136,17 +138,21 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
     # Sixth pass: simple NPCs
     # Schema per npc: {"name": str, "description": str}
     from game.npc import NPC
+
     for key, rd in rooms_data.items():
         room = rooms[key]
         for nd in rd.get("npcs", []) or []:
             n = (nd.get("name") or "").strip()
             dsc = nd.get("description")
             if not n or not isinstance(dsc, str) or not dsc.strip():
-                raise ValueError("NPC entries must include non-empty 'name' and 'description'")
+                raise ValueError(
+                    "NPC entries must include non-empty 'name' and 'description'"
+                )
             room.add_npc(NPC(n, dsc))
 
     # Top-level events
     from game.underlings.events import Events as Event
+
     for ev in data.get("events", []) or []:
         name = ev["name"]
         room_key = ev.get("room")

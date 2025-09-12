@@ -1,4 +1,4 @@
-from components.core_components import Effect
+from game.effects.item_effects.item_effects import ItemEffect, Effect
 from interfaces.interface import CanCast, Combatant
 
 
@@ -35,10 +35,14 @@ class Item(CanCast):  # Inherit from CanCast
         self.quantity = quantity
         self.is_usable = is_usable
         self.effect_type: Effect = effect
-        self.effect_value = effect_value
+        self.effect_value: int = effect_value
         self.is_consumable = is_consumable
         self.is_equipment = is_equipment
         self.tags = set(tags or [])
+        self.effects = {}
+
+    def add_effect(self, effect: Effect, value: ItemEffect):
+        self.effects[effect] = value
 
     def add_tag(self, tag: str):
         self.tags.add(tag)
@@ -48,6 +52,7 @@ class Item(CanCast):  # Inherit from CanCast
 
     def cast(self, target: Combatant):
         """Applies the item's effect to the target."""
+
         if self.effect_type == Effect.HEAL:
             target.heal(self.effect_value)
         elif self.effect_type == Effect.DAMAGE:
@@ -55,6 +60,12 @@ class Item(CanCast):  # Inherit from CanCast
         else:
             print(f"Item {self.name} has no castable effect.")
             raise UseItemError()
+
+        # if self.effect_type not in self.effects:
+        #     print(f"Item {self.name} has no castable effect.")
+        #     raise UseItemError()
+        #
+        # self.effects[self.effect_type].apply(target)
 
     def __iadd__(self, quantity: int):
         self.quantity += quantity

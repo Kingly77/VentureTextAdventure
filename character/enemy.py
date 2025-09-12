@@ -1,6 +1,5 @@
 from character.basecharacter import BaseCharacter
-from character.tomes.enemy_reward import Reward
-from components.core_components import Effect
+from game.effects.item_effects.item_effects import Effect
 from game.items import Item
 from game.magic import Spell
 from interfaces.interface import Combatant

@@ -3,7 +3,7 @@ import os
 
 from character.enemy import Goblin
 from character.hero import RpgHero
-from components.core_components import Effect
+from game.effects.item_effects.item_effects import Effect
 from game.effects.locked_door_effect import LockedDoorEffect
 from game.items import Item
 from game.quest import Quest, Objective

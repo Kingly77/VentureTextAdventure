@@ -5,7 +5,7 @@ from character.hero import RpgHero
 from game.items import Item
 from game.room import Room
 from game.rpg_adventure_game import Game
-from components.core_components import Effect
+from game.effects.item_effects.item_effects import Effect
 import commands.engine as eng
 
 

@@ -10,7 +10,8 @@ from character.tomes import (
     SpellCastingMix,
     ItemUsageMix,
 )
-from components.core_components import Effect, Exp
+from components.core_components import Exp
+from game.effects.item_effects.item_effects import Effect
 from components.inventory import ItemNotFoundError
 from components.inventory_evil_cousin import QuestAwareInventory
 from components.quest_log import QuestLog
