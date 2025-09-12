@@ -5,6 +5,8 @@ from typing import (
     Optional,
     Callable,
 )
+
+from game.display import display
 from game.npc import NPC
 from game.effects.room_effect_base import RoomDiscEffect
 
@@ -24,6 +26,10 @@ class DarkCaveLightingEffect(RoomDiscEffect):
     def __init__(self, room: "Room"):
         super().__init__(room)
         self._is_lit = False  # This effect manages its own lighting state
+
+    def handle_enter(self, hero: "RpgHero"):
+        """Called when the hero enters the cave."""
+        pass
 
     def get_modified_description(self, base_description: str) -> str:
         """

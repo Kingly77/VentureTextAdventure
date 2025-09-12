@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, TYPE_CHECKING
 from character.basecharacter import BaseCharacter
 from character.tomes import (
@@ -16,6 +17,7 @@ from components.quest_log import QuestLog
 from components.wallet import Wallet
 from game.items import Item, UseItemError
 from game.magic import Spell, NoTargetError
+from game.underlings.events import Events
 from interfaces.interface import Combatant
 
 if TYPE_CHECKING:
@@ -43,12 +45,15 @@ class RpgHero(
         """Initialize a hero with default attributes and abilities."""
         # Calculate health based on level
         health = self.BASE_HEALTH + (level - 1) * self.HEALTH_PER_LEVEL
+        self.rooms_vistited = set()
 
         super().__init__(name, level, base_health=health)
         # Cache a quest-aware inventory wrapper to avoid recreating it on each access
         self._inventory_wrapper = QuestAwareInventory(
             self.components["inventory"], self
         )
+
+        Events.add_event("location_entered", self._on_location_entered)
 
         # Hero-specific initialization
 
@@ -57,7 +62,15 @@ class RpgHero(
         self.components.add_component("quests", QuestLog())
         self.components.add_component("xp", Exp(0, 100))
         self.components.add_component("wallet", Wallet(0))
-        self._equipped = Item("fists", 0, True, effect=Effect.DAMAGE, effect_value=5, is_equipment=True, tags=["weapon"])
+        self._equipped = Item(
+            "fists",
+            0,
+            True,
+            effect=Effect.DAMAGE,
+            effect_value=5,
+            is_equipment=True,
+            tags=["weapon"],
+        )
         self.inventory.add_item(self._equipped)
         print(
             f"{self.name} is a level {self.level} hero with {self.xp} XP, "
@@ -66,6 +79,13 @@ class RpgHero(
 
     def __str__(self):
         return f"{self.name} (Level {self.level}, XP {self.xp}, health {self.health}/{self.max_health}, mana {self.mana}/{self.max_mana})"
+
+    def _on_location_entered(self, _, room: "Room"):
+        """Handle the location_entered event by updating the set of rooms visited."""
+        if room in self.rooms_vistited:
+            return
+        logging.info(f"{self.name} has entered {room}")
+        self.rooms_vistited.add(room)
 
     @property
     def equipped(self) -> Item:
@@ -107,7 +127,9 @@ class RpgHero(
     def attack(self, target: Combatant, weapon_name: str | None = None):
         """Attack using the currently equipped weapon. If a weapon name is provided, try to equip it first."""
         if target is None:
-            raise ValueError(f"{self.name} tried to attack, but no target was provided.")
+            raise ValueError(
+                f"{self.name} tried to attack, but no target was provided."
+            )
 
         # If a specific weapon name is given, attempt to equip it (keeps backwards compatibility)
         if weapon_name:

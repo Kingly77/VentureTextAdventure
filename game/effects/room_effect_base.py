@@ -35,6 +35,9 @@ class RoomDiscEffect(ABC):
     def handle_item_use(self, verb: str, item_name: str, user: "Combatant") -> bool:
         return False
 
+    def handle_enter(self, val_hero: "RpgHero"):
+        return False
+
     def handle_interaction(
         self,
         verb: str,

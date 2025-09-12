@@ -4,6 +4,7 @@ from character.hero import RpgHero
 from commands import engine
 from game.items import Item
 from game.room import Room
+from game.underlings.events import Events
 from game.util import handle_item_use
 from game.underlings.inventory_maybe import transfer
 from game.display import display
@@ -198,6 +199,7 @@ def go_command(
     if next_room and not next_room.is_locked:
         hero.last_room = game.current_room
         game.current_room = next_room
+        Events.trigger_event("location_entered", hero, next_room.name)
         display.write(f"You go {direction}.")
         if hasattr(game.current_room, "on_enter"):
             game.current_room.on_enter(hero)
@@ -256,7 +258,9 @@ def _handle_item_usage(
         if source == "hero":
             _use_item_on_self(item, item_name, hero)
         else:
-            display.write(f"You must take the {item_name} first before using it on yourself.")
+            display.write(
+                f"You must take the {item_name} first before using it on yourself."
+            )
     elif what.kind == TargetKind.ROOM:
         _use_item_on_room(item, hero, current_room)
     elif what.kind == TargetKind.OBJECT:

@@ -8,7 +8,7 @@
   "rooms": {
     "forest_clearing": {
       "name": "Forest Clearing",
-      "description": "A peaceful clearing in a dense forest. Sunlight filters through the leaves, and a stone table stands before you.",
+      "description": "A hush clings to this ring of grass where the forest parts. Sunlight pours in dusty shafts, dragonflies stitch lazy circles over wildflowers, and a lichen-cloaked stone table waits like an altar to forgotten picnics.",
       "links": [
         {"dir": "north", "to": "dark_cave_entrance", "back": "south"},
         {"dir": "east", "to": "manor", "back": "west"},
@@ -26,7 +26,7 @@
     },
     "manor": {
       "name": "Manor",
-      "description": "A small manor with a large garden. The air is warm and the sun shines brightly.",
+      "description": "A modest manor crouches behind an overgrown garden, ivy fingering its stone like old script. Wind chimes tinkle somewhere unseen, and the brass door knocker is polished by countless anxious hands.",
       "links": [
         {"dir": "north", "to": "foyer", "back": "south"}
       ],
@@ -47,17 +47,18 @@
     },
     "foyer": {
       "name": "Foyer",
-      "description": "A cozy foyer with a large table and chair. There is a large glass door to the east.",
+      "description": "Dust hangs in sunbeams over a scuffed table and a solitary chair. An oil portrait watches from the wall, and to the east a glass door glimmers like still water.",
       "locked": true
     },
     "dark_cave_entrance": {
       "name": "Dark Cave Entrance",
-      "description": "The air grows cold as you stand at the mouth of a dark, damp cave.",
+      "description": "Your breath turns to mist at the cave’s lip. The smell of wet stone and old iron seeps out in slow, cool waves, and somewhere inside a drip measures time with patient clicks.",
       "links": [
         {"dir": "east", "to": "goblins_lair", "back": "west"}
       ],
       "effects": [
-        {"key": "dark_cave"}
+        {"key": "dark_cave"},
+        {"key": "entry", "params": {"msg": "You enter the dark cave."}}
       ],
       "items": [
         {"name": "torch", "value": 5, "is_usable": true, "is_consumable": false, "tags": ["fire"]}
@@ -65,7 +66,7 @@
     },
     "goblins_lair": {
       "name": "Goblin's Lair",
-      "description": "A small, squalid cave reeking of unwashed goblin. Bones litter the floor.",
+      "description": "A reeking den of tallow smoke and sour ale. Greasy fetishes dangle from the ceiling, bones and gnawed boots strewn like trophies across the dirt.",
       "links": [
         {"dir": "east", "to": "dungeon_cell_1", "back": "west"}
       ],
@@ -80,7 +81,7 @@
     },
     "dungeon_cell_1": {
       "name": "Goblin Dungeon - Cell 1",
-      "description": "A cramped stone cell with rusted bars. Scratches mark the walls.",
+      "description": "A cramped cell of sweating stone. Rust-sick bars weep orange tears, and shallow tally marks bite into the walls in restless rows.",
       "links": [
         {"dir": "west", "to": "goblins_lair", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_2", "back": "west"}
@@ -92,7 +93,7 @@
     },
     "dungeon_cell_2": {
       "name": "Goblin Dungeon - Cell 2",
-      "description": "The damp air smells of mold. You hear faint chittering ahead.",
+      "description": "Mildew breathes from the stones, sweet and stale. Water gathers in a corner with patient plinks, and faint chittering drifts from deeper halls.",
       "links": [
         {"dir": "west", "to": "dungeon_cell_1", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_3", "back": "west"}
@@ -104,7 +105,7 @@
     },
     "dungeon_cell_3": {
       "name": "Goblin Dungeon - Cell 3",
-      "description": "Bones crunch underfoot. Shapes flit just out of sight.",
+      "description": "Splintered bones pop beneath your boots like old twigs. A scurrying shadow retreats just beyond the reach of your gaze.",
       "links": [
         {"dir": "west", "to": "dungeon_cell_2", "back": "east"},
         {"dir": "east", "to": "dungeon_cell_4", "back": "west"}

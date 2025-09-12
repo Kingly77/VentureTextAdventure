@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Callable, Dict, Any
 
+from game.effects.entry_effect import EntryEffect
 from game.effects.locked_door_effect import LockedDoorEffect
 from game.effects.torch_effect import TorchEffect
 from game.effects.room_effects import NPCDialogEffect, DarkCaveLightingEffect
@@ -10,7 +11,9 @@ from game.effects.shop_effect import ShopEffect
 _REGISTRY: Dict[str, Callable] = {}
 
 
-def register_effect(key: str, factory: Callable[["Room", Dict[str, Any], Dict[str, "Room"]], object]):
+def register_effect(
+    key: str, factory: Callable[["Room", Dict[str, Any], Dict[str, "Room"]], object]
+):
     lk = (key or "").strip().lower()
     if not lk:
         raise ValueError("Effect key must be a non-empty string")
@@ -22,6 +25,11 @@ def get_effect_factory(key: str) -> Callable | None:
 
 
 # Built-in effect factories
+
+
+def _entery_effect_factory(room, params: Dict[str, Any], rooms_by_key):
+    return EntryEffect(room, params.get("msg"))
+
 
 def _locked_door_factory(room, params: Dict[str, Any], rooms_by_key):
     target_key = params.get("target")
@@ -67,7 +75,12 @@ def _npc_dialog_factory(room, params: Dict[str, Any], rooms_by_key):
             obj_type = obj.get("type", "collect")
             obj_target = obj.get("target", "goblin ear")
             obj_value = int(obj.get("value", 1))
-            return Quest(name, description, reward, objective=Objective(obj_type, obj_target, obj_value))
+            return Quest(
+                name,
+                description,
+                reward,
+                objective=Objective(obj_type, obj_target, obj_value),
+            )
 
         quest_factory = _factory
 
@@ -95,3 +108,4 @@ register_effect("torch_table", _torch_factory)
 register_effect("npc_dialog", _npc_dialog_factory)
 register_effect("dark_cave", _dark_cave_factory)
 register_effect("shop", _shop_factory)
+register_effect("entry", _entery_effect_factory)

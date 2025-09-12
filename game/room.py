@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict, Optional, TYPE_CHECKING
 from components.core_components import HoldComponent
 from components.inventory import Inventory, ItemNotFoundError
+from game.display import display
 from game.items import Item
 from game.effects.room_effect_base import RoomDiscEffect  # Room effect base (decoupled)
 from game.room_objs import RoomObject
@@ -107,6 +108,15 @@ class Room:
             self.is_locked = False
         else:
             print(f"[{self.name}] The door is already unlocked.")
+
+    def on_enter(self, hero: RpgHero):
+        """Called when the hero enters this room."""
+        handled = False
+        for effect in self.effects:
+            effect.handle_enter(hero)
+
+        if not handled:
+            print(f"[{self.name}] You see nothing special about this room.")
 
     def add_object(self, room_object: RoomObject):
         """Adds an object to this room."""
