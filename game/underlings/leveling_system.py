@@ -6,8 +6,17 @@ class LevelingSystem:
     BASE_XP_TO_NEXT_LEVEL = 100
 
     def __init__(self):
+        # Auto-register by default for backward compatibility
         Events.add_event("xp_gained", self.level_up)
         pass
+
+    def setup_events(self):
+        """Registers the level_up handler on the xp_gained event.
+        Safe to call multiple times; duplicate handlers simply no-op after the first level-up
+        because level_up uses the player's current XP and thresholds.
+        """
+        Events.add_event("xp_gained", self.level_up)
+        return True
 
     @staticmethod
     def calculate_xp_to_next_level(level: int) -> int:

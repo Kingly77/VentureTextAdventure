@@ -8,7 +8,10 @@ class Objective:
     def __init__(self, type_str: str, target: str, value: int):
         self.type = type_str
         self.target = target
-        self.value = value
+        self.value = int(value)
+
+    def __repr__(self):
+        return f"Objective(type='{self.type}', target='{self.target}', value={self.value})"
 
 
 class Quest:
@@ -49,13 +52,17 @@ class Quest:
             item = kwargs.get("item")
             if item and getattr(item, "name", None) == self.objective.target:
                 qty = getattr(item, "quantity", 1) or 1
-                self.progress += int(qty)
+                self.progress = min(
+                    self.objective.value, self.progress + int(qty)
+                )
                 return
 
         # Kill objective
         if self.objective.type == "kill" and event_name == "enemy_killed":
             if kwargs.get("enemy_type") == self.objective.target:
-                self.progress += max(1, int(kwargs.get("count", 1)))
+                self.progress = min(
+                    self.objective.value, self.progress + max(1, int(kwargs.get("count", 1)))
+                )
                 return
 
         # Visit objective
@@ -66,10 +73,28 @@ class Quest:
                 return
 
     def check_item(self, item):
-        return self.objective.type == "collect" and item.name == self.objective.target
+        return (
+            self.objective.type == "collect"
+            and item is not None
+            and getattr(item, "name", None) == self.objective.target
+        )
 
     def check_progress(self):
         return self.progress >= self.objective.value
+
+    @property
+    def is_complete(self) -> bool:
+        return self.check_progress()
+
+    @property
+    def progress_remaining(self) -> int:
+        return max(0, self.objective.value - self.progress)
+
+    @property
+    def progress_fraction(self) -> float:
+        if self.objective.value <= 0:
+            return 1.0
+        return min(1.0, self.progress / float(self.objective.value))
 
     def __str__(self):
         return f"({self.id}) {self.name}: {self.description}"
@@ -78,6 +103,7 @@ class Quest:
         return f"Quest('{self.id}', '{self.name}', '{self.description}', reward={self.reward})"
 
     def complete(self, who: RpgHero):
+        # Collect-type quests consume items when completing
         if self.objective.type == "collect":
             if who.inventory.has_component(self.objective.target):
                 if (
@@ -92,7 +118,47 @@ class Quest:
                     print(
                         f"You earned {self.reward} experience points. XP remaining until next level: {who.xp_to_next_level}"
                     )
-
+                    # Trigger completion event for observers
+                    Events.trigger_event(self.event_name, who)
                     return True
+            return False
+
+        # For non-collect objectives, completing depends purely on tracked progress
+        if self.check_progress():
+            who.add_xp(self.reward)
+            print(f"Quest complete: {self.description}")
+            print(
+                f"You earned {self.reward} experience points. XP remaining until next level: {who.xp_to_next_level}"
+            )
+            Events.trigger_event(self.event_name, who)
+            return True
 
         return False
+
+    # Simple serialization helpers
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "reward": self.reward,
+            "objective": {
+                "type": self.objective.type,
+                "target": self.objective.target,
+                "value": self.objective.value,
+            },
+            "progress": self.progress,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Quest":
+        obj = Objective(
+            data["objective"]["type"], data["objective"]["target"], data["objective"]["value"]
+        )
+        q = Quest(data["name"], data["description"], data["reward"], obj)
+        # Preserve id/progress if provided
+        if "id" in data:
+            q.id = data["id"]
+        q.progress = int(data.get("progress", 0))
+        q.progress = min(q.progress, q.objective.value)
+        return q

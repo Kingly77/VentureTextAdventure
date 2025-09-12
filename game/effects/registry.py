@@ -4,7 +4,8 @@ from typing import Callable, Dict, Any
 from game.effects.entry_effect import EntryEffect
 from game.effects.locked_door_effect import LockedDoorEffect
 from game.effects.torch_effect import TorchEffect
-from game.effects.room_effects import NPCDialogEffect, DarkCaveLightingEffect
+from game.effects.room_effects import DarkCaveLightingEffect
+from game.effects.npc_effect import NPCDialogEffect
 from game.effects.shop_effect import ShopEffect
 
 # Registry maps effect key -> factory(room, params, rooms_by_key) -> effect instance

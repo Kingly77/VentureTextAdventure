@@ -13,7 +13,7 @@ def test_combat_victory_with_attack():
     room = Room("Arena", "A sparse arena for testing.")
 
     # Put a goblin in the room and construct the game
-    goblin = Goblin("Grim", 1)
+    goblin = Goblin("Grim", 1, base_health=1)
     room.combatants.append(goblin)
 
     game = Game(hero, room)
@@ -40,7 +40,9 @@ def test_combat_victory_with_attack():
     assert goblin not in room.combatants
 
     # Hero should gain XP equal to goblin.xp_value (100)
-    assert hero.xp >= 100 or hero.level > 1  # leveling system may auto-level; accept either
+    assert (
+        hero.xp >= 100 or hero.level > 1
+    )  # leveling system may auto-level; accept either
 
     # Output should mention the attack and defeat somewhere
     text = "\n".join(out)

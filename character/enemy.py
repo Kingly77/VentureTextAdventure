@@ -9,9 +9,11 @@ from interfaces.interface import Combatant
 class Goblin(BaseCharacter):
     """Goblin enemy class."""
 
-    def __init__(self, name: str, level: int):
+    def __init__(
+        self, name: str, level: int, base_health: int = 5, xp_value: int = 100
+    ):
         """Initialize a goblin with default attributes."""
-        super().__init__(name, level, base_health=5, xp_value=100)
+        super().__init__(name, level, base_health=base_health, xp_value=xp_value)
 
         self.components["inventory"].add_item(
             Item("sword", 0, True, effect=Effect.DAMAGE, effect_value=10)

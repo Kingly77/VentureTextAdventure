@@ -8,7 +8,8 @@ from game.effects.locked_door_effect import LockedDoorEffect
 from game.items import Item
 from game.quest import Quest, Objective
 from game.room import Room
-from game.effects.room_effects import DarkCaveLightingEffect, NPCDialogEffect
+from game.effects.room_effects import DarkCaveLightingEffect
+from game.effects.npc_effect import NPCDialogEffect
 from game.effects.shop_effect import ShopEffect
 from game.effects.torch_effect import TorchEffect
 from game.underlings.events import Events as Event
