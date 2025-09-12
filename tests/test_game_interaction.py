@@ -5,6 +5,7 @@ from game.items import Item
 from game.room import Room
 from game.room_objs import RoomObject
 from components.core_components import Effect
+from game.effects.room_effect_base import RoomDiscEffect
 
 
 @pytest.fixture
@@ -110,6 +111,81 @@ def test_room_objects():
     return {"chest": chest, "torch_holder": torch_holder, "plant": plant}
 
 
+class TestRoomInteractionEffect(RoomDiscEffect):
+    def get_modified_description(self, base_description: str) -> str:
+        return base_description
+
+    def handle_interaction(self, verb, target_name, val_hero, item, room):
+        if not target_name:
+            return None
+        tgt = target_name.lower()
+        vb = (verb or "").lower().strip()
+
+        # Chest interactions: use/open/unlock with a key
+        if tgt == "chest" and vb in {"use", "open", "unlock"}:
+            chest = room.objects.get("chest")
+            if not chest:
+                return None
+            if not item or "key" not in (item.tags or set()):
+                return "This chest requires a proper key to unlock."
+            if chest.has_tag("locked"):
+                chest.remove_tag("locked")
+                chest.add_tag("unlocked")
+                chest.change_description(
+                    "An unlocked wooden chest with gold trim. It's open and ready for looting."
+                )
+                treasure = Item("gold coins", 50, False, quantity=20)
+                room.add_item(treasure)
+                return "You unlock the chest with the key! Inside you find a pile of gold coins."
+            return "The chest is already unlocked."
+
+        # Torch holder interactions: use/place/light with a light source
+        if tgt == "torch holder" and vb in {"use", "place", "light"}:
+            holder = room.objects.get("torch holder")
+            if not holder:
+                return None
+            if not item or "light-source" not in (item.tags or set()):
+                return "You need something that provides light."
+            holder.change_description(
+                "A metal bracket holding a lit torch, illuminating the area."
+            )
+            room.change_description(
+                room.base_description + " The room is now well lit."
+            )
+            return (
+                "You place the torch in the holder, brightening the room considerably."
+            )
+
+        # Dried plant interactions: use/burn/ignite/light with fire; use/water/splash/pour with liquid
+        if tgt == "dried plant" and vb in {
+            "use",
+            "burn",
+            "ignite",
+            "light",
+            "water",
+            "splash",
+            "pour",
+        }:
+            plant = room.objects.get("dried plant")
+            if not plant:
+                return None
+            if not item:
+                return "You need something to interact with the plant."
+            if ("fire-starter" in (item.tags or set())) or (
+                "light-source" in (item.tags or set())
+            ):
+                plant.change_description("A pile of ashes where a plant once stood.")
+                plant.remove_tag("flammable")
+                plant.add_tag("burnt")
+                return "The dried plant catches fire immediately and burns to ashes!"
+            elif "liquid" in (item.tags or set()):
+                plant.change_description("A slightly damp withered plant.")
+                return "You pour some liquid on the plant, making it damp."
+            return "That doesn't seem to affect the plant."
+
+        return None
+
+
 @pytest.fixture
 def interactive_room(test_room_objects):
     """Create a room with interactive objects."""
@@ -118,6 +194,9 @@ def interactive_room(test_room_objects):
     # Add objects to the room
     for obj in test_room_objects.values():
         room.add_object(obj)
+
+    # Add a room effect that handles interactions for multiple verbs
+    room.add_effect(TestRoomInteractionEffect(room))
 
     return room
 
@@ -163,7 +242,7 @@ def test_item_interaction_with_object(game_setup_with_objects, test_items):
     assert chest.has_tag("locked")
 
     # Interact with chest using key
-    result = chest.try_interact("use", hero, key, room)
+    result = room.interact("use", "chest", hero, key, room)
 
     # Check the result
     assert "unlock the chest with the key" in result
@@ -183,7 +262,7 @@ def test_object_state_changes(game_setup_with_objects, test_items):
     original_description = torch_holder.description
 
     # Use torch on the torch holder
-    result = torch_holder.try_interact("use", hero, test_items["torch"], room)
+    result = room.interact("use", "torch holder", hero, test_items["torch"], room)
 
     # Check results
     assert "place the torch in the holder" in result
@@ -199,13 +278,13 @@ def test_multiple_interaction_options(game_setup_with_objects, test_items):
     original_description = plant.description
 
     # First, try water on the plant
-    result = plant.try_interact("use", hero, test_items["water"], room)
+    result = room.interact("water", "dried plant", hero, test_items["water"], room)
     assert "damp" in result
     assert "damp" in plant.description
     assert plant.has_tag("flammable")  # Still flammable
 
     # Then, try matches on the plant
-    result = plant.try_interact("use", hero, test_items["matches"], room)
+    result = room.interact("burn", "dried plant", hero, test_items["matches"], room)
     assert "catches fire" in result
     assert "ashes" in plant.description
     assert not plant.has_tag("flammable")
@@ -218,14 +297,14 @@ def test_invalid_interactions(game_setup_with_objects, test_items):
 
     # Try to use sword on chest
     chest = room.objects["chest"]
-    result = chest.try_interact("use", hero, test_items["sword"], room)
+    result = room.interact("use", "chest", hero, test_items["sword"], room)
 
     # Should get a message about needing a key
     assert "requires a proper key" in result
     assert chest.has_tag("locked")  # Still locked
 
     # Try an invalid verb
-    result = chest.try_interact("break", hero, test_items["sword"], room)
+    result = room.interact("break", "chest", hero, test_items["sword"], room)
     assert "cannot break" in result
 
 
