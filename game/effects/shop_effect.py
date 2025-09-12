@@ -1,7 +1,7 @@
 from character.hero import RpgHero
 from components.wallet import Wallet
 from game.items import Item
-from game.effects.room_effect_base import RoomDiscEffect
+from interfaces.room_effect_base import RoomDiscEffect
 from game.room import Room
 from game.underlings.inventory_maybe import transfer
 

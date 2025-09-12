@@ -4,7 +4,7 @@ from typing import (
     TYPE_CHECKING,
 )
 
-from game.effects.room_effect_base import RoomDiscEffect
+from interfaces.room_effect_base import RoomDiscEffect
 
 if TYPE_CHECKING:
     from game.room import Room

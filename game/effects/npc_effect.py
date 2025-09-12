@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, Callable
 
 from character.hero import RpgHero
-from game.effects.room_effect_base import RoomDiscEffect
+from interfaces.room_effect_base import RoomDiscEffect
 from game.items import Item
 from game.npc import NPC
 from game.quest import Quest

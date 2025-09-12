@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -18,12 +18,11 @@ class RoomDiscEffect(ABC):
     def __init__(self, room: "Room"):
         self.room = room
 
-    @abstractmethod
     def get_modified_description(self, base_description: str) -> str:
         """
         Returns a description modified by this effect.
         """
-        raise NotImplementedError
+        return base_description
 
     # Optional hooks; default no-op/False
     def handle_take(self, hero: "RpgHero", item_name: str):

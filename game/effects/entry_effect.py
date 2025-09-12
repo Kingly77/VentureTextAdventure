@@ -1,5 +1,5 @@
 from game.display import display
-from game.effects.room_effect_base import RoomDiscEffect
+from interfaces.room_effect_base import RoomDiscEffect
 from game.underlings.events import Events
 
 

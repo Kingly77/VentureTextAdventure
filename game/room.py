@@ -3,9 +3,8 @@ import logging
 from typing import List, Dict, Optional, TYPE_CHECKING
 from components.core_components import HoldComponent
 from components.inventory import Inventory, ItemNotFoundError
-from game.display import display
 from game.items import Item
-from game.effects.room_effect_base import RoomDiscEffect  # Room effect base (decoupled)
+from interfaces.room_effect_base import RoomDiscEffect  # Room effect base (decoupled)
 from game.room_objs import RoomObject
 from interfaces.interface import Combatant  # Import Combatant
 from game.npc import NPC

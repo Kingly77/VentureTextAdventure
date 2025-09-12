@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from game.items import Item
     from game.room import Room
 
-from game.effects.room_effect_base import RoomDiscEffect
+from interfaces.room_effect_base import RoomDiscEffect
 from game.room_objs import RoomObject
 from game.underlings.events import Events, EventNotFoundError
 
@@ -50,8 +50,7 @@ class LockedDoorEffect(RoomDiscEffect):
             or f"A sturdy wooden {self.door_name} with a heavy lock. It doesn't budge."
         )
         self.unlocked_description = (
-            unlocked_description
-            or f"The {self.door_name} stands open, leading onward."
+            unlocked_description or f"The {self.door_name} stands open, leading onward."
         )
 
         self.door = RoomObject(self.door_name, self._current_door_desc())
@@ -68,7 +67,9 @@ class LockedDoorEffect(RoomDiscEffect):
 
     def _current_door_desc(self) -> str:
         return (
-            self.unlocked_description if not self.target_room.is_locked else self.locked_description
+            self.unlocked_description
+            if not self.target_room.is_locked
+            else self.locked_description
         )
 
     # Event callback
@@ -124,7 +125,9 @@ class LockedDoorEffect(RoomDiscEffect):
         # Key-based unlocking
         if self.key_name and iname == self.key_name:
             self._unlock_via_event_or_direct()
-            return f"You unlock the {self.door_name} with the {item.name}. It clicks open."
+            return (
+                f"You unlock the {self.door_name} with the {item.name}. It clicks open."
+            )
 
         # Bash-with-weapon option
         if self.allow_bash and hasattr(item, "has_tag") and item.has_tag("weapon"):
