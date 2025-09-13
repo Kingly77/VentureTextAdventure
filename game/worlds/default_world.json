@@ -139,6 +139,14 @@
       "enemies": [
         {"type": "Goblin", "name": "Goblin Guard 5", "level": 1, "count": 1,
          "reward": {"name": "goblin ear", "value": 1, "is_usable": false, "is_consumable": false}}
+      ],
+      "effects": [
+        {"key": "npc_dialog", "params": {"npc_name": "Bearded Man", "npc_description": "is watching you carefully.","quest":{
+          "name": "Magic stick quest",
+          "description": "Collect the Magic stick.",
+          "reward": 100,
+          "objective": {"type": "collect", "target": "magic stick", "value": 1}
+        }}}
       ]
     },
     "shack_shop": {

@@ -18,6 +18,7 @@ class Item(CanCast):  # Inherit from CanCast
         is_consumable: bool = False,
         is_equipment: bool = False,
         tags=None,
+        effects: dict | None = None,
         **kwargs,
     ):
         if not isinstance(name, str) or not name:
@@ -39,9 +40,14 @@ class Item(CanCast):  # Inherit from CanCast
         self.is_consumable = is_consumable
         self.is_equipment = is_equipment
         self.tags = set(tags or [])
-        self.effects = {}
-        # Only add effect if a concrete ItemEffect is created
-        self.add_effect(make_effect(effect, self, effect_value), effect)
+        # Preserve incoming effects mapping when provided (used for transfers/snapshots)
+        if effects is not None:
+            # Shallow copy to avoid accidental shared mutation of the dict structure
+            self.effects = dict(effects)
+        else:
+            self.effects = {}
+            # Only add effect if a concrete ItemEffect is created
+            self.add_effect(make_effect(effect, self, effect_value), effect)
 
     def add_effect(self, value: ItemEffect, effect: Effect):
         # Ignore None to avoid unusable entries for NONE/unknown effects

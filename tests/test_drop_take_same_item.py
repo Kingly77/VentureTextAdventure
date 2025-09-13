@@ -35,6 +35,7 @@ def _assert_same_item_props(a: Item, b: Item):
     assert a.is_consumable == b.is_consumable
     assert getattr(a, "is_equipment", False) == getattr(b, "is_equipment", False)
     assert set(a.tags or []) == set(b.tags or [])
+    assert a.effects == b.effects
 
 
 def _clone_item(src: Item) -> Item:

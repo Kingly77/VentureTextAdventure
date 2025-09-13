@@ -68,6 +68,7 @@ class Inventory:
                 is_consumable=item.is_consumable,
                 is_equipment=getattr(item, "is_equipment", False),
                 tags=set(item.tags or []),
+                effects=item.effects,
             )
             cloned.quantity = item.quantity
             self.items[item.name] = cloned

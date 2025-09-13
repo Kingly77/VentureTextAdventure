@@ -134,17 +134,17 @@ def _handle_status(req: CommandRequest, ctx: CommandContext):
     except Exception:
         # Fallback if attributes missing
         display.write(f"🧙 {getattr(hero, 'name', 'Hero')}")
-    if hasattr(hero, 'health') and hasattr(hero, 'max_health'):
+    if hasattr(hero, "health") and hasattr(hero, "max_health"):
         display.write(f"❤️  Health: {hero.health}/{hero.max_health}")
-    if hasattr(hero, 'mana') and hasattr(hero, 'max_mana'):
+    if hasattr(hero, "mana") and hasattr(hero, "max_mana"):
         display.write(f"✨ Mana: {hero.mana}/{hero.max_mana}")
-    if hasattr(hero, 'gold'):
+    if hasattr(hero, "gold"):
         display.write(f"💰 Gold: {hero.gold}")
 
     # Quest log section
-    ql = getattr(hero, 'quest_log', None)
-    active_quests = list(getattr(ql, 'active_quests', {}).values()) if ql else []
-    completed_quests = getattr(ql, 'completed_quests', []) if ql else []
+    ql = getattr(hero, "quest_log", None)
+    active_quests = list(getattr(ql, "active_quests", {}).values()) if ql else []
+    completed_quests = getattr(ql, "completed_quests", []) if ql else []
 
     if active_quests or completed_quests:
         display.write("\n📜 Quest Log:")
@@ -201,14 +201,22 @@ def _handle_inventory(req: CommandRequest, ctx: CommandContext):
                 effect_text = f" (Heals {item.effect_value})"
             elif getattr(item.effect_type, "name", "") == "DAMAGE":
                 effect_text = f" (Damage {item.effect_value})"
-            display.write(f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each")
+            display.write(
+                f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each"
+            )
         display.write()
 
     if equipment:
         display.write("⚔️ Equipment:")
         for item in equipment:
-            marker = " [equipped]" if getattr(getattr(hero, "equipped", None), "name", None) == item.name else ""
-            display.write(f"  • {item.name}{marker} x{item.quantity} - {item.cost} gold each")
+            marker = (
+                " [equipped]"
+                if getattr(getattr(hero, "equipped", None), "name", None) == item.name
+                else ""
+            )
+            display.write(
+                f"  • {item.name}{marker} x{item.quantity} - {item.cost} gold each"
+            )
         display.write()
 
     if misc_items:
@@ -223,7 +231,9 @@ def _handle_inventory(req: CommandRequest, ctx: CommandContext):
 def _handle_talk(req: CommandRequest, ctx: CommandContext):
     # Try to let the current room/effects handle the conversation
     try:
-        msg = ctx.room.interact("talk", req.arg if req.arg else None, ctx.hero, None, ctx.room)
+        msg = ctx.room.interact(
+            "talk", req.arg if req.arg else None, ctx.hero, None, ctx.room
+        )
         if msg is not None:
             if isinstance(msg, str) and msg:
                 display.write(msg)
@@ -247,27 +257,27 @@ def _handle_debug(req: CommandRequest, ctx: CommandContext):
     arg = (req.arg or "").strip().lower()
     hero = ctx.hero
     if arg == "heal":
-        if hasattr(hero, 'max_health'):
+        if hasattr(hero, "max_health"):
             hero.health = hero.max_health
         display.write(f"{getattr(hero, 'name', 'Hero')} fully healed.")
     elif arg == "mana":
-        if hasattr(hero, 'max_mana'):
+        if hasattr(hero, "max_mana"):
             hero.mana = hero.max_mana
         display.write(f"{getattr(hero, 'name', 'Hero')} restored mana.")
     elif arg == "xp":
-        if hasattr(hero, 'add_xp'):
+        if hasattr(hero, "add_xp"):
             hero.add_xp(100)
         display.write("Gained 100 XP.")
     elif arg == "gold":
-        if hasattr(hero, 'add_gold'):
+        if hasattr(hero, "add_gold"):
             hero.add_gold(100)
-        elif hasattr(hero, 'gold'):
+        elif hasattr(hero, "gold"):
             hero.gold += 100
         display.write("Gained 100 gold.")
     elif arg == "hurt":
-        if hasattr(hero, 'take_damage'):
+        if hasattr(hero, "take_damage"):
             hero.take_damage(10)
-        elif hasattr(hero, 'health'):
+        elif hasattr(hero, "health"):
             hero.health = max(0, hero.health - 10)
         display.write(f"{getattr(hero, 'name', 'Hero')} was hurt for 10 HP.")
     else:
@@ -316,7 +326,9 @@ def _handle_isweapon(req: CommandRequest, ctx: CommandContext):
         display.write(f"You don't see or have a '{req.arg}'.")
         return
     display.write(
-        f"Yes, {item.name} is a weapon." if ctx.hero.is_weapon(item) else f"No, {item.name} is not a weapon."
+        f"Yes, {item.name} is a weapon."
+        if ctx.hero.is_weapon(item)
+        else f"No, {item.name} is not a weapon."
     )
 
 
