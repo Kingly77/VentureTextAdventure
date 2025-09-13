@@ -64,7 +64,7 @@ class Inventory:
                 cost=item.cost,
                 is_usable=item.is_usable,
                 effect=item.effect_type,
-                effect_value=item.effect_value,
+                # effect_value=item.effect_value,
                 is_consumable=item.is_consumable,
                 is_equipment=getattr(item, "is_equipment", False),
                 tags=set(item.tags or []),
@@ -109,10 +109,15 @@ class Inventory:
             cost=current_item.cost,
             is_usable=current_item.is_usable,
             effect=current_item.effect_type,
-            effect_value=current_item.effect_value,
+            # effect_value=current_item.effect_value,
             is_consumable=current_item.is_consumable,
-            is_equipment=current_item.is_equipment if hasattr(current_item, "is_equipment") else False,
+            is_equipment=(
+                current_item.is_equipment
+                if hasattr(current_item, "is_equipment")
+                else False
+            ),
             tags=set(current_item.tags or []),
+            effects=current_item.effects,
         )
         logging.debug(f"{current_item.tags} {removed_item.tags} ")
         removed_item.quantity = quantity

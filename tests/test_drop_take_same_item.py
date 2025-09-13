@@ -31,7 +31,7 @@ def _assert_same_item_props(a: Item, b: Item):
     assert a.quantity == b.quantity
     assert a.is_usable == b.is_usable
     assert a.effect_type == b.effect_type
-    assert a.effect_value == b.effect_value
+    # assert a.effect_value == b.effect_value
     assert a.is_consumable == b.is_consumable
     assert getattr(a, "is_equipment", False) == getattr(b, "is_equipment", False)
     assert set(a.tags or []) == set(b.tags or [])
@@ -43,11 +43,12 @@ def _clone_item(src: Item) -> Item:
         cost=src.cost,
         is_usable=src.is_usable,
         effect=src.effect_type,
-        effect_value=src.effect_value,
+        # effect_value=src.effect_value,
         is_consumable=src.is_consumable,
         is_equipment=getattr(src, "is_equipment", False),
         tags=set(src.tags or []),
         quantity=src.quantity,
+        effects=src.effects,
     )
 
 

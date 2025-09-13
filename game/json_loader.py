@@ -68,43 +68,41 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
         room.is_locked = bool(rd.get("locked", False))
         rooms[key] = room
 
-    # Second pass: items
-    for key, rd in rooms_data.items():
-        room = rooms[key]
-        for item_d in rd.get("items", []) or []:
-            room.add_item(_make_item(item_d))
+    # Import once for subsequent passes
+    from character import enemy as enemy_mod
+    from game.effects.registry import get_effect_factory
+    from game.npc import NPC
+    from game.underlings.events import Events as Event
 
-    # Third pass: links (bidirectional if back is provided)
+    # Combined subsequent passes in a single traversal to reduce lookups/iterations
     for key, rd in rooms_data.items():
         room = rooms[key]
-        for link in rd.get("links", []) or []:
+
+        # Items
+        add_item = room.add_item
+        for item_d in rd.get("items", ()) or ():
+            add_item(_make_item(item_d))
+
+        # Links (bidirectional if back is provided)
+        add_exit = room.add_exit
+        link_rooms = room.link_rooms
+        for link in rd.get("links", ()) or ():
             direction = link["dir"]
-            target_key = link["to"]
-            target_room = rooms[target_key]
+            target_room = rooms[link["to"]]
             back = link.get("back")
             if back:
-                room.link_rooms(direction, target_room, back)
+                link_rooms(direction, target_room, back)
             else:
-                room.add_exit(direction, target_room)
+                add_exit(direction, target_room)
 
-    # Fourth pass: enemies
-    # Expected schema per enemy: {"type": "Goblin", "name": "Goblin", "level": 1, "count": 1, "reward": {item}}
-    from character import enemy as enemy_mod
-
-    for key, rd in rooms_data.items():
-        room = rooms[key]
-        for ed in rd.get("enemies", []) or []:
+        # Enemies
+        combatants = room.combatants
+        for ed in rd.get("enemies", ()) or ():
             etype = (ed.get("type") or "").strip()
             if not etype:
                 raise ValueError("Enemy entry requires 'type'")
-            # Map common lowercase names to class names
-            type_key = etype.lower()
-            cls_name = None
-            if type_key in {"goblin", "troll"}:
-                cls_name = type_key.capitalize()
-            else:
-                # Allow direct class name usage
-                cls_name = etype
+            tkey = etype.lower()
+            cls_name = tkey.capitalize() if tkey in {"goblin", "troll"} else etype
             EnemyClass = getattr(enemy_mod, cls_name, None)
             if EnemyClass is None:
                 raise ValueError(f"Unknown enemy type: {etype}")
@@ -112,57 +110,48 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
             level = int(ed.get("level", 1))
             base_name = ed.get("name", cls_name)
             reward_cfg = ed.get("reward") or None
+            # Localize for speed
+            make_item = _make_item
             for i in range(count):
                 name = base_name if count == 1 else f"{base_name} {i+1}"
                 foe = EnemyClass(name, level)
                 if isinstance(reward_cfg, dict) and reward_cfg:
-                    foe.reward = _make_item(reward_cfg)
-                # Append to room combatants list
-                room.combatants.append(foe)
+                    foe.reward = make_item(reward_cfg)
+                combatants.append(foe)
 
-    # Fifth pass: effects via registry
-    from game.effects.registry import get_effect_factory
-
-    for key, rd in rooms_data.items():
-        room = rooms[key]
-        for eff in rd.get("effects", []) or []:
+        # Effects via registry
+        add_effect = room.add_effect
+        for eff in rd.get("effects", ()) or ():
             eff_key = eff.get("key")
             params = eff.get("params", {}) or {}
             factory = get_effect_factory(eff_key)
             if factory is None:
                 raise ValueError(f"Unknown effect key: {eff_key}")
             effect_instance = factory(room, params, rooms)
-            # Room.add_effect performs its own validation
-            room.add_effect(effect_instance)
+            add_effect(effect_instance)
 
-    # Sixth pass: simple NPCs
-    # Schema per npc: {"name": str, "description": str}
-    from game.npc import NPC
-
-    for key, rd in rooms_data.items():
-        room = rooms[key]
-        for nd in rd.get("npcs", []) or []:
+        # Simple NPCs
+        add_npc = room.add_npc
+        for nd in rd.get("npcs", ()) or ():
             n = (nd.get("name") or "").strip()
             dsc = nd.get("description")
             if not n or not isinstance(dsc, str) or not dsc.strip():
                 raise ValueError(
                     "NPC entries must include non-empty 'name' and 'description'"
                 )
-            room.add_npc(NPC(n, dsc))
+            add_npc(NPC(n, dsc))
 
     # Top-level events
-    from game.underlings.events import Events as Event
-
-    for ev in data.get("events", []) or []:
+    for ev in data.get("events", ()) or ():
         name = ev["name"]
         room_key = ev.get("room")
         action = ev.get("action")
         one_time = bool(ev.get("one_time", False))
         if room_key is None or action is None:
             raise ValueError("Event entries must include 'room' and 'action'")
-        if room_key not in rooms:
+        handler_room = rooms.get(room_key)
+        if handler_room is None:
             raise ValueError(f"Event room key '{room_key}' not found")
-        handler_room = rooms[room_key]
         handler = getattr(handler_room, action)
         Event.add_event(name, handler, one_time)
 

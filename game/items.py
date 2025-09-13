@@ -1,4 +1,4 @@
-from game.effects.item_effects.item_effects import ItemEffect, Effect
+from game.effects.item_effects.item_effects import ItemEffect, Effect, make_effect
 from interfaces.interface import CanCast, Combatant
 
 
@@ -35,13 +35,18 @@ class Item(CanCast):  # Inherit from CanCast
         self.quantity = quantity
         self.is_usable = is_usable
         self.effect_type: Effect = effect
-        self.effect_value: int = effect_value
+        # self.effect_value: int = effect_value
         self.is_consumable = is_consumable
         self.is_equipment = is_equipment
         self.tags = set(tags or [])
         self.effects = {}
+        # Only add effect if a concrete ItemEffect is created
+        self.add_effect(make_effect(effect, self, effect_value), effect)
 
-    def add_effect(self, effect: Effect, value: ItemEffect):
+    def add_effect(self, value: ItemEffect, effect: Effect):
+        # Ignore None to avoid unusable entries for NONE/unknown effects
+        if value is None:
+            return
         self.effects[effect] = value
 
     def add_tag(self, tag: str):
@@ -53,19 +58,12 @@ class Item(CanCast):  # Inherit from CanCast
     def cast(self, target: Combatant):
         """Applies the item's effect to the target."""
 
-        if self.effect_type == Effect.HEAL:
-            target.heal(self.effect_value)
-        elif self.effect_type == Effect.DAMAGE:
-            target.take_damage(self.effect_value)
-        else:
+        effect_impl = self.effects.get(self.effect_type)
+        if effect_impl is None:
             print(f"Item {self.name} has no castable effect.")
             raise UseItemError()
 
-        # if self.effect_type not in self.effects:
-        #     print(f"Item {self.name} has no castable effect.")
-        #     raise UseItemError()
-        #
-        # self.effects[self.effect_type].apply(target)
+        effect_impl.apply_to(target)
 
     def __iadd__(self, quantity: int):
         self.quantity += quantity
@@ -79,4 +77,4 @@ class Item(CanCast):  # Inherit from CanCast
         return f"{self.name} x{self.quantity}"
 
     def __repr__(self):
-        return f"Item('{self.name}', cost={self.cost}, qty={self.quantity}, usable={self.is_usable}, effect={self.effect_type.name}, value={self.effect_value})"
+        return f"Item('{self.name}', cost={self.cost}, qty={self.quantity}, usable={self.is_usable}, effect={self.effect_type.name})"
