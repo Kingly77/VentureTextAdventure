@@ -56,11 +56,6 @@
       "room_type": "effect",
       "links": [
         {"dir": "west", "to": "manor", "back": "east"}
-      ],
-      "items": [
-        {"name": "health potion", "value": 10, "is_usable": true, "effect": "HEAL", "effect_value": 20, "is_consumable": true},
-        {"name": "stick", "value": 1, "is_usable": false, "is_consumable": false},
-        {"name": "marble ball", "value": 1, "is_usable": false, "is_consumable": true}
       ]
     },
     "dark_cave_entrance": {

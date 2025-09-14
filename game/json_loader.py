@@ -74,12 +74,16 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
         room = None
         room_class_spec = rd.get("room_class") or None
         room_type_spec_raw = rd.get("room_type")
-        room_type_spec = str(room_type_spec_raw).strip() if room_type_spec_raw is not None else ""
+        room_type_spec = (
+            str(room_type_spec_raw).strip() if room_type_spec_raw is not None else ""
+        )
 
         def _resolve_effect_room_class(spec: str):
             # Returns a class object for an EffectRoom subclass given a string spec
             # Supports fully qualified name (e.g., "my.mod.Class") or short name resolved in game.effect_room
-            from game.effect_room import EffectRoom  # local import
+            # EffectRooms go in game.rooms
+            from game.rooms.effect_room import EffectRoom  # local import
+
             if not spec:
                 return None
             spec = str(spec).strip()
@@ -93,7 +97,7 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
                     cls = None
             else:
                 try:
-                    mod = importlib.import_module("game.effect_room")
+                    mod = importlib.import_module("game.rooms.effect_room")
                     cls = getattr(mod, spec, None)
                 except Exception:
                     cls = None
@@ -110,13 +114,21 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
             room = Cls(name, desc)
         else:
             # Case 2: flags for base EffectRoom
-            is_effect_room_flag = bool(rd.get("is_effect_room", False)) or room_type_spec.lower() == "effect"
+            is_effect_room_flag = (
+                bool(rd.get("is_effect_room", False))
+                or room_type_spec.lower() == "effect"
+            )
             if is_effect_room_flag:
-                from game.effect_room import EffectRoom  # local import
+                from game.rooms.effect_room import EffectRoom  # local import
+
                 room = EffectRoom(name, desc)
             else:
                 # Case 3: room_type used as class name
-                if room_type_spec and room_type_spec.lower() not in {"", "effect", "room"}:
+                if room_type_spec and room_type_spec.lower() not in {
+                    "",
+                    "effect",
+                    "room",
+                }:
                     # attempt to resolve as EffectRoom subclass
                     Cls = _resolve_effect_room_class(room_type_spec)
                     room = Cls(name, desc)
