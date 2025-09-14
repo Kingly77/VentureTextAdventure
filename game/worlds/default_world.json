@@ -170,6 +170,6 @@
     }
   },
   "events": [
-    {"name": "unlock_foyer", "room": "foyer", "action": "unlock", "one_time": true}
+    {"name": "unlock_foyer", "room": "foyer","effect":"entry", "action": "unlock", "one_time": true}
   ]
 }
