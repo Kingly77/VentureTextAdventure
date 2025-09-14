@@ -24,8 +24,6 @@ If you are new to this codebase, start with docs/GettingStarted.md.
 - Testing: pytest (+ pytest-cov optional)
 - Formatting: black
 
-> TODO: Confirm the minimum supported Python version. Code uses modern typing and should work on 3.10+, but the exact floor hasn’t been verified.
-
 ## Requirements
 - Python 3.x
 - A virtual environment tool (venv, virtualenv, or similar)
@@ -71,7 +69,7 @@ Two ways to use it:
 
   hero, start_room = setup_game(json_path="/path/to/world.json")
   game = Game(hero, start_room)
-  game.main_game_loop()
+  game.run()
   ```
 
 Schema highlights (top-level keys):
@@ -131,6 +129,11 @@ Type help at any time for a list of commands. Examples:
 - quit — exit the game
 
 ## Scripts and tooling
+- Code formatting with black:
+  ```bash
+  black .            # format in-place
+  black --check .    # verify formatting
+  ```
 - Count Python lines (totals or per-file):
   ```bash
   python tools/count_lines.py . --per-file --relative
@@ -171,7 +174,9 @@ Venture/
 │   ├── items.py, magic.py        # Items, effects, spells
 │   ├── room.py, room_objs.py     # Rooms and interactive objects
 │   ├── effects/                  # Room and object effects (see effects/registry.py for keys)
-│   └── underlings/               # Systems: events, leveling, questing, inventory helpers
+│   ├── underlings/               # Systems: events, leveling, questing, inventory helpers
+|   └── rooms/                    # All subclasses of Room (e.g., Room, EffectRoom, ShopRoom)
+|       ├── effect_room.py        # Base class for effect rooms
 ├── character/                    # Hero and enemies
 ├── commands/engine.py            # Parser, command registry, and handlers
 ├── components/                   # Core components and inventory
@@ -191,4 +196,4 @@ This project is licensed under the Apache License 2.0. See the LICENSE file for 
 
 ## Contributing
 Issues and pull requests are welcome.
-> TODO: Add contribution guidelines and code style rules if needed.
+See CONTRIBUTING.md for guidelines and docs/GettingStarted.md for a tour of the codebase.

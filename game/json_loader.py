@@ -80,27 +80,52 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
 
         def _resolve_effect_room_class(spec: str):
             # Returns a class object for an EffectRoom subclass given a string spec
-            # Supports fully qualified name (e.g., "my.mod.Class") or short name resolved in game.effect_room
-            # EffectRooms go in game.rooms
+            # New rule: assume EffectRoom subclasses live under game.rooms and allow specs like
+            # "garden.garden" meaning module "game.rooms.garden", class "garden" (or "Garden").
+            # Backward compatibility: still accept fully-qualified paths and short names in game.rooms.effect_room.
             from game.rooms.effect_room import EffectRoom  # local import
 
             if not spec:
                 return None
             spec = str(spec).strip()
+
+            def _get_class_from_module(module, cls_name):
+                # try exact name first
+                c = getattr(module, cls_name, None)
+                if c is not None:
+                    return c
+                # try PascalCase variant of class name (e.g., garden -> Garden, dark_forest -> DarkForest)
+                parts = [p for p in cls_name.replace("-", "_").split("_") if p]
+                pascal = "".join(p.capitalize() for p in parts)
+                if pascal:
+                    return getattr(module, pascal, None)
+                return None
+
             cls = None
+
             if "." in spec:
+                # Try as fully-qualified first
                 mod_path, cls_name = spec.rsplit(".", 1)
                 try:
                     mod = importlib.import_module(mod_path)
-                    cls = getattr(mod, cls_name, None)
+                    cls = _get_class_from_module(mod, cls_name)
                 except Exception:
                     cls = None
+                # If not found, assume it's under game.rooms.<module>
+                if cls is None:
+                    try:
+                        mod = importlib.import_module(f"game.rooms.{mod_path}")
+                        cls = _get_class_from_module(mod, cls_name)
+                    except Exception:
+                        cls = None
             else:
+                # No dot: check in the effect_room module for convenience (legacy behavior)
                 try:
                     mod = importlib.import_module("game.rooms.effect_room")
-                    cls = getattr(mod, spec, None)
+                    cls = _get_class_from_module(mod, spec)
                 except Exception:
                     cls = None
+
             if cls is None:
                 raise ValueError(f"Could not resolve EffectRoom subclass '{spec}'")
             # Validate subclass
