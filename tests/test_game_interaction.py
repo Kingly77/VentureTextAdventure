@@ -68,6 +68,9 @@ class RoomInteractionEffectHelper(RoomDiscEffect):
         tgt = target_name.lower()
         vb = (verb or "").lower().strip()
 
+        if vb == "examine" and tgt == "plant":
+            return "You examine the plant, but it's too dry to interact with."
+
         # Chest interactions: use/open/unlock with a key
         if tgt == "chest" and vb in {"use", "open", "unlock"}:
             chest = room.objects.get("chest")

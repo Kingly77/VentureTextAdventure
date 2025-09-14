@@ -55,10 +55,21 @@ def handle_inventory_command(
 
         elif action == "examine":
             item: Item = None
+
+            for effect in current_room.effects:
+                didFind = effect.handle_interaction(
+                    "examine", arg, hero, item, current_room
+                )
+
             if hero_has_item:
                 item = hero_inv[arg]
             elif room_inv.has_component(arg):
                 item = room_inv[arg]
+
+            elif didFind:
+                display.write(didFind)
+                # examined by a room effect
+                return
             else:
                 display.write(f"There is no {arg} here to examine.")
                 return

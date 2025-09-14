@@ -32,6 +32,11 @@ class TorchEffect(RoomDiscEffect):
         item: Optional["Item"],
         room: "Room",
     ) -> Optional[str]:
+
+        if verb == "examine" and target_name == "table":
+
+            return self.forest_table.description
+
         if verb != "use" or target_name != "table":
             return None
 
