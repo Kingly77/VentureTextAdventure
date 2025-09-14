@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import importlib
 from typing import Dict, Tuple, Any
 
 from game.room import Room
@@ -64,7 +65,64 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
         desc = rd.get("description")
         if not name or not desc:
             raise ValueError(f"Room '{key}' must have name and description")
-        room = Room(name, desc)
+
+        # Decide which Room class to instantiate
+        # 1) If 'room_class' provided, resolve it as a subclass of EffectRoom (preferred explicit form)
+        # 2) If 'room_type' == 'effect' or 'is_effect_room': true, use base EffectRoom
+        # 3) If 'room_type' is a non-empty string and not 'effect', try treating it as a class name
+        # 4) Otherwise, use plain Room
+        room = None
+        room_class_spec = rd.get("room_class") or None
+        room_type_spec_raw = rd.get("room_type")
+        room_type_spec = str(room_type_spec_raw).strip() if room_type_spec_raw is not None else ""
+
+        def _resolve_effect_room_class(spec: str):
+            # Returns a class object for an EffectRoom subclass given a string spec
+            # Supports fully qualified name (e.g., "my.mod.Class") or short name resolved in game.effect_room
+            from game.effect_room import EffectRoom  # local import
+            if not spec:
+                return None
+            spec = str(spec).strip()
+            cls = None
+            if "." in spec:
+                mod_path, cls_name = spec.rsplit(".", 1)
+                try:
+                    mod = importlib.import_module(mod_path)
+                    cls = getattr(mod, cls_name, None)
+                except Exception:
+                    cls = None
+            else:
+                try:
+                    mod = importlib.import_module("game.effect_room")
+                    cls = getattr(mod, spec, None)
+                except Exception:
+                    cls = None
+            if cls is None:
+                raise ValueError(f"Could not resolve EffectRoom subclass '{spec}'")
+            # Validate subclass
+            if not issubclass(cls, EffectRoom):
+                raise ValueError(f"Class '{spec}' is not a subclass of EffectRoom")
+            return cls
+
+        # Case 1: explicit room_class
+        if room_class_spec:
+            Cls = _resolve_effect_room_class(room_class_spec)
+            room = Cls(name, desc)
+        else:
+            # Case 2: flags for base EffectRoom
+            is_effect_room_flag = bool(rd.get("is_effect_room", False)) or room_type_spec.lower() == "effect"
+            if is_effect_room_flag:
+                from game.effect_room import EffectRoom  # local import
+                room = EffectRoom(name, desc)
+            else:
+                # Case 3: room_type used as class name
+                if room_type_spec and room_type_spec.lower() not in {"", "effect", "room"}:
+                    # attempt to resolve as EffectRoom subclass
+                    Cls = _resolve_effect_room_class(room_type_spec)
+                    room = Cls(name, desc)
+                else:
+                    room = Room(name, desc)
+
         room.is_locked = bool(rd.get("locked", False))
         rooms[key] = room
 

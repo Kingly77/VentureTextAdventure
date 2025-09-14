@@ -50,6 +50,19 @@
       "description": "Dust hangs in sunbeams over a scuffed table and a solitary chair. An oil portrait watches from the wall, and to the east a glass door glimmers like still water.",
       "locked": true
     },
+    "Garden": {
+      "name": "Garden",
+      "description": "A small garden with a few flowers and a few trees. A few flowers are blooming, and a few trees are growing.",
+      "room_type": "effect",
+      "links": [
+        {"dir": "west", "to": "manor", "back": "east"}
+      ],
+      "items": [
+        {"name": "health potion", "value": 10, "is_usable": true, "effect": "HEAL", "effect_value": 20, "is_consumable": true},
+        {"name": "stick", "value": 1, "is_usable": false, "is_consumable": false},
+        {"name": "marble ball", "value": 1, "is_usable": false, "is_consumable": true}
+      ]
+    },
     "dark_cave_entrance": {
       "name": "Dark Cave Entrance",
       "description": "Your breath turns to mist at the cave’s lip. The smell of wet stone and old iron seeps out in slow, cool waves, and somewhere inside a drip measures time with patient clicks.",
