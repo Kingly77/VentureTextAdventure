@@ -1,8 +1,12 @@
+from __future__ import annotations
+import logging
 from typing import Callable, TYPE_CHECKING
 from interfaces.interface import Combatant, CanCast
 
 if TYPE_CHECKING:
     from character.basecharacter import BaseCharacter
+
+logger = logging.getLogger(__name__)
 
 
 class SpellError(Exception):
@@ -22,7 +26,13 @@ class NoTargetError(SpellError):
 class Spell(CanCast):
     """Represents a magical spell that can be cast on a target."""
 
-    def __init__(self, name: str, cost: int, caster: "BaseCharacter", effect: Callable[[Combatant], None]):
+    def __init__(
+        self,
+        name: str,
+        cost: int,
+        caster: "BaseCharacter",
+        effect: Callable[[Combatant], None],
+    ):
         """Initialize a spell with a name, mana cost, caster, and effect.
 
         Args:
@@ -41,22 +51,24 @@ class Spell(CanCast):
         self.effect = effect
         self.caster = caster
 
-    def cast(self, target: Combatant):
+    def cast(self, target: Combatant) -> None:
         """Casts the spell on the target.
 
         Args:
             target: The target to cast the spell on
 
         Raises:
-            NoTargetError: If no target is provided
+            NoTargetError: If no target is provided,
             Exception: Any exception that might be raised by the effect
         """
         if target is None:
-            print(f"Error: No target provided for {self.name}.")
+            # Keep raising the same domain error, but log instead of printing
+            logger.error("No target provided for %s.", self.name)
             raise NoTargetError(self.name)
 
         try:
             self.effect(target)
         except Exception as e:
-            print(f"Error casting {self.name}: {e}")
+            # Re-raise after logging so upstream handlers can decide
+            logger.exception("Error casting %s: %s", self.name, e)
             raise

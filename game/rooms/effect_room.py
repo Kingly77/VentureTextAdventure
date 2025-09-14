@@ -31,3 +31,18 @@ class EffectRoom(Room, RoomDiscEffect, abc.ABC):
 
     # The RoomDiscEffect base already provides no-op/default implementations for
     # all hooks. Users can override them in subclasses of EffectRoom as needed.
+
+
+class ExampleEffectRoom(EffectRoom):
+    """A simple EffectRoom subclass to be used by JSON loader tests.
+
+    It appends a suffix to the description and recognizes an interaction.
+    """
+
+    def get_modified_description(self, base_description: str) -> str:
+        return base_description + " (An eerie aura lingers here.)"
+
+    def handle_interaction(self, verb: str, target_name: str, val_hero, item, room):
+        if verb == "examine" and target_name == "aura":
+            return "The aura hums softly as you focus on it."
+        return None

@@ -111,7 +111,7 @@ def test_room_objects():
     return {"chest": chest, "torch_holder": torch_holder, "plant": plant}
 
 
-class TestRoomInteractionEffect(RoomDiscEffect):
+class RoomInteractionEffectHelper(RoomDiscEffect):
     def get_modified_description(self, base_description: str) -> str:
         return base_description
 
@@ -196,7 +196,7 @@ def interactive_room(test_room_objects):
         room.add_object(obj)
 
     # Add a room effect that handles interactions for multiple verbs
-    room.add_effect(TestRoomInteractionEffect(room))
+    room.add_effect(RoomInteractionEffectHelper(room))
 
     return room
 
