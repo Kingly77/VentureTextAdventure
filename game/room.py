@@ -207,12 +207,10 @@ class Room:
             if result is not None:
                 return result
 
-        if tgt in self.objects:
-            return self.objects[tgt].try_interact(vb, user, item, room)
-
+        # No effect handled this interaction
         if tgt:
-            print(f"You try to {vb} the {tgt}, but nothing special happens.")
-            return None
+            # Return a clear message indicating the action isn't supported on the target
+            return f"You cannot {vb} the {tgt}."
 
         print(f"You try to {vb}, but nothing special happens.")
         return None

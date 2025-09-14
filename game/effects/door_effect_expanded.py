@@ -36,12 +36,6 @@ class DoorEffectExpanded(RoomDiscEffect):
             True,
         )
 
-        def knock_door(user: "RpgHero", item: "Item", r: "Room", *args) -> str:
-            if item.name == "stick":
-                return "Knock"
-            return ""
-
-        self.door.add_interaction("use", knock_door)
 
     def handle_item_use(self, verb: str, item_name: str, user: "Combatant") -> bool:
         # This effect only responds to object-targeted 'use' via handle_interaction

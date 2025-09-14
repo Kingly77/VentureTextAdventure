@@ -77,24 +77,11 @@ def handle_item_use(
                 room.use_item_in_room(item, hero)
                 return True
 
-            # First try room-object based interactions
-            for obj in room.objects.values():
-                if obj.name != target.name:
-                    continue
-                if "use" in obj.interaction_events:
-                    result = obj.try_interact("use", hero, item, room)
-                    if result:
-                        display.write(result)
-                        return True
-
-            # Then try generic tag matches
-            for obj in room.objects.values():
-                if obj.has_tag("flammable") and item.has_tag("light-source"):
-                    obj.change_description("A smoldering pile of ash.")
-                    display.write(
-                        "You set fire to the object. It burns with surprising intensity!"
-                    )
-                    return True
+            # Delegate targeted interactions to Room effects only
+            msg = room.interact("use", getattr(target, "name", None), hero, item, room)
+            if msg:
+                display.write(msg)
+                return True
 
             # Fallback: nothing happened
             display.write(f"Nothing happens when you use the {item.name} in this room.")

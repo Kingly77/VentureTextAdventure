@@ -38,75 +38,22 @@ def test_items():
 
 @pytest.fixture
 def test_room_objects():
-    """Fixture that creates interactive room objects."""
+    """Fixture that creates room objects (no direct interactions)."""
 
-    # Create a locked chest that can be opened with a key
+    # Create a locked chest
     chest = RoomObject(
         "chest", "A locked wooden chest with gold trim.", tags=["container", "locked"]
     )
 
-    # Create a function to handle using a key on the chest
-    def open_with_key(user, item=None, room=None):
-        if not item or "key" not in item.tags:
-            return "This chest requires a proper key to unlock."
-
-        if "locked" in chest.tags:
-            chest.remove_tag("locked")
-            chest.add_tag("unlocked")
-            chest.change_description(
-                "An unlocked wooden chest with gold trim. It's open and ready for looting."
-            )
-            if room:
-                # Add a reward item to the room when unlocked
-                treasure = Item("gold coins", 50, False, quantity=20)
-                room.add_item(treasure)
-            return "You unlock the chest with the key! Inside you find a pile of gold coins."
-        return "The chest is already unlocked."
-
-    # Register the interaction
-    chest.add_interaction("use", open_with_key)
-
-    # Create a torch holder that can be used with a torch
+    # Create a torch holder
     torch_holder = RoomObject(
         "torch holder", "An empty metal bracket on the wall.", tags=["fixture"]
     )
-
-    def place_torch(user, item=None, room=None):
-        if not item or "light-source" not in item.tags:
-            return "You need something that provides light."
-
-        torch_holder.change_description(
-            "A metal bracket holding a lit torch, illuminating the area."
-        )
-        if room:
-            room.change_description(
-                room.base_description + " The room is now well lit."
-            )
-        return "You place the torch in the holder, brightening the room considerably."
-
-    torch_holder.add_interaction("use", place_torch)
 
     # Create a dried plant that can catch fire
     plant = RoomObject(
         "dried plant", "A withered plant that looks very dry.", tags=["flammable"]
     )
-
-    def burn_plant(user, item=None, room=None):
-        if not item:
-            return "You need something to interact with the plant."
-
-        if "fire-starter" in item.tags or "light-source" in item.tags:
-            plant.change_description("A pile of ashes where a plant once stood.")
-            plant.remove_tag("flammable")
-            plant.add_tag("burnt")
-            return "The dried plant catches fire immediately and burns to ashes!"
-        elif "liquid" in item.tags:
-            plant.change_description("A slightly damp withered plant.")
-            return "You pour some liquid on the plant, making it damp."
-
-        return "That doesn't seem to affect the plant."
-
-    plant.add_interaction("use", burn_plant)
 
     return {"chest": chest, "torch_holder": torch_holder, "plant": plant}
 
