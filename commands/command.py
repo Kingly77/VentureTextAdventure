@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import commands.command_reg
 from character.hero import RpgHero
 from commands import engine
 from game.items import Item
@@ -97,7 +98,9 @@ def use_command(_, arg: str, hero: "RpgHero" = None, current_room: "Room" = None
         return
 
     item_name, target_str = _parse_use_arguments(arg)
-    what: engine.UseTarget = engine.parse_use_arg(arg, hero.name, current_room)
+    what: commands.command_reg.UseTarget = engine.parse_use_arg(
+        arg, hero.name, current_room
+    )
 
     # Decide where the item is and delegate accordingly
     item_location = _find_item_location(item_name, hero, current_room)
@@ -224,7 +227,7 @@ def _handle_item_usage(
     target_str: str | None,
     hero: "RpgHero",
     current_room: "Room",
-    what: engine.UseTarget,
+    what: commands.command_reg.UseTarget,
     source: str,
 ):
     """Unified item usage handler for both hero and room sources.
@@ -233,7 +236,7 @@ def _handle_item_usage(
     - Respects TargetKind from engine.parse_use_arg
     - Preserves behavior that room-sourced items cannot be used on self without taking them first.
     """
-    from .engine import TargetKind
+    from commands.command_reg import TargetKind
 
     # Acquire the item from the appropriate inventory
     try:

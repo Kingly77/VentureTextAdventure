@@ -3,13 +3,11 @@ import logging
 from character.enemy import Goblin
 
 from commands.engine import (
-    CommandRegistry,
-    CommandContext,
-    CommandRequest,
     parse_command_line,
     maybe_gag,
     register_default_commands,
 )
+from commands.command_reg import CommandRegistry, CommandRequest, CommandContext
 
 from game.underlings.inventory_maybe import add_item as inv_add_item
 
@@ -145,7 +143,9 @@ class Game:
 
         # Unknown verb: give room/effects a chance to handle it
         try:
-            msg = self.current_room.interact(action, arg or None, self.hero, None, self.current_room)
+            msg = self.current_room.interact(
+                action, arg or None, self.hero, None, self.current_room
+            )
             if msg is not None:
                 if isinstance(msg, str) and msg:
                     print(msg)

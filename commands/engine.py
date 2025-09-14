@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Callable, Optional, List, Dict, Tuple
+from typing import Optional, List, Tuple
 
 # Import existing command functions to adapt
 from commands.command import (
@@ -10,77 +8,15 @@ from commands.command import (
     use_command as _use_command,
     go_command as _go_command,
 )
+from commands.command_reg import (
+    CommandRegistry,
+    CommandRequest,
+    CommandContext,
+    UseTarget,
+    TargetKind,
+)
 from game.util import handle_spell_cast
 from game.display import display
-
-
-class TargetKind(Enum):
-    NONE = auto()
-    SELF = auto()
-    ROOM = auto()
-    OBJECT = auto()
-
-
-@dataclass
-class UseTarget:
-    kind: TargetKind
-    name: Optional[str] = None  # for OBJECT
-
-
-@dataclass
-class CommandRequest:
-    raw: str
-    action: str  # canonical, e.g., "take"
-    arg: str  # the remainder after action
-    tokens: List[str]  # tokenized arg (lowercased)
-    use_target: Optional[UseTarget] = None
-
-
-@dataclass
-class CommandContext:
-    game: "Game"
-    hero: "RpgHero"
-    room: "Room"
-
-
-@dataclass
-class CommandDef:
-    name: str
-    handler: Callable[[CommandRequest, CommandContext], None]
-    aliases: List[str]
-    help: str
-
-
-class CommandRegistry:
-    def __init__(self):
-        self._commands: Dict[str, CommandDef] = {}
-        self._alias_to_name: Dict[str, str] = {}
-
-    def register(
-        self,
-        name: str,
-        handler: Callable[[CommandRequest, CommandContext], None],
-        help: str,
-        aliases: Optional[List[str]] = None,
-    ):
-        aliases = aliases or []
-        cmd = CommandDef(name=name, handler=handler, aliases=aliases, help=help)
-        self._commands[name] = cmd
-        for a in [name] + aliases:
-            self._alias_to_name[a] = name
-
-    def resolve(self, action: str) -> Optional[CommandDef]:
-        canonical = self._alias_to_name.get(action)
-        if not canonical:
-            return None
-        return self._commands.get(canonical)
-
-    def help_text(self) -> str:
-        lines = ["Available commands:"]
-        for cmd in sorted(self._commands.values(), key=lambda c: c.name):
-            alias_str = f" (aliases: {', '.join(cmd.aliases)})" if cmd.aliases else ""
-            lines.append(f"  {cmd.name}{alias_str} - {cmd.help}")
-        return "\n".join(lines)
 
 
 def parse_command_line(line: str) -> List[Tuple[str, str]]:
@@ -110,6 +46,11 @@ def maybe_gag(pairs: List[Tuple[str, str]]) -> Optional[str]:
 
 def _handle_help(req: CommandRequest, ctx: CommandContext):
     display.write(ctx.game.registry.help_text())
+    # a way to get effects to run on help
+    try:
+        display.write(ctx.room.interact("help", req.arg, ctx.hero, None, ctx.room))
+    except Exception:
+        pass
 
 
 def _handle_look(req: CommandRequest, ctx: CommandContext):

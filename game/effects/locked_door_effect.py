@@ -140,6 +140,17 @@ class LockedDoorEffect(RoomDiscEffect):
         # Otherwise, no special effect
         return None
 
+    def handle_help(self, user: "RpgHero"):
+        key_hint = f" with the '{self.key_name}'" if self.key_name else ""
+        bash_hint = " or bash it with a weapon" if self.allow_bash else ""
+        event_hint = (
+            " (it may also unlock after solving a puzzle)" if self.unlock_event else ""
+        )
+        return (
+            f"- {self.door_name.title()}: Use a key{key_hint}{bash_hint}.{event_hint}\n"
+            f"  Try: look {self.door_name}, open {self.door_name}, use <item> on {self.door_name}"
+        )
+
     def _unlock_via_event_or_direct(self):
         if self.unlock_event:
             try:

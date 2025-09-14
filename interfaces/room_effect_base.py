@@ -37,6 +37,9 @@ class RoomDiscEffect(ABC):
     def handle_enter(self, val_hero: "RpgHero"):
         return False
 
+    def handle_help(self, val_hero: "RpgHero"):
+        return "No help available for this room."
+
     def handle_interaction(
         self,
         verb: str,

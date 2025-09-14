@@ -197,6 +197,11 @@ class Room:
         """
         vb = (verb or "").lower().strip()
         tgt = (target_name or "").lower().strip()
+
+        if vb == "help":
+            for effects in self.effects:
+                return effects.handle_help(user)
+
         for effect in self.effects:
             result = effect.handle_interaction(vb, tgt, user, item, room)
             if result is not None:

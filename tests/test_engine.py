@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
+import commands.command_reg
 import commands.engine as eng
 
 
@@ -26,11 +27,14 @@ def test_parse_command_line_and_gag_basic():
 
 
 def test_command_registry_register_resolve_help():
-    registry = eng.CommandRegistry()
+    registry = commands.command_reg.CommandRegistry()
 
     called = {}
 
-    def handler(req: eng.CommandRequest, ctx: eng.CommandContext):
+    def handler(
+        req: commands.command_reg.CommandRequest,
+        ctx: commands.command_reg.CommandContext,
+    ):
         called["req"] = req
         called["ctx"] = ctx
 
@@ -49,8 +53,12 @@ def test_command_registry_register_resolve_help():
     assert "ping (aliases: pong, p) - Ping command" in help_text
 
     # Execute handler through def
-    ctx = eng.CommandContext(game=MagicMock(), hero=MagicMock(), room=MagicMock())
-    req = eng.CommandRequest(raw="ping server", action="ping", arg="server", tokens=["server"]) 
+    ctx = commands.command_reg.CommandContext(
+        game=MagicMock(), hero=MagicMock(), room=MagicMock()
+    )
+    req = commands.command_reg.CommandRequest(
+        raw="ping server", action="ping", arg="server", tokens=["server"]
+    )
     d0.handler(req, ctx)
     assert called["req"].arg == "server"
     assert called["ctx"].hero is ctx.hero
@@ -61,40 +69,45 @@ def test_parse_use_arg_variants():
     room.objects = {"door": MagicMock()}
     # None target
     ut = eng.parse_use_arg("healing potion", "Hero", room)
-    assert ut.kind == eng.TargetKind.NONE
+    assert ut.kind == commands.command_reg.TargetKind.NONE
     # On self
     ut = eng.parse_use_arg("potion on self", "Hero", room)
-    assert ut.kind == eng.TargetKind.SELF
+    assert ut.kind == commands.command_reg.TargetKind.SELF
     # On hero by name
     ut = eng.parse_use_arg("potion on hero", "Hero", room)
-    assert ut.kind == eng.TargetKind.SELF
+    assert ut.kind == commands.command_reg.TargetKind.SELF
     # In room
     ut = eng.parse_use_arg("torch in room", "Hero", room)
-    assert ut.kind == eng.TargetKind.ROOM
+    assert ut.kind == commands.command_reg.TargetKind.ROOM
     # On object present in room
     ut = eng.parse_use_arg("key on door", "Hero", room)
-    assert ut.kind == eng.TargetKind.OBJECT and ut.name == "door"
+    assert ut.kind == commands.command_reg.TargetKind.OBJECT and ut.name == "door"
     # Unknown target -> NONE
     ut = eng.parse_use_arg("key on statue", "Hero", room)
-    assert ut.kind == eng.TargetKind.NONE
+    assert ut.kind == commands.command_reg.TargetKind.NONE
 
 
 def test_adapters_delegate_to_underlying_functions():
     # Patch underlying functions imported by engine at import time
-    with patch.object(eng, "_handle_inventory_command") as mock_inv, \
-     patch.object(eng, "_use_command") as mock_use, \
-     patch.object(eng, "_go_command") as mock_go:
-        registry = eng.CommandRegistry()
+    with patch.object(eng, "_handle_inventory_command") as mock_inv, patch.object(
+        eng, "_use_command"
+    ) as mock_use, patch.object(eng, "_go_command") as mock_go:
+        registry = commands.command_reg.CommandRegistry()
         dummy_game = MagicMock()
         eng.register_default_commands(registry, dummy_game)
 
         # Build a context and simple request factory
         hero = MagicMock()
         room = MagicMock()
-        ctx = eng.CommandContext(game=dummy_game, hero=hero, room=room)
+        ctx = commands.command_reg.CommandContext(game=dummy_game, hero=hero, room=room)
 
         def make_req(name, arg):
-            return eng.CommandRequest(raw=f"{name} {arg}".strip(), action=name, arg=arg, tokens=arg.split() if arg else [])
+            return commands.command_reg.CommandRequest(
+                raw=f"{name} {arg}".strip(),
+                action=name,
+                arg=arg,
+                tokens=arg.split() if arg else [],
+            )
 
         # take -> inventory handler with action 'take'
         d = registry.resolve("take")
@@ -123,7 +136,7 @@ def test_adapters_delegate_to_underlying_functions():
 
 
 def test_register_default_commands_aliases_present():
-    registry = eng.CommandRegistry()
+    registry = commands.command_reg.CommandRegistry()
     eng.register_default_commands(registry, MagicMock())
 
     # Aliases map to canonical names
