@@ -45,6 +45,21 @@ class ItemEffect(abc.ABC):
         """Apply this effect to the target."""
         ...
 
+    # New: user-facing description for when this effect is used
+    def describe_use(self, actor, target) -> str:
+        """Return a user-facing description of using this effect.
+
+        Default is a generic message; concrete effects can override to
+        provide richer feedback. The actor/target are typically characters
+        with a 'name' attribute.
+        """
+        actor_name = getattr(actor, "name", "Someone")
+        target_name = getattr(target, "name", "the target")
+        item_name = getattr(self.item, "name", "an item")
+        if actor is target:
+            return f"{actor_name} uses {item_name}."
+        return f"{actor_name} uses {item_name} on {target_name}."
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.item!r})"
 
@@ -67,6 +82,14 @@ class ItemAttack(ItemEffect):
                 # Best-effort fallback; ignore if unsupported
                 pass
 
+    def describe_use(self, actor, target) -> str:
+        actor_name = getattr(actor, "name", "Someone")
+        target_name = getattr(target, "name", "the target")
+        item_name = getattr(self.item, "name", "an item")
+        if actor is target:
+            return f"{actor_name} brandishes {item_name} and looks a bit bruised."
+        return f"{actor_name} strikes {target_name} with {item_name}, dealing {self.damage} damage."
+
     def __repr__(self) -> str:
         return f"ItemAttack(damage={self.damage}, item={self.item!r})"
 
@@ -80,11 +103,16 @@ class ItemHealth(ItemEffect):
         amt = max(0, self.amount)
         if hasattr(target, "heal") and callable(getattr(target, "heal")):
             target.heal(amt)
-        elif hasattr(target, "health"):
-            try:
-                target.health += amt
-            except Exception:
-                pass
+        else:
+            # It's better to raise an error than to bypass the intended method.
+            raise TypeError(f"Target {target} does not have a heal method.")
+
+    def describe_use(self, actor, target) -> str:
+        actor_name = getattr(actor, "name", "Someone")
+        item_name = getattr(self.item, "name", "an item")
+        if actor is target:
+            return f"{actor_name} drinks {item_name} and feels rejuvenated."
+        return f"{actor_name} uses {item_name} to restore health to {getattr(target, 'name', 'the target')}."
 
     def __repr__(self) -> str:
         return f"ItemHealth(amount={self.amount}, item={self.item!r})"

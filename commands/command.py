@@ -148,22 +148,22 @@ def _find_item_location(item_name: str, hero: RpgHero, current_room: Room) -> st
 
 
 def _use_item_on_self(item: Item, item_name: str, hero: RpgHero):
-    """Use an item on the hero themselves."""
+    """Use an item on the hero themselves.
+
+    This delegates to the item effects system instead of inferring outcome from health changes.
+    """
     if not item.is_usable:
         display.write(
             f"The {item_name} cannot be used on yourself. It may be used on a room instead."
         )
         return
 
-    old_health = hero.health
-    handle_item_use(hero, item, None, None)
-    display.write(f"{hero.name} used {item_name} on themselves.")
-
-    # Display effect based on what happened
-    if hero.health > old_health:
-        display.write(f"You feel refreshed! Health increased to {hero.health}.")
-    elif hero.health < old_health:
-        display.write(f"Ouch! That hurt. Health decreased to {hero.health}.")
+    try:
+        success = handle_item_use(hero, item, None, None)
+        if success:
+            display.write(f"{hero.name} used {item_name} on themselves.")
+    except Exception as e:
+        display.error(f"Error using {item_name}: {e}")
 
 
 def _use_item_on_room(item: Item, hero: RpgHero, current_room: Room):
@@ -281,4 +281,4 @@ def _handle_item_usage(
         # target_str is the normalized object key per parse_use_arg
         _use_item_on_object(item, target_str, hero, current_room, vb="use")
     else:
-        display.write(f"You don't see '{target_str}' to use the {item_name} on.")
+        display.write(f"What do you want to use {item_name} with?")
