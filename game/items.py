@@ -63,7 +63,6 @@ class Item(CanCast):  # Inherit from CanCast
 
     def cast(self, target: Combatant):
         """Applies the item's effect to the target."""
-
         effect_impl = self.effects.get(self.effect_type)
         if effect_impl is None:
             print(f"Item {self.name} has no castable effect.")
@@ -76,6 +75,8 @@ class Item(CanCast):  # Inherit from CanCast
         return self
 
     def __isub__(self, quantity: int):  # Added for decrementing quantity
+        if quantity > self.quantity:
+            raise ValueError("Cannot subtract more than current quantity")
         self.quantity -= quantity
         return self
 
