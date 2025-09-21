@@ -1,5 +1,8 @@
 from __future__ import annotations
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.room import Room
 
 from game.effects.entry_effect import EntryEffect
 from game.effects.locked_door_effect import LockedDoorEffect
@@ -7,6 +10,7 @@ from game.effects.torch_effect import TorchEffect
 from game.effects.room_effects import DarkCaveLightingEffect
 from game.effects.npc_effect import NPCDialogEffect
 from game.effects.shop_effect import ShopEffect
+from game.effects.smoke_effect import SmokeEffect
 
 # Registry maps effect key -> factory(room, params, rooms_by_key) -> effect instance
 _REGISTRY: Dict[str, Callable] = {}
@@ -103,6 +107,12 @@ def _shop_factory(room, params: Dict[str, Any], rooms_by_key):
     return ShopEffect(room, shopkeeper_name=name, prices=prices)
 
 
+def _smoke_factory(room, params: Dict[str, Any], rooms_by_key):
+    intensity = int(params.get("intensity", 5))
+    persistent = bool(params.get("persistent", True))
+    return SmokeEffect(room, intensity=intensity, persistent=persistent)
+
+
 # Register built-in keys
 register_effect("locked_door", _locked_door_factory)
 register_effect("torch_table", _torch_factory)
@@ -110,3 +120,4 @@ register_effect("npc_dialog", _npc_dialog_factory)
 register_effect("dark_cave", _dark_cave_factory)
 register_effect("shop", _shop_factory)
 register_effect("entry", _entery_effect_factory)
+register_effect("smoke", _smoke_factory)

@@ -16,7 +16,8 @@
         {"dir": "west", "to": "village_square", "back": "east"}
       ],
       "effects": [
-        {"key": "torch_table"}
+        {"key": "torch_table"},
+        {"key": "smoke", "params": {"intensity": 1, "persistent": true}}
       ],
       "items": [
         {"name": "health potion", "value": 10, "is_usable": true, "effect": "HEAL", "effect_value": 20, "is_consumable": true},
