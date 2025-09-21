@@ -32,6 +32,10 @@ class EffectRoom(Room, RoomDiscEffect, abc.ABC):
     # The RoomDiscEffect base already provides no-op/default implementations for
     # all hooks. Users can override them in subclasses of EffectRoom as needed.
 
+    def get_modified_description(self, base_description: str) -> str:
+        """Default passthrough to preserve prior behavior in tests."""
+        return base_description
+
 
 class ExampleEffectRoom(EffectRoom):
     """A simple EffectRoom subclass to be used by JSON loader tests.

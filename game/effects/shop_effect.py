@@ -14,9 +14,9 @@ class ShopEffect(RoomDiscEffect):
         self.prices = prices or {}  # item.name -> price override
 
     def get_modified_description(self, base_description: str) -> str:
-        # Append shop info to room description
+        # Provide only shop info as a fragment; Room will append it.
         items = self.room.inventory.items.values()
-        lines = [f"{base_description}", f"\n{self.shopkeeper_name}'s shop:"]
+        lines = [f"{self.shopkeeper_name}'s shop:"]
         for item in items:
             price = self.get_price(item)
             lines.append(f" - {item.name} ({price}g)")

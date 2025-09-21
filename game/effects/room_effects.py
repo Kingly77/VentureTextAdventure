@@ -25,16 +25,35 @@ class DarkCaveLightingEffect(RoomDiscEffect):
         """Called when the hero enters the cave."""
         pass
 
-    def get_modified_description(self, base_description: str) -> str:
+    def get_new_description(self, base_description: str) -> str | None:
         """
-        Modifies the description based on whether the torch is lit or present.
+        Provide a full replacement description when it's too dark to see or
+        when lighting reveals the original base description.
         """
+        # If no torch is present and it's not lit, override with darkness
+        if not self._is_lit and not self.room.inventory.has_component("torch"):
+            return "It is pitch black here. You can barely see your hand in front of your face."
+
+        # If a torch has been lit, we reveal the base description (no total override)
         if self._is_lit:
-            return "The air is still cold, but the flickering light of the torch reveals a tiny, dusty area around you. Shadows dance at the edges of your vision."
-        elif not self.room.inventory.has_component("torch"):
-            return "The cave entrance is now pitch black. You can barely see your hand in front of your face."
-        else:  # Torch is present but not used/lit
-            return base_description  # Revert to original if not lit but torch is there
+            return base_description
+
+        # Otherwise, keep the base description untouched
+        return None
+
+    def get_modified_description(self, base_description: str) -> str | None:
+        """
+        Add descriptive fragments based on the lighting state.
+        """
+        # Torch lit: add a lighting fragment to enrich the base description
+        if self._is_lit:
+            return (
+                "The air is still cold, but the flickering light of the torch reveals a tiny, "
+                "dusty area around you. Shadows dance at the edges of your vision."
+            )
+
+        # When dark due to no torch, we've already fully overridden via get_new_description
+        return None
 
     def handle_item_use(self, verb: str, item_name: str, user: "Combatant") -> bool:
         """

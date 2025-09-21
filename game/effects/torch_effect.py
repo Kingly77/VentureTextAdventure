@@ -13,7 +13,7 @@ from game.underlings.events import Events
 class TorchEffect(RoomDiscEffect):
 
     def get_modified_description(self, base_description: str) -> str:
-        return base_description
+        return f"There is a fire pit in the center of the room."
 
     def __init__(self, room: "Room"):
         super().__init__(room)

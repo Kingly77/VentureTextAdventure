@@ -80,9 +80,10 @@ class TrapEffect(RoomDiscEffect):
         return False
 
     def get_modified_description(self, base_description: str) -> str:
+        # Return only changes unless we must replace the whole description
         if self.disarmed:
-            return base_description
+            return None
         if self.detected and not self.triggered:
-            return base_description + " You see a trap mechanism here."
+            return "You see a trap mechanism here."
         # If not detected yet, keep things vague
-        return base_description + " There seems to be something dangerous here."
+        return "There seems to be something dangerous here."

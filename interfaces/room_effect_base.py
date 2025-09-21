@@ -18,11 +18,19 @@ class RoomDiscEffect(ABC):
     def __init__(self, room: "Room"):
         self.room = room
 
-    def get_modified_description(self, base_description: str) -> str:
+    def get_new_description(self, base_description: str) -> Optional[str]:
         """
-        Returns a description modified by this effect.
+        Return a full replacement description for the room, or None to keep the base.
+        Implement this when the effect needs to entirely override the room description.
         """
-        return base_description
+        return None
+
+    def get_modified_description(self, base_description: str) -> Optional[str]:
+        """
+        Return a fragment to append to the description, or a full replacement string,
+        or None for no change. Default: no change.
+        """
+        return None
 
     # Optional hooks; default no-op/False
     def handle_take(self, hero: "RpgHero", item_name: str):

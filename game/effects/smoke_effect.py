@@ -39,9 +39,11 @@ class SmokeEffect(RoomDiscEffect):
     def get_modified_description(self, base_description: str) -> str:
         """
         Modifies the room description to include smoke effects.
+        Returns only the change (fragment) unless a full replacement is necessary.
         """
         if self.is_cleared:
-            return base_description
+            # No change to the description when cleared
+            return None
         
         smoke_descriptions = {
             1: "A thin wisp of smoke drifts through the air.",
@@ -57,7 +59,8 @@ class SmokeEffect(RoomDiscEffect):
         }
         
         smoke_desc = smoke_descriptions.get(self.intensity, smoke_descriptions[5])
-        return f"{base_description}\n\n{smoke_desc}"
+        # Return only the smoke description fragment; Room will append it.
+        return smoke_desc
 
     def handle_enter(self, val_hero: "RpgHero"):
         """

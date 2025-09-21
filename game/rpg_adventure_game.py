@@ -51,11 +51,13 @@ class Game:
     def _print_room_info(self):
         """Prints the description and exits of the current room."""
         print(f"\n--- You are in the {self.current_room.name} ---")
-        print(self.current_room.get_description())
+        # Print full description from the Room, including exits
+        # (moved exit rendering into the Room class)
+        if hasattr(self.current_room, "get_full_description"):
+            print(self.current_room.get_full_description())
+        else:
+            print(self.current_room.get_description())
 
-        if self.current_room.exits_to:
-            exits_str = ", ".join(self.current_room.exits_to.keys())
-            print(f"\nExits: {exits_str}")
 
     def _check_for_combat(self):
         """Checks for and initiates combat if enemies are in the room."""

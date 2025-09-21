@@ -64,7 +64,8 @@ class NPCDialogEffect(RoomDiscEffect):
         return self._quest
 
     def get_modified_description(self, base_description: str) -> str:
-        return base_description
+        # NPC presence is already represented via Room.add_npc; no change to base description
+        return None
 
     def handle_interaction(
         self,

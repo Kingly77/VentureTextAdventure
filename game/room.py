@@ -267,8 +267,46 @@ class Room:
         Also includes descriptions of items and objects in the room.
         """
         current_description = self.base_description
+
+        # First, allow any effect to fully replace the description
         for effect in self.effects:
-            current_description = effect.get_modified_description(current_description)
+            try:
+                new_full = effect.get_new_description(current_description)
+            except AttributeError:
+                new_full = None
+            if new_full is not None and isinstance(new_full, str):
+                current_description = new_full
+                # Continue to allow other effects to further replace if desired
+
+        # Then collect additive fragments or replacements from modified descriptions
+        extra_fragments = []  # Collect additive fragments from effects
+        for effect in self.effects:
+            try:
+                modified = effect.get_modified_description(current_description)
+            except TypeError:
+                # Defensive: if effect has older signature or mis-implemented method
+                modified = effect.get_modified_description(current_description)  # best effort
+            except AttributeError:
+                modified = None
+
+            # Treat None as no change
+            if modified is None:
+                continue
+
+            if isinstance(modified, str):
+                if current_description and current_description in modified:
+                    # Effect returned a full replacement that includes current text; adopt it
+                    current_description = modified
+                else:
+                    # Effect likely returned only its own fragment; collect to append later
+                    extra_fragments.append(modified)
+            else:
+                # Unknown return type; ignore to be safe
+                continue
+
+        # Append any collected fragments at the end, separated by blank lines
+        if extra_fragments:
+            current_description = "\n\n".join([current_description] + extra_fragments)
 
         # Add information about items in the room
         items_in_room = self.inventory.items.values()
@@ -298,6 +336,16 @@ class Room:
             npc_list_str = "\n\nPeople here:\n" + "\n".join(npc_descriptions)
 
         return f"{current_description}{item_list_str}{object_list_str}{npc_list_str}"
+
+    def get_full_description(self) -> str:
+        """Returns the full room description, including exits.
+        Keeps get_description focused on room/effects/items/objects/NPCs to preserve tests.
+        """
+        base = self.get_description()
+        if getattr(self, "exits_to", None) and self.exits_to:
+            exits_str = ", ".join(self.exits_to.keys())
+            return f"{base}\n\nExits: {exits_str}"
+        return base
 
     def __str__(self) -> str:
         return f"Room: {self.name}"
