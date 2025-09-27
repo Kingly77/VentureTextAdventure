@@ -1,5 +1,5 @@
 from character.basecharacter import BaseCharacter
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 from game.items import Item
 from game.magic import Spell
 from interfaces.interface import Combatant

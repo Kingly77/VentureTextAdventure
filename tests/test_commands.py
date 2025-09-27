@@ -1,6 +1,6 @@
 import pytest
 from character.hero import RpgHero
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 from game.items import Item
 from game.room import Room
 

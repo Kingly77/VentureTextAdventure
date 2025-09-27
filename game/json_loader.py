@@ -6,7 +6,7 @@ from typing import Dict, Tuple, Any
 
 from game.room import Room
 from game.items import Item
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 
 
 def _make_item(d: dict) -> Item:

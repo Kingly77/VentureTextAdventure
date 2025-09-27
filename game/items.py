@@ -1,4 +1,4 @@
-from game.effects.item_effects.item_effects import ItemEffect, Effect, make_effect
+from game.effects.item_effects.base import ItemEffect, Effect, make_effect
 from interfaces.interface import CanCast, Combatant
 
 

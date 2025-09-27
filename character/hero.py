@@ -16,7 +16,7 @@ from components.inventory_evil_cousin import QuestAwareInventory
 from components.quest_log import QuestLog
 from components.tags import Tags
 from components.wallet import Wallet
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 from game.items import Item, UseItemError
 from game.underlings.events import Events
 from interfaces.interface import Combatant

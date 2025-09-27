@@ -4,7 +4,7 @@ from unittest.mock import patch
 from game.game_world_initializer import setup_game
 from commands.command import use_command
 from game.items import Item
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 
 
 @pytest.fixture
@@ -39,7 +39,8 @@ def test_use_item_on_self_heals_and_consumes(world):
 
         # Verify a usage message was printed by ItemUsageMix
         assert any(
-            "used health potion on" in str(args).lower() for args, _ in mock_print.call_args_list
+            "used health potion on" in str(args).lower()
+            for args, _ in mock_print.call_args_list
         ), "Expected a usage message to be printed"
 
     # Health should have increased by up to 20 (clamped by max health handled in heal)

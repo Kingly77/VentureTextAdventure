@@ -4,7 +4,7 @@ from character.hero import RpgHero
 from game.items import Item
 from game.room import Room
 from game.room_objs import RoomObject
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 from interfaces.room_effect_base import RoomDiscEffect
 
 

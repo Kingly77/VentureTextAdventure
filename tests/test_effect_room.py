@@ -1,9 +1,7 @@
 # tests/test_effect_room.py
 import pytest
+
 from character.hero import RpgHero
-from game.effects.item_effects.item_effects import Effect
-from game.items import Item
-from game.room import Room
 from game.rooms.effect_room import EffectRoom
 from interfaces.room_effect_base import RoomDiscEffect
 

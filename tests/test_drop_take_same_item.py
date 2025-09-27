@@ -1,6 +1,6 @@
 import pytest
 
-from game.effects.item_effects.item_effects import Effect
+from game.effects.item_effects.base import Effect
 from game.items import Item
 from game.room import Room
 from game.rpg_adventure_game import Game
