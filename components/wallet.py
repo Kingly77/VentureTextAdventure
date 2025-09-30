@@ -2,7 +2,8 @@ from game.underlings.events import Events
 
 
 class Wallet:
-    # Python
+    """Wallet class."""
+
     class InsufficientFundsError(ValueError):
         pass
 

@@ -2,6 +2,18 @@ import logging
 from typing import Optional, TYPE_CHECKING, Set
 
 from character.basecharacter import BaseCharacter
+from character.tomes import (
+    ManaMix,
+    XpMix,
+    QuestMix,
+    InventoryViewMix,
+    WalletMix,
+    SpellCastingMix,
+    ItemUsageMix,
+    SpellCastError,
+    SpellNotFoundError,
+    InsufficientManaError,
+)
 from components.core_components import Exp, Mana
 from components.inventory_evil_cousin import QuestAwareInventory
 from components.quest_log import QuestLog
@@ -17,7 +29,16 @@ if TYPE_CHECKING:
     from game.room import Room
 
 
-class RpgHero(BaseCharacter):
+class RpgHero(
+    ManaMix,
+    XpMix,
+    QuestMix,
+    InventoryViewMix,
+    WalletMix,
+    SpellCastingMix,
+    ItemUsageMix,
+    BaseCharacter,
+):
     """
     Hero character class with spells, mana, and inventory.
 
@@ -36,25 +57,6 @@ class RpgHero(BaseCharacter):
     MANA_PER_LEVEL = 2
     HEALTH_PER_LEVEL = 5
 
-    class SpellCastError(Exception):
-        """Base exception for spell casting errors."""
-        pass
-
-    class SpellNotFoundError(SpellCastError):
-        """Raised when attempting to cast a non-existent spell."""
-        def __init__(self, spell_name: str):
-            self.spell_name = spell_name
-            super().__init__(f"Spell '{spell_name}' doesn't exist.")
-
-    class InsufficientManaError(SpellCastError):
-        """Raised when there's not enough mana to cast a spell."""
-        def __init__(self, spell_name: str, cost: int, available: int):
-            self.spell_name = spell_name
-            self.cost = cost
-            self.available = available
-            super().__init__(
-                f"Not enough mana for '{spell_name}'. Required: {cost}, Available: {available}"
-            )
 
     def __init__(self, name: str, level: int):
         """
@@ -110,24 +112,6 @@ class RpgHero(BaseCharacter):
         self.components.add_component("wallet", Wallet(0))
         self.components.add_component("tags", Tags(tags={"hero"}))
 
-        # Mana system
-        base_mana = self.BASE_MANA + (level - 1) * self.MANA_PER_LEVEL
-        self.components.add_component("mana", Mana(base_mana))
-
-        # Starter spells
-        self._initialize_spells()
-
-    def _initialize_spells(self) -> None:
-        """Initialize the hero's starting spells."""
-        self.components.add_component(
-            "fireball",
-            Spell("Fireball", 25, self, lambda target: target.take_damage(25)),
-        )
-        self.components.add_component(
-            "magic_missile",
-            Spell("Magic Missile", 5, self, lambda target: target.take_damage(5)),
-        )
-
     def _initialize_equipment(self) -> None:
         """Initialize the hero's default equipment."""
         self._equipped = Item(
@@ -143,10 +127,6 @@ class RpgHero(BaseCharacter):
 
     # ========== PROPERTIES ==========
 
-    @property
-    def inventory(self) -> QuestAwareInventory:
-        """Get the hero's quest-aware inventory."""
-        return self._inventory_wrapper
 
     @property
     def equipped(self) -> Item:
@@ -154,33 +134,6 @@ class RpgHero(BaseCharacter):
         return self._equipped
 
     # ========== EXPERIENCE SYSTEM ==========
-
-    @property
-    def xp_component(self) -> Exp:
-        """Get the experience component."""
-        return self.components["xp"]
-
-    @property
-    def xp_to_next_level(self) -> int:
-        """Get experience points needed for next level."""
-        return self.xp_component.next_lvl
-
-    @xp_to_next_level.setter
-    def xp_to_next_level(self, value: int) -> None:
-        """Set experience points needed for next level."""
-        self.xp_component.next_lvl = value
-
-    @property
-    def xp(self) -> int:
-        """Get current experience points."""
-        return self.components["xp"].exp
-
-    @xp.setter
-    def xp(self, value: int) -> None:
-        """Set current experience points."""
-        if value < 0:
-            raise ValueError("Experience points cannot be negative")
-        self.components["xp"].exp = value
 
     def add_xp(self, xp: int) -> None:
         """
@@ -196,77 +149,8 @@ class RpgHero(BaseCharacter):
             raise ValueError("Cannot add negative experience points")
         self.xp_component.add_xp(self, xp)
 
-    # ========== MANA SYSTEM ==========
 
-    def get_mana_component(self) -> Mana:
-        """Get the mana component."""
-        return self.components["mana"]
 
-    @property
-    def mana(self) -> int:
-        """Get current mana points."""
-        return self.get_mana_component().mana
-
-    @property
-    def max_mana(self) -> int:
-        """Get maximum mana points."""
-        return self.get_mana_component().max_mana
-
-    # ========== QUEST SYSTEM ==========
-
-    @property
-    def quest_log(self) -> QuestLog:
-        """Get the hero's quest log."""
-        return self.components["quests"]
-
-    # ========== CURRENCY SYSTEM ==========
-
-    @property
-    def wallet(self) -> Wallet:
-        """Get the hero's wallet."""
-        if not self.components.has_component("wallet"):
-            raise ValueError("Hero has no wallet component")
-        return self.components["wallet"]
-
-    @property
-    def gold(self) -> int:
-        """Get current gold amount."""
-        return self.wallet.balance
-
-    @gold.setter
-    def gold(self, value: int) -> None:
-        """Set gold amount directly (use with caution)."""
-        if value < 0:
-            raise ValueError("Gold amount cannot be negative")
-        self.wallet._balance = value
-
-    def add_gold(self, amount: int) -> None:
-        """
-        Add gold to the hero's wallet.
-
-        Args:
-            amount: Amount of gold to add
-
-        Raises:
-            ValueError: If amount is negative
-        """
-        if amount < 0:
-            raise ValueError("Cannot add negative gold")
-        self.wallet.add(amount)
-
-    def spend_gold(self, amount: int) -> None:
-        """
-        Spend gold from the hero's wallet.
-
-        Args:
-            amount: Amount of gold to spend
-
-        Raises:
-            ValueError: If amount is negative or exceeds available gold
-        """
-        if amount < 0:
-            raise ValueError("Cannot spend negative gold")
-        self.wallet.spend(amount)
 
     # ========== UTILITY METHODS ==========
 
@@ -307,108 +191,7 @@ class RpgHero(BaseCharacter):
         logging.info(f"{self.name} has entered {room}")
         self.rooms_visited.add(room)
 
-    # ========== ITEM USAGE ==========
 
-    def use_item(self, item_name: str, target: Optional[Combatant] = None) -> bool:
-        """
-        Use an item from inventory on a target.
-
-        Args:
-            item_name: Name of the item to use
-            target: Target to use the item on (defaults to self)
-
-        Returns:
-            True if item was used successfully
-
-        Raises:
-            TypeError: If item_name is not a string
-            ItemNotFoundError: If item is not in inventory
-            UseItemError: If item cannot be used
-        """
-        from components.inventory import ItemNotFoundError
-
-        if not isinstance(item_name, str):
-            raise TypeError("Item name must be string")
-
-        key = self._normalize_name(item_name)
-        try:
-            item = self.inventory[key]
-        except ItemNotFoundError:
-            raise
-
-        if not item.is_usable:
-            print(f"{item_name} cannot be used.")
-            raise UseItemError()
-
-        if target is None:
-            target = self
-
-        try:
-            item.cast(target)
-            print(f"{self.name} used {item_name} on {getattr(target, 'name', 'self')}.")
-            if item.is_consumable:
-                self.inventory.remove_item(key, 1)
-            return True
-        except Exception as e:
-            print(f"Error using {item_name}: {e}")
-            raise
-
-    # ========== SPELL CASTING ==========
-
-    def get_spell(self, spell_name: str) -> Optional[Spell]:
-        """
-        Get a spell by name.
-
-        Args:
-            spell_name: Name of the spell to retrieve
-
-        Returns:
-            The spell component if found, None otherwise
-        """
-        key = self._normalize_name(spell_name)
-        if self.components.has_component(key):
-            component = self.components[key]
-            if isinstance(component, Spell):
-                return component
-        return None
-
-    def cast_spell(self, spell_name: str, target: Combatant) -> bool:
-        """
-        Cast a spell on a target.
-
-        Args:
-            spell_name: Name of the spell to cast
-            target: Target to cast the spell on
-
-        Returns:
-            True if spell was cast successfully
-
-        Raises:
-            SpellNotFoundError: If spell doesn't exist
-            InsufficientManaError: If not enough mana
-            NoTargetError: If target is invalid
-        """
-        spell = self.get_spell(spell_name)
-        if not spell:
-            print(f"Spell '{spell_name}' doesn't exist.")
-            raise RpgHero.SpellNotFoundError(spell_name)
-
-        mana_component = self.get_mana_component()
-        current_mana = mana_component.mana
-        if current_mana < spell.cost:
-            print(f"Not enough mana for '{spell_name}'.")
-            raise RpgHero.InsufficientManaError(spell_name, spell.cost, current_mana)
-
-        try:
-            spell.cast(target)
-            mana_component.consume(spell.cost)
-            return True
-        except NoTargetError as e:
-            print(f"Failed to cast {spell_name}: {e}")
-            raise
-        except Exception as e:
-            print(f"Error occurred while casting {spell_name}: {e}")
-            raise
 
     # ========== COMBAT SYSTEM ==========
 
