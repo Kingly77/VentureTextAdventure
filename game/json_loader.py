@@ -163,6 +163,46 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
         room.is_locked = bool(rd.get("locked", False))
         rooms[key] = room
 
+    # Handle maze building if specified
+    # Check for rooms that have a maze_builder parameter
+    for key, rd in rooms_data.items():
+        maze_builder = rd.get("maze_builder")
+        if maze_builder:
+            # Import the maze creation function
+            if maze_builder == "complex":
+                from game.rooms.maze_room import create_complex_maze
+                maze_rooms = create_complex_maze()
+            elif maze_builder == "simple":
+                from game.rooms.maze_room import create_simple_maze
+                maze_rooms = create_simple_maze()
+            else:
+                raise ValueError(f"Unknown maze_builder type: {maze_builder}")
+            
+            # Replace the placeholder room with the entrance from the maze
+            entrance = maze_rooms.get("entrance")
+            if entrance:
+                # Transfer any properties from the placeholder room
+                placeholder = rooms[key]
+                entrance.is_locked = placeholder.is_locked
+                rooms[key] = entrance
+            
+            # Add all other maze rooms to the rooms dictionary with unique keys
+            for maze_key, maze_room in maze_rooms.items():
+                if maze_key != "entrance":
+                    # Create unique key like "maze_entrance_room1", "maze_entrance_exit", etc.
+                    full_key = f"{key}_{maze_key}"
+                    rooms[full_key] = maze_room
+            
+            # Check if there's a post-maze connection specified
+            post_maze_link = rd.get("post_maze_link")
+            if post_maze_link:
+                exit_key = f"{key}_exit"
+                if exit_key in rooms and post_maze_link in rooms:
+                    # Link the maze exit to the specified room
+                    direction = rd.get("post_maze_direction", "north")
+                    back_direction = rd.get("post_maze_back_direction", "south")
+                    rooms[exit_key].link_rooms(direction, rooms[post_maze_link], back_direction)
+
     # Import once for subsequent passes
     from character import enemy as enemy_mod
     from game.effects.registry import get_effect_factory

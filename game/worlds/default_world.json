@@ -173,9 +173,25 @@
     "village_square": {
       "name": "Village Square",
       "description": "A quaint village square with a stone well and a few benches. Villagers pass by, chatting quietly.",
+      "links": [
+        {"dir": "north", "to": "maze_entrance", "back": "south"}
+      ],
       "effects": [
         {"key": "npc_dialog", "params": {"npc_name": "Old Villager", "npc_description": "leans on a walking stick, ready to chat."}}
       ]
+    },
+    "maze_entrance": {
+      "name": "Maze Entrance",
+      "description": "A stone archway marks the entrance to a confusing maze.",
+      "room_class": "maze_room.MazeRoom",
+      "maze_builder": "complex",
+      "post_maze_link": "treasure_chamber",
+      "post_maze_direction": "east",
+      "post_maze_back_direction": "west"
+    },
+    "treasure_chamber": {
+      "name": "Treasure Chamber",
+      "description": "A small chamber bathed in golden light. Ancient treasures line the walls, and a sense of accomplishment fills the air."
     }
   },
   "events": [

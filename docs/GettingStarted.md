@@ -143,3 +143,16 @@ pytest tests/test_commands.py -q
 - commands/engine.py — command parser and router.
 - components/inventory.py — inventory behavior.
 - tests/ — runnable test suite demonstrating typical interactions.
+
+maze world example:
+Path:
+  Start: Maze Entrance
+  1. go north -> Maze Room 1
+  2. go north -> Maze Room 3
+  3. go east -> Maze Room 6
+  4. go north -> Maze Room 8
+  5. go east -> Maze Room 10
+  6. go north -> Maze Room 12
+  7. go east -> Maze Room 14
+  8. go north -> Maze Room 15
+  9. go east -> Maze Exit
