@@ -48,6 +48,9 @@ class RoomDiscEffect(ABC):
     def handle_help(self, val_hero: "RpgHero"):
         return "No help available for this room."
 
+    def on_item_removed(self, item_name):
+        pass
+
     def handle_interaction(
         self,
         verb: str,
