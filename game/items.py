@@ -85,3 +85,32 @@ class Item(CanCast):  # Inherit from CanCast
 
     def __repr__(self):
         return f"Item('{self.name}', cost={self.cost}, qty={self.quantity}, usable={self.is_usable}, effect={self.effect_type.name})"
+
+    def __eq__(self, other):
+        """Compare items by their properties, not identity."""
+        if not isinstance(other, Item):
+            return NotImplemented
+        return (
+            self.name == other.name
+            and self.cost == other.cost
+            and self.quantity == other.quantity
+            and self.is_usable == other.is_usable
+            and self.effect_type == other.effect_type
+            and self.is_consumable == other.is_consumable
+            and getattr(self, "is_equipment", False)
+            == getattr(other, "is_equipment", False)
+            and set(self.tags or []) == set(other.tags or [])
+            and self.effects.keys() == other.effects.keys()
+            # Compare effects by their type and properties
+            and all(
+                type(self.effects[k]) == type(other.effects[k])
+                and self.effects[k] == other.effects[k]
+                for k in self.effects.keys()
+            )
+        )
+
+    def __hash__(self):
+        """Make Item hashable based on immutable properties."""
+        # Note: This is a basic implementation. If items are mutable,
+        # you might need to reconsider using them as dict keys.
+        return hash((self.name, self.cost, self.effect_type))

@@ -1,6 +1,7 @@
 import logging
 
 from game.items import Item
+from copy import deepcopy
 
 
 class InventoryError(Exception):
@@ -59,17 +60,19 @@ class Inventory:
                     pass
         else:
             # Store a cloned copy to avoid sharing the same Item instance across inventories
-            cloned = Item(
-                name=item.name,
-                cost=item.cost,
-                is_usable=item.is_usable,
-                effect=item.effect_type,
-                # effect_value=item.effect_value,
-                is_consumable=item.is_consumable,
-                is_equipment=getattr(item, "is_equipment", False),
-                tags=set(item.tags or []),
-                effects=item.effects,
-            )
+            # cloned = Item(
+            #     name=item.name,
+            #     cost=item.cost,
+            #     is_usable=item.is_usable,
+            #     effect=item.effect_type,
+            #     # effect_value=item.effect_value,
+            #     is_consumable=item.is_consumable,
+            #     is_equipment=getattr(item, "is_equipment", False),
+            #     tags=set(item.tags or []),
+            #     effects=item.effects,
+            # )
+            cloned = deepcopy(item)
+
             cloned.quantity = item.quantity
             self.items[item.name] = cloned
 
@@ -101,25 +104,27 @@ class Inventory:
             )
             raise InsufficientQuantityError(item_name, quantity, current_item.quantity)
 
-        current_item -= quantity
-
         # Create a new Item instance representing the removed quantity.
         # Use keyword args to avoid parameter misalignment and ensure tags transfer.
-        removed_item = Item(
-            name=current_item.name,
-            cost=current_item.cost,
-            is_usable=current_item.is_usable,
-            effect=current_item.effect_type,
-            # effect_value=current_item.effect_value,
-            is_consumable=current_item.is_consumable,
-            is_equipment=(
-                current_item.is_equipment
-                if hasattr(current_item, "is_equipment")
-                else False
-            ),
-            tags=set(current_item.tags or []),
-            effects=current_item.effects,
-        )
+        # removed_item = Item(
+        #     name=current_item.name,
+        #     cost=current_item.cost,
+        #     is_usable=current_item.is_usable,
+        #     effect=current_item.effect_type,
+        #     # effect_value=current_item.effect_value,
+        #     is_consumable=current_item.is_consumable,
+        #     is_equipment=(
+        #         current_item.is_equipment
+        #         if hasattr(current_item, "is_equipment")
+        #         else False
+        #     ),
+        #     tags=set(current_item.tags or []),
+        #     effects=current_item.effects,
+        # )
+
+        removed_item = deepcopy(current_item)
+
+        current_item -= quantity
         logging.debug(f"{current_item.tags} {removed_item.tags} ")
         removed_item.quantity = quantity
 

@@ -30,6 +30,12 @@ class ItemHealth(ItemEffect):
     def __repr__(self) -> str:
         return f"ItemHealth(amount={self.amount}, item={self.item!r})"
 
+    def __eq__(self, other):
+        """Compare ItemHealth effects by their properties."""
+        if not isinstance(other, ItemHealth):
+            return NotImplemented
+        return self.amount == other.amount and self.item == other.item
+
 
 def _make_item_health(item: "Item", amount: int):
     return ItemHealth(item, amount)

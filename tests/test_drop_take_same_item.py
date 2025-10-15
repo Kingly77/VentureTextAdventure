@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 
 from game.effects.item_effects.base import Effect
@@ -35,22 +37,20 @@ def _assert_same_item_props(a: Item, b: Item):
     assert a.is_consumable == b.is_consumable
     assert getattr(a, "is_equipment", False) == getattr(b, "is_equipment", False)
     assert set(a.tags or []) == set(b.tags or [])
-    assert a.effects == b.effects
+
+    # Compare effects by their keys and properties, not by identity
+    assert a.effects.keys() == b.effects.keys()
+    for key in a.effects.keys():
+        effect_a = a.effects[key]
+        effect_b = b.effects[key]
+        assert type(effect_a) == type(effect_b)
+        # For ItemHealth specifically
+        if hasattr(effect_a, "amount") and hasattr(effect_b, "amount"):
+            assert effect_a.amount == effect_b.amount
 
 
 def _clone_item(src: Item) -> Item:
-    return Item(
-        name=src.name,
-        cost=src.cost,
-        is_usable=src.is_usable,
-        effect=src.effect_type,
-        # effect_value=src.effect_value,
-        is_consumable=src.is_consumable,
-        is_equipment=getattr(src, "is_equipment", False),
-        tags=set(src.tags or []),
-        quantity=src.quantity,
-        effects=src.effects,
-    )
+    return deepcopy(src)
 
 
 def test_drop_then_take_preserves_item_properties(game: Game):
