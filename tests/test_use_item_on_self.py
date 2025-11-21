@@ -1,8 +1,10 @@
 import pytest
+from types import SimpleNamespace
 from unittest.mock import patch
 
+from commands.command_reg import CommandRequest, CommandContext
 from game.game_world_initializer import setup_game
-from commands.command import use_command
+from commands.command import handle_use as use_command
 from game.items import Item
 from game.effects.item_effects.base import Effect
 
@@ -11,6 +13,17 @@ from game.effects.item_effects.base import Effect
 def world():
     hero, start_room = setup_game()
     return hero, start_room
+
+
+def make_ctx(hero, room):
+    game = SimpleNamespace(registry=None)
+    return CommandContext(game=game, hero=hero, room=room)
+
+
+def build_req(action: str, arg: str) -> CommandRequest:
+    raw = f"{action} {arg}".strip()
+    tokens = [t for t in arg.lower().split() if t] if arg else []
+    return CommandRequest(raw=raw, action=action.lower(), arg=arg.lower(), tokens=tokens)
 
 
 def test_use_item_on_self_heals_and_consumes(world):
@@ -35,7 +48,9 @@ def test_use_item_on_self_heals_and_consumes(world):
 
     with patch("builtins.print") as mock_print:
         # Use item on self via the use command
-        use_command("use", "health potion on self", hero, room)
+        req = build_req("use", "health potion on self")
+        ctx = make_ctx(hero, room)
+        use_command(req, ctx)
 
         # Verify a usage message was printed by ItemUsageMix
         assert any(
@@ -69,7 +84,9 @@ def test_use_item_on_named_hero_variant(world):
     hero.inventory.add_item(potion)
 
     # Use the variant that targets by hero name
-    use_command("use", f"minor potion on {hero.name}", hero, room)
+    req = build_req("use", f"minor potion on {hero.name}")
+    ctx = make_ctx(hero, room)
+    use_command(req, ctx)
 
     assert hero.health > start_health
     assert not hero.inventory.has_component("minor potion")

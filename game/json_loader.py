@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import importlib
 from typing import Dict, Tuple, Any
+from pathlib import Path
 
 from game.room import Room
 from game.items import Item
@@ -302,7 +303,34 @@ essential_keys = ("rooms", "start_room")
 
 
 def load_world_from_path(path: str) -> Tuple[Dict[str, Room], str, Dict[str, Any]]:
-    """Open a JSON file and call load_world."""
-    with open(path, "r", encoding="utf-8") as fh:
+    """Open a JSON file and call load_world.
+
+    This resolver is robust to odd relative paths coming from tests by trying
+    multiple bases when the initial path doesn't exist:
+      1) As-given (absolute or relative to current working directory)
+      2) Relative to this module's directory (the 'game' package directory)
+    """
+    p = Path(path)
+    candidates = []
+    # 1) as-given (respect absolute or current cwd relative)
+    candidates.append(p if p.is_absolute() else (Path.cwd() / p))
+    # 2) relative to this module's directory (handles "../game/..." patterns)
+    candidates.append(Path(__file__).resolve().parent / p)
+
+    src_path = None
+    for cand in candidates:
+        try:
+            rp = cand.resolve()
+        except FileNotFoundError:
+            # On some Python versions, resolve may raise; just skip
+            rp = cand
+        if rp.exists() and rp.is_file():
+            src_path = rp
+            break
+
+    if src_path is None:
+        raise FileNotFoundError(f"World JSON file not found: {path}")
+
+    with src_path.open("r", encoding="utf-8") as fh:
         data = json.load(fh)
     return load_world(data)

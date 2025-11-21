@@ -6,6 +6,8 @@ import commands.engine as eng
 
 
 def test_parse_command_line_and_gag_basic():
+
+    # f"You picked up and dropped the {x1}. Why?"
     # Single command
     pairs = eng.parse_command_line("Look")
     assert pairs == [("look", "")]
@@ -20,7 +22,7 @@ def test_parse_command_line_and_gag_basic():
 
     # Gag triggers for take X and drop X
     gag = eng.maybe_gag([("take", "coin"), ("drop", "coin")])
-    assert gag == "You picked up and dropped the coin."
+    assert gag == f"You picked up and dropped the coin. Why?"
 
     # Gag does not trigger for different items
     assert eng.maybe_gag([("take", "coin"), ("drop", "key")]) is None
