@@ -39,6 +39,9 @@ def handle_inventory_command(
                 display.write(f"There is no {arg} here to take.")
 
         elif action == "drop" and hero_has_item:
+            if not hero_has_item:
+                display.write(f"You don't have a {arg} to drop.")
+                return
 
             for effect in current_room.effects:
                 if hasattr(effect, "handle_drop") and effect.handle_drop(hero, arg):
@@ -56,24 +59,27 @@ def handle_inventory_command(
         elif action == "examine":
             item: Item = None
 
+            # Check if a room effect handles it first
             for effect in current_room.effects:
                 did_find = effect.handle_interaction(
-                    "examine", arg, hero, item, current_room
+                    "examine", arg, hero, None, current_room
                 )
+                if did_find:
+                    display.write(did_find)
+                    return  # Effect handled it, we're done
 
+            # Otherwise look for the item in inventories
             if hero_has_item:
                 item = hero_inv[arg]
             elif room_inv.has_component(arg):
                 item = room_inv[arg]
-            elif did_find:
-                display.write(did_find)
-                # examined by a room effect
-                return
             else:
                 display.write(f"There is no {arg} here to examine.")
                 return
 
+            # Display item details
             display.write(f"You examine the {item.name}:")
+            # ... rest of examination code
             display.write(f"  Quantity: {item.quantity}")
             display.write(f"  Value: {item.cost} gold")
             if item.is_usable:
@@ -204,20 +210,8 @@ def go_command(
         display.write("Invalid game state.")
         return
 
-    next_room = current_room.exits_to.get(direction)
-    if not next_room:
-        display.write("You can't go that way.")
-        return
-
-    if next_room and not next_room.is_locked:
-        hero.last_room = game.current_room
-        game.current_room = next_room
-        Events.trigger_event("location_entered", hero, next_room.name)
-        display.write(f"You go {direction}.")
-        if hasattr(game.current_room, "on_enter"):
-            game.current_room.on_enter(hero)
-
-    elif direction == "back":
+    # Handle "back" FIRST before checking exits
+    if direction == "back":
         if hero.last_room is None:
             display.write("You can't go back any further.")
             return
@@ -225,11 +219,23 @@ def go_command(
         game.current_room = hero.last_room
         hero.last_room = temp
         display.write("You go back.")
+        return
 
-    elif next_room.is_locked:
-        display.write("The door is locked.")
-    else:
+    next_room = current_room.exits_to.get(direction)
+    if not next_room:
         display.write("You can't go that way.")
+        return
+
+    if next_room.is_locked:
+        display.write("The door is locked.")
+        return
+
+    hero.last_room = game.current_room
+    game.current_room = next_room
+    Events.trigger_event("location_entered", hero, next_room.name)
+    display.write(f"You go {direction}.")
+    if hasattr(game.current_room, "on_enter"):
+        game.current_room.on_enter(hero)
 
 
 def _handle_item_usage(
@@ -248,7 +254,10 @@ def _handle_item_usage(
     """
     from commands.command_reg import TargetKind
 
-    # Acquire the item from the appropriate inventory
+    if source == "none":
+        display.write(f"You don't have or see a '{item_name}'.")
+        return
+
     try:
         if source == "hero":
             item = hero.inventory[item_name]
@@ -265,8 +274,11 @@ def _handle_item_usage(
             target_str is None or target_str in ["room", "the room", "this room"]
         ):
             _use_item_on_room(item, hero, current_room)
-            return
+        else:
+            display.write(f"What do you want to use {item_name} with?")
+        return  # Always return here!
 
+    # Now safe to access what.kind
     if what.kind == TargetKind.SELF:
         if source == "hero":
             _use_item_on_self(item, item_name, hero)
