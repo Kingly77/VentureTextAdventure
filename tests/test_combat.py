@@ -4,7 +4,7 @@ from character.hero import RpgHero
 from character.enemy import Goblin
 from game.room import Room
 from game.rpg_adventure_game import Game
-import commands.engine as eng
+from tests.helpers import run_cmd
 
 
 def test_combat_victory_with_attack():
@@ -30,7 +30,7 @@ def test_combat_victory_with_attack():
     assert game.current_enemy is goblin
 
     # Perform an attack via the command engine (end-to-end path)
-    out = eng.execute_line(game, "attack")
+    out = run_cmd(game, "attack")
 
     # After one attack, goblin should be defeated (base health 1, fists deal 5)
     assert game.in_combat is False

@@ -534,7 +534,7 @@ def handle_attack(req: CommandRequest, ctx: CommandContext):
             game._end_combat(False)
             return
 
-    # Check if enemy defeated
+    # Check if the enemy defeated
     if not enemy.is_alive():
         game._end_combat(True)
 

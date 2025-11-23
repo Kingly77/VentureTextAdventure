@@ -19,6 +19,16 @@ _REGISTRY: Dict[str, Callable] = {}
 def register_effect(
     key: str, factory: Callable[["Room", Dict[str, Any], Dict[str, "Room"]], object]
 ):
+    """Register a custom effect that can be used in world JSON.
+
+    Args:
+        key: Effect identifier used in JSON "effects" list
+        factory: Function(room, params, rooms_by_key) -> RoomDiscEffect
+
+    Example:
+        >>> register_effect("lever", lambda r, p, _: LeverEffect(r))
+        >>> # Then in JSON: {"key": "lever", "params": {}}
+    """
     lk = (key or "").strip().lower()
     if not lk:
         raise ValueError("Effect key must be a non-empty string")

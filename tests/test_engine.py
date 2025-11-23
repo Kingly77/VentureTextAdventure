@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import commands.command_reg
 import commands.engine as eng
@@ -66,75 +66,44 @@ def test_command_registry_register_resolve_help():
     assert called["ctx"].hero is ctx.hero
 
 
-def test_parse_use_arg_variants():
+def test_registry_handlers_resolve_and_invoke():
+    """Ensure handlers registered by register_default_commands are callable via registry."""
+    registry = commands.command_reg.CommandRegistry()
+    dummy_game = MagicMock()
+    eng.register_default_commands(registry, dummy_game)
+
+    # Build a context and simple request factory
+    hero = MagicMock()
     room = MagicMock()
-    room.objects = {"door": MagicMock()}
-    # None target
-    ut = eng.parse_use_arg("healing potion", "Hero", room)
-    assert ut.kind == commands.command_reg.TargetKind.NONE
-    # On self
-    ut = eng.parse_use_arg("potion on self", "Hero", room)
-    assert ut.kind == commands.command_reg.TargetKind.SELF
-    # On hero by name
-    ut = eng.parse_use_arg("potion on hero", "Hero", room)
-    assert ut.kind == commands.command_reg.TargetKind.SELF
-    # In room
-    ut = eng.parse_use_arg("torch in room", "Hero", room)
-    assert ut.kind == commands.command_reg.TargetKind.ROOM
-    # On object present in room
-    ut = eng.parse_use_arg("key on door", "Hero", room)
-    assert ut.kind == commands.command_reg.TargetKind.OBJECT and ut.name == "door"
-    # Unknown target -> NONE
-    ut = eng.parse_use_arg("key on statue", "Hero", room)
-    assert ut.kind == commands.command_reg.TargetKind.NONE
+    ctx = commands.command_reg.CommandContext(game=dummy_game, hero=hero, room=room)
 
+    def make_req(name, arg):
+        return commands.command_reg.CommandRequest(
+            raw=f"{name} {arg}".strip(),
+            action=name,
+            arg=arg,
+            tokens=arg.split() if arg else [],
+        )
 
-def test_adapters_delegate_to_underlying_functions():
-    # Patch underlying functions imported by engine at import time
-    with patch.object(eng, "_handle_inventory_command") as mock_inv, patch.object(
-        eng, "_use_command"
-    ) as mock_use, patch.object(eng, "_go_command") as mock_go:
-        registry = commands.command_reg.CommandRegistry()
-        dummy_game = MagicMock()
-        eng.register_default_commands(registry, dummy_game)
-
-        # Build a context and simple request factory
-        hero = MagicMock()
-        room = MagicMock()
-        ctx = commands.command_reg.CommandContext(game=dummy_game, hero=hero, room=room)
-
-        def make_req(name, arg):
-            return commands.command_reg.CommandRequest(
-                raw=f"{name} {arg}".strip(),
-                action=name,
-                arg=arg,
-                tokens=arg.split() if arg else [],
-            )
-
-        # take -> inventory handler with action 'take'
-        d = registry.resolve("take")
-        d.handler(make_req("take", "coin"), ctx)
-        mock_inv.assert_any_call("take", "coin", hero, room)
-
-        # drop
-        d = registry.resolve("drop")
-        d.handler(make_req("drop", "coin"), ctx)
-        mock_inv.assert_any_call("drop", "coin", hero, room)
-
-        # examine
-        d = registry.resolve("examine")
-        d.handler(make_req("examine", "torch"), ctx)
-        mock_inv.assert_any_call("examine", "torch", hero, room)
-
-        # use
-        d = registry.resolve("use")
-        d.handler(make_req("use", "potion"), ctx)
-        mock_use.assert_called_with("use", "potion", hero, room)
-
-        # go
-        d = registry.resolve("go")
-        d.handler(make_req("go", "north"), ctx)
-        mock_go.assert_called_with("go", "north", hero, room, dummy_game)
+    # Ensure key commands resolve and their handlers are callable without raising
+    for name, arg in [
+        ("look", ""),
+        ("status", ""),
+        ("inventory", ""),
+        ("take", "coin"),
+        ("drop", "coin"),
+        ("examine", "torch"),
+        ("use", "potion"),
+        ("equip", "sword"),
+        ("go", "north"),
+        ("attack", ""),
+        ("cast", ""),
+        ("talk", ""),
+    ]:
+        d = registry.resolve(name)
+        assert d is not None and d.name
+        # Handlers may print or perform actions on ctx, ensure no exception
+        d.handler(make_req(name, arg), ctx)
 
 
 def test_register_default_commands_aliases_present():

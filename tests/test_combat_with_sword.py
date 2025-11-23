@@ -6,7 +6,7 @@ from game.room import Room
 from game.rpg_adventure_game import Game
 from game.items import Item
 from game.effects.item_effects.base import Effect
-import commands.engine as eng
+from tests.helpers import run_cmd
 
 
 def test_combat_victory_with_sword_pickup_and_equip():
@@ -47,7 +47,7 @@ def test_combat_victory_with_sword_pickup_and_equip():
     assert "sword" in [item.name.lower() for item in room.inventory.items.values()]
 
     # Take the sword using the command system
-    take_output = eng.execute_line(game, "take sword")
+    take_output = run_cmd(game, "take sword")
     text = "\n".join(take_output)
     assert "took the sword" in text.lower()
 
@@ -55,7 +55,7 @@ def test_combat_victory_with_sword_pickup_and_equip():
     assert "sword" in [item.name.lower() for item in hero.inventory.items.values()]
 
     # Equip the sword
-    equip_output = eng.execute_line(game, "equip sword")
+    equip_output = run_cmd(game, "equip sword")
     text = "\n".join(equip_output)
     assert "equipped sword" in text.lower()
 
@@ -78,7 +78,7 @@ def test_combat_victory_with_sword_pickup_and_equip():
     assert goblin.health == 15
 
     # Perform an attack with the equipped sword
-    attack_output = eng.execute_line(game, "attack")
+    attack_output = run_cmd(game, "attack")
     text = "\n".join(attack_output)
 
     # After one attack with the sword (damage 20), goblin should be defeated (health 10)

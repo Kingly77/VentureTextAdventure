@@ -7,6 +7,7 @@ from game.room import Room
 from game.rpg_adventure_game import Game
 from game.effects.item_effects.base import Effect
 import commands.engine as eng
+from tests.helpers import run_cmd
 
 
 @pytest.fixture
@@ -106,10 +107,10 @@ def test_dispatch_command_methods():
     """Test dispatching via public parse_and_execute and assert observable behavior via execute_line."""
     # Create a simple game instance
     game = Game(MagicMock(), MagicMock())
-    out = eng.execute_line(game, "look")
+    out = run_cmd(game, "look")
     assert len(out) > 0
 
-    out = eng.execute_line(game, "inventory")
+    out = run_cmd(game, "inventory")
     # Should print inventory header or empty message
     assert len(out) > 0
 
@@ -117,7 +118,7 @@ def test_dispatch_command_methods():
 def test_parse_and_execute(test_game):
     """Test parse_and_execute end-to-end using public behavior."""
     # Check that 'look' produces some output
-    out = eng.execute_line(test_game, "look")
+    out = run_cmd(test_game, "look")
     assert len(out) > 0
 
     # Take key should move item from room to inventory
@@ -134,11 +135,11 @@ def test_parse_and_execute(test_game):
 def test_integration_with_game_object(test_game):
     """Test integration of parser with actual game object."""
     # Test inventory command
-    out = eng.execute_line(test_game, "inventory")
+    out = run_cmd(test_game, "inventory")
     assert len(out) > 0
 
     # Test look command and ensure room description appears
-    out = eng.execute_line(test_game, "look")
+    out = run_cmd(test_game, "look")
     assert any("simple room for testing" in line.lower() for line in out)
 
     # Test take command and verify key was added to inventory
@@ -146,13 +147,13 @@ def test_integration_with_game_object(test_game):
     assert "key" in test_game.hero.inventory.items
 
     # Test use command and check health-related output
-    out = eng.execute_line(test_game, "use health potion")
+    out = run_cmd(test_game, "use health potion")
     assert any("health" in line.lower() for line in out)
 
 
 def test_unknown_command(test_game):
     """Test handling of unknown commands."""
-    out = eng.execute_line(test_game, "dance")
+    out = run_cmd(test_game, "dance")
     text = "\n".join(out)
     assert "Unknown command. Try 'help' for a list of commands." in text
 
@@ -160,10 +161,10 @@ def test_unknown_command(test_game):
 def test_complex_commands(test_game):
     """Test more complex command scenarios."""
     # Test use item on target
-    out = eng.execute_line(test_game, "use torch on room")
+    out = run_cmd(test_game, "use torch on room")
     assert len(out) > 0
 
     # Test examine item
-    out = eng.execute_line(test_game, "examine torch")
+    out = run_cmd(test_game, "examine torch")
     text = "\n".join(out).lower()
     assert "torch" in text
