@@ -6,7 +6,6 @@ from character.tomes import (
     ManaMix,
     XpMix,
     QuestMix,
-    InventoryViewMix,
     WalletMix,
     SpellCastingMix,
     ItemUsageMix,
@@ -15,7 +14,6 @@ from character.tomes import (
     InsufficientManaError,
 )
 from components.core_components import Exp, Mana
-from components.inventory_evil_cousin import QuestAwareInventory
 from components.quest_log import QuestLog
 from components.tags import Tags
 from components.wallet import Wallet
@@ -33,7 +31,6 @@ class RpgHero(
     ManaMix,
     XpMix,
     QuestMix,
-    InventoryViewMix,
     WalletMix,
     SpellCastingMix,
     ItemUsageMix,
@@ -83,11 +80,6 @@ class RpgHero(
 
         # Initialize base character
         super().__init__(name, level, base_health=health)
-
-        # Set up inventory wrapper (cached for performance)
-        self._inventory_wrapper = QuestAwareInventory(
-            self.components["inventory"], self
-        )
 
         # Register for location events
         Events.add_event("location_entered", self._on_location_entered)
@@ -148,6 +140,10 @@ class RpgHero(
         if xp < 0:
             raise ValueError("Cannot add negative experience points")
         self.xp_component.add_xp(self, xp)
+
+    def trigger_item_collected(self, item: Item) -> None:
+        """Trigger item collected event for quests."""
+        Events.trigger_event("item_collected", self, item)
 
 
 

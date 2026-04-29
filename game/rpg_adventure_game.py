@@ -9,8 +9,6 @@ from commands.engine import (
 )
 from commands.command_reg import CommandRegistry, CommandRequest, CommandContext
 
-from game.underlings.inventory_maybe import add_item as inv_add_item
-
 
 class Game:
 
@@ -100,7 +98,7 @@ class Game:
                 defeated_enemy = self.current_room.combatants.pop(0)
                 print(f"You defeated {defeated_enemy.name}.")
                 if hasattr(defeated_enemy, "reward"):
-                    inv_add_item(self.hero.inventory, defeated_enemy.reward)
+                    self.hero.inventory.add_item(defeated_enemy.reward)
                     print(
                         f"{self.hero.name} collected a trophy: {defeated_enemy.reward.name} x{defeated_enemy.reward.quantity}!"
                     )

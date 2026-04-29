@@ -3,7 +3,6 @@ from components.wallet import Wallet
 from game.items import Item
 from interfaces.room_effect_base import RoomDiscEffect
 from game.room import Room
-from game.underlings.inventory_maybe import transfer
 
 
 class ShopEffect(RoomDiscEffect):
@@ -58,7 +57,7 @@ class ShopEffect(RoomDiscEffect):
         # self.room.remove_item(item_name)
         # handle_inventory_operation(hero.inventory.add_item, item)
 
-        transfer(inv, item_name, hero.inventory)
+        inv.transfer(item_name, hero.inventory)
 
         print(f"{self.shopkeeper_name} sells you the {item.name} for {price} gold.")
         return True
@@ -72,7 +71,7 @@ class ShopEffect(RoomDiscEffect):
             print(f"{self.shopkeeper_name} says: 'I’m not buying that.'")
             return True
 
-        moved = transfer(hero.inventory, item_name, self.room, 1)
+        moved = hero.inventory.transfer(item_name, self.room.inventory, 1)
         if not moved:
             print("how did you get here?")
             return False

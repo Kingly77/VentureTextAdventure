@@ -1,7 +1,12 @@
 import logging
+from typing import Optional, TYPE_CHECKING, Callable
+from copy import deepcopy
 
 from game.items import Item
-from copy import deepcopy
+
+
+if TYPE_CHECKING:
+    from character.basecharacter import BaseCharacter
 
 
 class InventoryError(Exception):
@@ -33,9 +38,15 @@ class InsufficientQuantityError(InventoryError):
 class Inventory:
     """Manages a collection of items for a character."""
 
-    def __init__(self):
-        """Initialize an empty inventory."""
+    def __init__(self, owner: Optional["BaseCharacter"] = None):
+        """Initialize an empty inventory.
+
+        Args:
+            owner: The character who owns this inventory (optional).
+                   If provided, adding items may trigger events.
+        """
         self.items: dict[str, Item] = {}
+        self.owner = owner
 
     def add_item(self, item: Item):
         """Adds an item to the inventory, stacking if it already exists.
@@ -59,22 +70,21 @@ class Inventory:
                 except Exception:
                     pass
         else:
-            # Store a cloned copy to avoid sharing the same Item instance across inventories
-            # cloned = Item(
-            #     name=item.name,
-            #     cost=item.cost,
-            #     is_usable=item.is_usable,
-            #     effect=item.effect_type,
-            #     # effect_value=item.effect_value,
-            #     is_consumable=item.is_consumable,
-            #     is_equipment=getattr(item, "is_equipment", False),
-            #     tags=set(item.tags or []),
-            #     effects=item.effects,
-            # )
             cloned = deepcopy(item)
-
             cloned.quantity = item.quantity
             self.items[item.name] = cloned
+
+        # Trigger event if owner is present and it's a hero (or has quest system)
+        if self.owner and hasattr(self.owner, "trigger_item_collected"):
+            self.owner.trigger_item_collected(item)
+        elif self.owner:
+            # Fallback for generic event triggering if needed
+            try:
+                from game.underlings.events import Events
+
+                Events.trigger_event("item_collected", self.owner, item)
+            except (ImportError, AttributeError):
+                pass
 
     def remove_item(self, item_name: str, quantity: int = 1) -> Item:
         """Removes a specified quantity of an item from the inventory.
@@ -155,6 +165,20 @@ class Inventory:
             A string listing all items in the inventory
         """
         return f"<Inventory with: {list(self.items.values())}>"
+
+    def transfer(
+        self, item_name: str, target: "Inventory", quantity: int = 1
+    ) -> Optional[Item]:
+        """Move a quantity of an item from this inventory to another.
+
+        Returns the moved Item (with its quantity set to the amount moved) or None on failure.
+        """
+        try:
+            moved: Item = self.remove_item(item_name, quantity)
+            target.add_item(moved)
+            return moved
+        except (ItemNotFoundError, InsufficientQuantityError, ValueError, TypeError):
+            return None
 
     def has_component(self, item):
         if item in self.items:

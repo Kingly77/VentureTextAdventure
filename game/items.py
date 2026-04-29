@@ -36,7 +36,6 @@ class Item(CanCast):  # Inherit from CanCast
         self.quantity = quantity
         self.is_usable = is_usable
         self.effect_type: Effect = effect
-        # self.effect_value: int = effect_value
         self.is_consumable = is_consumable
         self.is_equipment = is_equipment
         self.tags = set(tags or [])

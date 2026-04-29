@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from commands.command_reg import CommandRequest, CommandContext, UseTarget, TargetKind
 from game.display import display
-from game.underlings.inventory_maybe import transfer
 from game.underlings.events import Events
 from game.util import handle_item_use, handle_spell_cast
 
@@ -251,7 +250,7 @@ def handle_take(req: CommandRequest, ctx: CommandContext):
         display.write(f"There is no {item_name} here to take.")
         return
 
-    moved = transfer(ctx.room.inventory, item_name, ctx.hero.inventory)
+    moved = ctx.room.inventory.transfer(item_name, ctx.hero.inventory)
     if moved:
         display.write(f"You took the {item_name}.")
     else:
@@ -277,7 +276,7 @@ def handle_drop(req: CommandRequest, ctx: CommandContext):
                 return
 
     # Try to drop into room inventory
-    moved = transfer(ctx.hero.inventory, item_name, ctx.room.inventory, quantity=1)
+    moved = ctx.hero.inventory.transfer(item_name, ctx.room.inventory, quantity=1)
     if moved:
         display.write(f"You dropped the {moved.name} in the {ctx.room.name}.")
     else:

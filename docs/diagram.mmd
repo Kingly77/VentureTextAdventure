@@ -11,7 +11,6 @@ components.core_components
 %% =======================
 game.items
 components.inventory
-components.inventory_evil_cousin
 
 %% =======================
 %% Third layer: Mechanics & Effects
@@ -48,7 +47,6 @@ commands.engine
 %% =======================
 %% Bottom layer: Underlings
 %% =======================
-game.underlings.inventory_maybe
 game.underlings.events
 
 %% =======================
@@ -63,9 +61,7 @@ components.core_components --> game.underlings.events
 game.items --> components.core_components
 game.items --> interfaces.interface
 components.inventory --> game.items
-components.inventory_evil_cousin --> components.inventory
-components.inventory_evil_cousin --> game.items
-components.inventory_evil_cousin --> game.underlings.events
+components.inventory --> game.underlings.events
 
 %% Mechanics & Effects
 game.magic --> interfaces.interface
@@ -88,7 +84,6 @@ game.effects.shop_effect --> components.wallet
 game.effects.shop_effect --> game.items
 game.effects.shop_effect --> game.effects.room_effects
 game.effects.shop_effect --> game.room
-game.effects.shop_effect --> game.underlings.inventory_maybe
 
 game.effects.door_effect_expanded --> game.effects.room_effects
 game.effects.door_effect_expanded --> game.room
@@ -106,7 +101,6 @@ character.basecharacter --> interfaces.interface
 character.hero --> character.basecharacter
 character.hero --> components.core_components
 character.hero --> components.inventory
-character.hero --> components.inventory_evil_cousin
 character.hero --> components.quest_log
 character.hero --> components.wallet
 character.hero --> game.items
@@ -131,8 +125,6 @@ commands.command --> commands.engine
 commands.command --> game.items
 commands.command --> game.room
 commands.command --> game.util
-commands.command --> game.underlings.inventory_maybe
 
 %% Underlings
-game.underlings.inventory_maybe --> components.inventory
-game.underlings.inventory_maybe --> game.util
+game.underlings.events

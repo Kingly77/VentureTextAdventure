@@ -20,7 +20,7 @@ class BaseCharacter(Combatant):
         self.xp_value = xp_value * level
         self.components = HoldComponent()
         self.components.add_component("health", Health(int(base_health * level * 1.5)))
-        self.components.add_component("inventory", Inventory())
+        self.components.add_component("inventory", Inventory(owner=self))
 
     def get_health_component(self) -> Health:
         """Get the health component of the character."""
