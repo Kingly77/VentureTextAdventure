@@ -163,9 +163,9 @@ class Room:
             raise TypeError("Only NPC instances can be added to a room.")
         self.npcs[npc.key()] = npc
 
-    def add_item(self, item: Item):
-        self.inventory.add_item(item)
-        print(f"[{self.name}] A {item.name} x{item.quantity} has appeared.")
+    def add_item(self, item: Item, quantity: int = 1):
+        self.inventory.add_item(item, quantity)
+        logging.debug(f"[{self.name}] {item.name} x{quantity} added.")
 
     def remove_item(self, item_name: str, quantity: int = 1) -> Item:
         if not self.inventory.has_component(item_name):

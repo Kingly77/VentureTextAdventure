@@ -42,7 +42,7 @@ def test_items():
             effect_value=20,
             tags=["potion"],
         ),
-        "gold": Item("gold coins", 1, False, quantity=10),
+        "gold": Item("gold coins", 1, False),
     }
 
 

@@ -84,8 +84,8 @@ class RoomInteractionEffectHelper(RoomDiscEffect):
                 chest.change_description(
                     "An unlocked wooden chest with gold trim. It's open and ready for looting."
                 )
-                treasure = Item("gold coins", 50, False, quantity=20)
-                room.add_item(treasure)
+                treasure = Item("gold coins", 50, False)
+                room.add_item(treasure, 20)
                 return "You unlock the chest with the key! Inside you find a pile of gold coins."
             return "The chest is already unlocked."
 

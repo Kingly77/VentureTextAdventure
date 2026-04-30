@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, TYPE_CHECKING, Callable
+from typing import Optional, TYPE_CHECKING
 from copy import deepcopy
 
 from game.items import Item
@@ -36,152 +36,106 @@ class InsufficientQuantityError(InventoryError):
 
 
 class Inventory:
-    """Manages a collection of items for a character."""
+    """Manages a collection of items for a character.
+
+    Stackable items (item.stackable=True) are tracked as (canonical_item, count) pairs
+    keyed by name. Non-stackable items (equipment) are stored as individual instances.
+    """
 
     def __init__(self, owner: Optional["BaseCharacter"] = None):
-        """Initialize an empty inventory.
-
-        Args:
-            owner: The character who owns this inventory (optional).
-                   If provided, adding items may trigger events.
-        """
-        self.items: dict[str, Item] = {}
+        self._stacks: dict[str, tuple[Item, int]] = {}  # name → (item, count)
+        self._separate: list[Item] = []  # non-stackable individual items
         self.owner = owner
 
-    def add_item(self, item: Item):
-        """Adds an item to the inventory, stacking if it already exists.
+    @property
+    def items(self) -> dict[str, Item]:
+        """Backward-compatible view: returns dict of canonical items keyed by name."""
+        result = {name: item for name, (item, _) in self._stacks.items()}
+        for item in self._separate:
+            result.setdefault(item.name, item)
+        return result
 
-        Args:
-            item: The item to add to the inventory
-        """
+    def count(self, item_name: str) -> int:
+        """Return the total count of an item by name."""
+        if item_name in self._stacks:
+            return self._stacks[item_name][1]
+        return sum(1 for item in self._separate if item.name == item_name)
+
+    def add_item(self, item: Item, quantity: int = 1):
+        """Add item(s) to the inventory. Stackable items merge; non-stackable are kept separate."""
         if not isinstance(item, Item):
             raise TypeError("Can only add Item objects to inventory")
+        if quantity < 1:
+            raise ValueError("Quantity must be at least 1")
 
-        if item.name in self.items:
-            existing = self.items[item.name]
-            # Increase quantity and preserve union of tags
-            existing += item.quantity
-            try:
-                existing.tags.update(item.tags)
-            except Exception:
-                # Be resilient if tags aren't sets/lists for some reason
-                try:
-                    existing.tags = set(existing.tags or []) | set(item.tags or [])
-                except Exception:
-                    pass
+        if item.stackable:
+            if item.name in self._stacks:
+                canonical, current = self._stacks[item.name]
+                self._stacks[item.name] = (canonical, current + quantity)
+            else:
+                self._stacks[item.name] = (deepcopy(item), quantity)
         else:
-            cloned = deepcopy(item)
-            cloned.quantity = item.quantity
-            self.items[item.name] = cloned
+            for _ in range(quantity):
+                self._separate.append(deepcopy(item))
 
-        # Trigger event if owner is present and it's a hero (or has quest system)
         if self.owner and hasattr(self.owner, "trigger_item_collected"):
-            self.owner.trigger_item_collected(item)
+            self.owner.trigger_item_collected(item, quantity)
         elif self.owner:
-            # Fallback for generic event triggering if needed
             try:
                 from game.underlings.events import Events
-
-                Events.trigger_event("item_collected", self.owner, item)
+                Events.trigger_event("item_collected", self.owner, item, quantity=quantity)
             except (ImportError, AttributeError):
                 pass
 
     def remove_item(self, item_name: str, quantity: int = 1) -> Item:
-        """Removes a specified quantity of an item from the inventory.
-
-        Args:
-            item_name: The name of the item to remove
-            quantity: The quantity to remove (default: 1)
-
-        Raises:
-            ItemNotFoundError: If the item is not in the inventory
-            InsufficientQuantityError: If trying to remove more than available
-            ValueError: If quantity is not positive
-        """
+        """Remove a quantity of an item; returns the canonical item instance."""
         if quantity <= 0:
             raise ValueError("Quantity to remove must be positive")
 
-        if item_name not in self.items:
-            # Still print for user feedback but also raise exception for proper handling
+        if item_name in self._stacks:
+            canonical, current = self._stacks[item_name]
+            if quantity > current:
+                print(f"Cannot remove {quantity} of {item_name}, only {current} items are available.")
+                raise InsufficientQuantityError(item_name, quantity, current)
+            if quantity == current:
+                del self._stacks[item_name]
+                logging.debug(f"Item '{item_name}' removed entirely from inventory.")
+            else:
+                self._stacks[item_name] = (canonical, current - quantity)
+                print(f"Removed {quantity} of {item_name}. Remaining: {current - quantity}")
+            return canonical
+
+        matches = [item for item in self._separate if item.name == item_name]
+        if not matches:
             print(f"Item '{item_name}' not found in inventory.")
             raise ItemNotFoundError(item_name)
-
-        current_item = self.items[item_name]
-        if quantity > current_item.quantity:
-            # Still print for user feedback but also raise exception for proper handling
-            print(
-                f"Cannot remove {quantity} of {item_name}, only {current_item.quantity} items are available."
-            )
-            raise InsufficientQuantityError(item_name, quantity, current_item.quantity)
-
-        # Create a new Item instance representing the removed quantity.
-        # Use keyword args to avoid parameter misalignment and ensure tags transfer.
-        # removed_item = Item(
-        #     name=current_item.name,
-        #     cost=current_item.cost,
-        #     is_usable=current_item.is_usable,
-        #     effect=current_item.effect_type,
-        #     # effect_value=current_item.effect_value,
-        #     is_consumable=current_item.is_consumable,
-        #     is_equipment=(
-        #         current_item.is_equipment
-        #         if hasattr(current_item, "is_equipment")
-        #         else False
-        #     ),
-        #     tags=set(current_item.tags or []),
-        #     effects=current_item.effects,
-        # )
-
-        removed_item = deepcopy(current_item)
-
-        current_item -= quantity
-        logging.debug(f"{current_item.tags} {removed_item.tags} ")
-        removed_item.quantity = quantity
-
-        if current_item.quantity <= 0:
-            logging.debug(f"Item '{item_name}' removed entirely from inventory.")
-            del self.items[item_name]
-        else:
-            print(
-                f"Removed {quantity} of {item_name}. Remaining: {current_item.quantity}"
-            )
-        return removed_item
+        item = matches[0]
+        self._separate.remove(item)
+        return item
 
     def __getitem__(self, item_name: str) -> Item | None:
-        """Allows dictionary-like access to retrieve an item.
-
-        Args:
-            item_name: The name of the item to retrieve
-
-        Returns:
-            The item if found, None otherwise
-        """
-        return self.items.get(item_name)
+        if item_name in self._stacks:
+            return self._stacks[item_name][0]
+        for item in self._separate:
+            if item.name == item_name:
+                return item
+        return None
 
     def __repr__(self) -> str:
-        """Returns a string representation of the inventory.
-
-        Returns:
-            A string listing all items in the inventory
-        """
-        return f"<Inventory with: {list(self.items.values())}>"
+        stacks = [(name, count) for name, (_, count) in self._stacks.items()]
+        sep = [item.name for item in self._separate]
+        return f"<Inventory stacks={stacks} separate={sep}>"
 
     def transfer(
         self, item_name: str, target: "Inventory", quantity: int = 1
     ) -> Optional[Item]:
-        """Move a quantity of an item from this inventory to another.
-
-        Returns the moved Item (with its quantity set to the amount moved) or None on failure.
-        """
+        """Move a quantity of an item from this inventory to another."""
         try:
-            moved: Item = self.remove_item(item_name, quantity)
-            target.add_item(moved)
-            return moved
+            item = self.remove_item(item_name, quantity)
+            target.add_item(item, quantity)
+            return item
         except (ItemNotFoundError, InsufficientQuantityError, ValueError, TypeError):
             return None
 
-    def has_component(self, item):
-        if item in self.items:
-            return True
-        else:
-            return False
+    def has_component(self, item_name: str) -> bool:
+        return item_name in self._stacks or any(i.name == item_name for i in self._separate)

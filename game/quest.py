@@ -51,7 +51,7 @@ class Quest:
         if self.objective.type == "collect" and event_name == "item_collected":
             item = kwargs.get("item")
             if item and getattr(item, "name", None) == self.objective.target:
-                qty = getattr(item, "quantity", 1) or 1
+                qty = kwargs.get("quantity", 1) or 1
                 self.progress = min(
                     self.objective.value, self.progress + int(qty)
                 )
@@ -107,7 +107,7 @@ class Quest:
         if self.objective.type == "collect":
             if who.inventory.has_component(self.objective.target):
                 if (
-                    who.inventory[self.objective.target].quantity
+                    who.inventory.count(self.objective.target)
                     >= self.objective.value
                 ):
                     who.inventory.remove_item(

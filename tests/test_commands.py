@@ -30,7 +30,7 @@ def test_items():
             "sword", 25, True, is_equipment=True, effect=Effect.DAMAGE, effect_value=15
         ),
         "key": Item("rusty key", 0, False),
-        "treasure": Item("gold coin", 1, False, quantity=10),
+        "treasure": Item("gold coin", 1, False),
     }
 
 
@@ -155,21 +155,16 @@ def test_drop_multiple_items(game_setup, test_items):
 
     # Add treasure with quantity to hero's inventory
     treasure = test_items["treasure"]
-    hero.inventory.add_item(treasure)
+    hero.inventory.add_item(treasure, 10)
 
     # Drop part of the stack
     drop_quantity = 5
     dropped_item = hero.inventory.remove_item("gold coin", drop_quantity)
-    current_room.add_item(dropped_item)
+    current_room.add_item(dropped_item, drop_quantity)
 
     # Verify quantities
-    assert hero.inventory["gold coin"].quantity == 5  # Started with 10
-    room_treasure = next(
-        value
-        for key, value in current_room.inventory.items.items()
-        if key == "gold coin"
-    )
-    assert room_treasure.quantity == 5
+    assert hero.inventory.count("gold coin") == 5  # Started with 10
+    assert current_room.inventory.count("gold coin") == 5
 
 
 def test_drop_nonexistent_item(game_setup):

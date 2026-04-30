@@ -197,7 +197,7 @@ def handle_inventory(req: CommandRequest, ctx: CommandContext):
                 elif item.effect_type.name == "DAMAGE":
                     effect_text = f" (Damage {item.effect_value})"
             display.write(
-                f"  • {item.name} x{item.quantity}{effect_text} - {item.cost} gold each"
+                f"  • {item.name} x{hero.inventory.count(item.name)}{effect_text} - {item.cost} gold each"
             )
         display.write()
 
@@ -212,14 +212,14 @@ def handle_inventory(req: CommandRequest, ctx: CommandContext):
             ):
                 equipped_marker = " [equipped]"
             display.write(
-                f"  • {item.name}{equipped_marker} x{item.quantity} - {item.cost} gold each"
+                f"  • {item.name}{equipped_marker} x{hero.inventory.count(item.name)} - {item.cost} gold each"
             )
         display.write()
 
     if misc_items:
         display.write("🔮 Other Items:")
         for item in misc_items:
-            display.write(f"  • {item.name} x{item.quantity} - {item.cost} gold each")
+            display.write(f"  • {item.name} x{hero.inventory.count(item.name)} - {item.cost} gold each")
 
     display.write("------------------------")
     if hasattr(hero, "gold"):
@@ -312,8 +312,9 @@ def handle_examine(req: CommandRequest, ctx: CommandContext):
         return
 
     # Display item details
+    inv = ctx.hero.inventory if location == "hero" else ctx.room.inventory
     display.write(f"You examine the {item.name}:")
-    display.write(f"  Quantity: {item.quantity}")
+    display.write(f"  Quantity: {inv.count(item.name)}")
     display.write(f"  Value: {item.cost} gold")
 
     if item.is_usable and hasattr(item, "effect_type"):

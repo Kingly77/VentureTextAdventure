@@ -30,7 +30,6 @@ def _assert_same_item_props(a: Item, b: Item):
     assert a is not None and b is not None
     assert a.name == b.name
     assert a.cost == b.cost
-    assert a.quantity == b.quantity
     assert a.is_usable == b.is_usable
     assert a.effect_type == b.effect_type
     # assert a.effect_value == b.effect_value

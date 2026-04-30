@@ -37,9 +37,8 @@ class QuestingSystem:
         return None
 
     # Existing flow now delegates to the shared handler
-    def on_item_collected(self, val_hero: "RpgHero", item):
-        # Keep legacy path working while using unified progress logic
-        return self._advance_quests(val_hero, "item_collected", item=item)
+    def on_item_collected(self, val_hero: "RpgHero", item, quantity: int = 1):
+        return self._advance_quests(val_hero, "item_collected", item=item, quantity=quantity)
 
     # New handlers (optional to emit in your game)
     def on_enemy_killed(self, val_hero: "RpgHero", enemy_type: str, count: int = 1):

@@ -98,9 +98,10 @@ class Game:
                 defeated_enemy = self.current_room.combatants.pop(0)
                 print(f"You defeated {defeated_enemy.name}.")
                 if hasattr(defeated_enemy, "reward"):
-                    self.hero.inventory.add_item(defeated_enemy.reward)
+                    qty = getattr(defeated_enemy, "reward_quantity", 1)
+                    self.hero.inventory.add_item(defeated_enemy.reward, qty)
                     print(
-                        f"{self.hero.name} collected a trophy: {defeated_enemy.reward.name} x{defeated_enemy.reward.quantity}!"
+                        f"{self.hero.name} collected a trophy: {defeated_enemy.reward.name} x{qty}!"
                     )
         else:
             print(f"\n{hero.name} has been defeated by {enemy.name}...")

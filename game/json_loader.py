@@ -10,8 +10,8 @@ from game.items import Item
 from game.effects.item_effects.base import Effect
 
 
-def _make_item(d: dict) -> Item:
-    """Create an Item from a simple dict.
+def _make_item(d: dict) -> tuple[Item, int]:
+    """Create an (Item, quantity) pair from a simple dict.
 
     Expected fields (all optional except name and value):
       - name: str
@@ -34,7 +34,7 @@ def _make_item(d: dict) -> Item:
     is_equipment = bool(d.get("is_equipment", False))
     tags = d.get("tags", [])
     quantity = int(d.get("quantity", 1))
-    return Item(
+    item = Item(
         name,
         cost,
         is_usable,
@@ -43,8 +43,8 @@ def _make_item(d: dict) -> Item:
         is_consumable=is_consumable,
         is_equipment=is_equipment,
         tags=tags,
-        quantity=quantity,
     )
+    return item, quantity
 
 
 def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, Any]]:
@@ -215,9 +215,9 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
         room = rooms[key]
 
         # Items
-        add_item = room.add_item
         for item_d in rd.get("items", ()) or ():
-            add_item(_make_item(item_d))
+            item, qty = _make_item(item_d)
+            room.add_item(item, qty)
 
         # Links (bidirectional if back is provided)
         add_exit = room.add_exit
@@ -252,7 +252,7 @@ def load_world(data: Dict[str, Any]) -> Tuple[Dict[str, Room], str, Dict[str, An
                 name = base_name if count == 1 else f"{base_name} {i+1}"
                 foe = EnemyClass(name, level)
                 if isinstance(reward_cfg, dict) and reward_cfg:
-                    foe.reward = make_item(reward_cfg)
+                    foe.reward, foe.reward_quantity = make_item(reward_cfg)
                 combatants.append(foe)
 
         # Effects via registry

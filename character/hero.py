@@ -141,9 +141,9 @@ class RpgHero(
             raise ValueError("Cannot add negative experience points")
         self.xp_component.add_xp(self, xp)
 
-    def trigger_item_collected(self, item: Item) -> None:
+    def trigger_item_collected(self, item: Item, quantity: int = 1) -> None:
         """Trigger item collected event for quests."""
-        Events.trigger_event("item_collected", self, item)
+        Events.trigger_event("item_collected", self, item, quantity=quantity)
 
 
 
